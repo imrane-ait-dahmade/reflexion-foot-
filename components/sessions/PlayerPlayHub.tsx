@@ -1,66 +1,50 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
+  Suspense,
   useCallback,
   useEffect,
   useState,
   useSyncExternalStore,
   useTransition,
 } from "react";
-import { Button } from "@/components/ui/Button";
-import type { TestSlug } from "@/lib/db/types";
+import { motion } from "motion/react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import {
-  clearPlayerSession,
   getServerPlayerSession,
   loadPlayerSession,
   subscribePlayerSession,
 } from "@/lib/sessions/player-session";
-import { TESTS } from "@/lib/tests/registry";
 
 type PlayerPlayHubProps = {
   code: string;
 };
 
-type ExerciseProgress = {
-  testSlug: TestSlug;
-  completed: boolean;
-  score: number | null;
-};
-
 type ProgressData = {
   session: { title: string; status: string; endsAt: string | null };
-  exercises: ExerciseProgress[];
   completedCount: number;
   totalCount: number;
-  nextExercise: TestSlug | null;
+  nextExercise: string | null;
   allDone: boolean;
 };
-
-function formatEndsAt(endsAt: string | null) {
-  if (!endsAt) return null;
-  const date = new Date(endsAt);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleTimeString("fr-FR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 function friendlyProgressError(message: string) {
   const lower = message.toLowerCase();
   if (lower.includes("fermée") || lower.includes("expir")) {
-    return "Session fermée ou expirée. Tu peux encore voir tes scores déjà envoyés.";
+    return "Session fermée ou expirée.";
   }
   if (lower.includes("failed to fetch") || lower.includes("network")) {
-    return "Pas de connexion. Appuie sur Rafraîchir quand le réseau revient.";
+    return "Pas de connexion. Réessaie dans un instant.";
   }
-  return message || "Impossible de charger la progression.";
+  return message || "Impossible de charger la session.";
 }
 
-export function PlayerPlayHub({ code }: PlayerPlayHubProps) {
+function PlayerPlayHubInner({ code }: PlayerPlayHubProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const showDone = searchParams.get("done") === "1";
   const stored = useSyncExternalStore(
     subscribePlayerSession,
     loadPlayerSession,
@@ -72,13 +56,11 @@ export function PlayerPlayHub({ code }: PlayerPlayHubProps) {
       : null;
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(Boolean(session));
   const [, startTransition] = useTransition();
 
-  const loadProgress = useCallback(() => {
+  const loadAndRoute = useCallback(() => {
     if (!session) return;
     startTransition(async () => {
-      setLoading(true);
       try {
         const response = await fetch(
           `/api/players/${session.sessionPlayerId}/progress`,
@@ -87,29 +69,35 @@ export function PlayerPlayHub({ code }: PlayerPlayHubProps) {
         if (!response.ok) throw new Error(data.error ?? "Erreur");
         setProgress(data);
         setError("");
+
+        if (data.session?.status === "closed" && !data.allDone) {
+          setError("La session est fermée. Tu ne peux plus continuer.");
+          return;
+        }
+
+        if (data.allDone || showDone) {
+          return;
+        }
+
+        if (data.nextExercise) {
+          router.replace(`/play/${session.code}/${data.nextExercise}`);
+        }
       } catch (err) {
         setError(
           friendlyProgressError(err instanceof Error ? err.message : "Erreur"),
         );
-      } finally {
-        setLoading(false);
       }
     });
-  }, [session]);
+  }, [router, session, showDone]);
 
   useEffect(() => {
-    if (!session) return;
-    loadProgress();
-  }, [loadProgress, session]);
+    loadAndRoute();
+  }, [loadAndRoute]);
 
   if (!session) {
     return (
       <section className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-5">
         <p>Tu n&apos;as pas encore rejoint cette session sur cet appareil.</p>
-        <p className="text-sm text-muted">
-          Si tu as déjà commencé sur un autre téléphone, rejoins à nouveau avec
-          le même code et le même nom.
-        </p>
         <Link
           href="/join"
           className="inline-flex min-h-12 items-center justify-center rounded-full bg-brand px-6 font-semibold text-white"
@@ -120,150 +108,61 @@ export function PlayerPlayHub({ code }: PlayerPlayHubProps) {
     );
   }
 
-  const exercises =
-    progress?.exercises ??
-    session.exercises.map((testSlug) => ({
-      testSlug,
-      completed: false,
-      score: null,
-    }));
-  const completedCount = progress?.completedCount ?? 0;
-  const totalCount = progress?.totalCount ?? session.exercises.length;
-  const endsLabel = formatEndsAt(progress?.session.endsAt ?? null);
-  const sessionClosed = progress?.session.status === "closed";
-  const canStartNew = !sessionClosed;
-
-  return (
-    <section className="flex flex-col gap-4">
-      <div className="rounded-xl border border-border bg-surface p-4">
-        <p className="text-sm text-muted">Joueur</p>
-        <p className="text-xl font-semibold">{session.displayName}</p>
-        <p className="text-sm text-muted">
-          Code <span className="font-semibold text-brand">{session.code}</span>
-          {progress?.session.title ? ` · ${progress.session.title}` : ""}
-        </p>
-        <p className="mt-2 text-sm text-brand">
-          Progression {completedCount}/{totalCount}
-          {loading && !progress ? " · chargement…" : ""}
-        </p>
-        {endsLabel && !sessionClosed && (
-          <p className="text-xs text-muted">
-            Code valide jusqu&apos;à {endsLabel}
-          </p>
-        )}
-        {sessionClosed && (
-          <p className="mt-1 text-sm text-danger">
-            Session fermée — tu peux encore voir tes résultats déjà envoyés.
-          </p>
-        )}
-      </div>
-
-      {error && (
-        <p className="rounded-xl border border-danger/40 px-3 py-2 text-sm text-danger">
-          {error}
-        </p>
-      )}
-
-      {progress?.allDone && (
-        <p className="rounded-xl border border-brand/40 bg-brand-soft px-4 py-3 text-sm text-brand">
-          Tous les exercices sont terminés. Ton entraîneur voit tes scores.
-        </p>
-      )}
-
-      {progress?.nextExercise && !progress.allDone && canStartNew && (
-        <Link
-          href={`/play/${session.code}/${progress.nextExercise}`}
+  if (error) {
+    return (
+      <section className="flex flex-col gap-3 rounded-xl border border-danger/40 bg-surface p-5">
+        <p className="text-danger">{error}</p>
+        <button
+          type="button"
+          onClick={loadAndRoute}
           className="inline-flex min-h-12 items-center justify-center rounded-full bg-brand px-6 font-semibold text-white"
         >
-          Continuer :{" "}
-          {TESTS.find((test) => test.slug === progress.nextExercise)?.name ??
-            progress.nextExercise}
-        </Link>
-      )}
+          Réessayer
+        </button>
+      </section>
+    );
+  }
 
-      <ul className="flex flex-col gap-3">
-        {exercises.map((exercise) => {
-          const test = TESTS.find((item) => item.slug === exercise.testSlug);
-          const href = `/play/${session.code}/${exercise.testSlug}`;
+  if (progress?.allDone || showDone) {
+    return (
+      <motion.section
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="flex flex-col items-center gap-4 rounded-2xl border border-brand/40 bg-surface px-5 py-10 text-center"
+      >
+        <CheckCircle2 className="size-16 text-brand" aria-hidden />
+        <h2 className="text-2xl font-bold">Terminé</h2>
+        <p className="max-w-sm text-muted">
+          Merci {session.displayName}. Tes exercices sont envoyés à ton
+          entraîneur.
+        </p>
+        <p className="text-xs uppercase tracking-[0.18em] text-brand">
+          {progress?.completedCount ?? session.exercises.length} /{" "}
+          {progress?.totalCount ?? session.exercises.length} exercices
+        </p>
+      </motion.section>
+    );
+  }
 
-          if (exercise.completed) {
-            return (
-              <li
-                key={exercise.testSlug}
-                className="rounded-xl border border-brand/30 bg-brand-soft p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">
-                      {test?.name ?? exercise.testSlug}
-                    </p>
-                    <p className="text-sm text-muted">Terminé</p>
-                  </div>
-                  <p className="text-lg font-bold tabular-nums text-brand">
-                    {exercise.score}/100
-                  </p>
-                </div>
-              </li>
-            );
-          }
-
-          if (!canStartNew) {
-            return (
-              <li
-                key={exercise.testSlug}
-                className="rounded-xl border border-border bg-surface p-4 opacity-60"
-              >
-                <p className="font-semibold">
-                  {test?.name ?? exercise.testSlug}
-                </p>
-                <p className="text-sm text-muted">Non terminé — session fermée</p>
-              </li>
-            );
-          }
-
-          return (
-            <li key={exercise.testSlug}>
-              <Link
-                href={href}
-                className="block rounded-xl border border-border bg-surface p-4 transition hover:border-brand hover:bg-surface-hover"
-              >
-                <p className="font-semibold">
-                  {test?.name ?? exercise.testSlug}
-                </p>
-                <p className="text-sm text-muted">{test?.description}</p>
-                <p className="mt-2 text-sm text-brand">À faire →</p>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Button
-          variant="secondary"
-          onClick={loadProgress}
-          className="flex-1"
-        >
-          Rafraîchir
-        </Button>
-        <Button
-          variant="secondary"
-          className="flex-1"
-          onClick={() => {
-            if (
-              !window.confirm(
-                "Quitter efface ta session sur cet appareil. Tu pourras rejoindre à nouveau avec le code.",
-              )
-            ) {
-              return;
-            }
-            clearPlayerSession();
-            router.push("/join");
-          }}
-        >
-          Quitter la session
-        </Button>
-      </div>
+  return (
+    <section className="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface px-5 py-10 text-center">
+      <Loader2 className="size-10 animate-spin text-brand" aria-hidden />
+      <p className="text-muted">Préparation de ton parcours…</p>
     </section>
+  );
+}
+
+export function PlayerPlayHub({ code }: PlayerPlayHubProps) {
+  return (
+    <Suspense
+      fallback={
+        <section className="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface px-5 py-10 text-center">
+          <Loader2 className="size-10 animate-spin text-brand" aria-hidden />
+          <p className="text-muted">Chargement…</p>
+        </section>
+      }
+    >
+      <PlayerPlayHubInner code={code} />
+    </Suspense>
   );
 }

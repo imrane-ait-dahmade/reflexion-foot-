@@ -3,8 +3,17 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
+import {
+  Check,
+  Crosshair,
+  Eye,
+  Grid3X3,
+  type LucideIcon,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth-client";
+import type { TestSlug } from "@/lib/db/types";
 import { TESTS } from "@/lib/tests/registry";
 
 type CreatedSession = {
@@ -24,6 +33,13 @@ type SessionListItem = {
   exerciseCount: number;
 };
 
+const TEST_ICONS: Record<string, LucideIcon> = {
+  "visual-tracking": Crosshair,
+  "visual-memory": Grid3X3,
+  "reaction-time": Zap,
+  "peripheral-vision": Eye,
+};
+
 function formatEndsAt(endsAt: string | null) {
   if (!endsAt) return null;
   const date = new Date(endsAt);
@@ -39,7 +55,10 @@ function formatEndsAt(endsAt: string | null) {
 export function CoachCreateSession() {
   const router = useRouter();
   const [title, setTitle] = useState("Séance vision");
-  const [exerciseCount, setExerciseCount] = useState(2);
+  const [selected, setSelected] = useState<TestSlug[]>([
+    "visual-tracking",
+    "reaction-time",
+  ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [created, setCreated] = useState<CreatedSession | null>(null);
@@ -62,14 +81,31 @@ export function CoachCreateSession() {
     loadSessions();
   }, [loadSessions]);
 
+  const toggleExercise = (slug: TestSlug) => {
+    setSelected((current) =>
+      current.includes(slug)
+        ? current.filter((item) => item !== slug)
+        : [...current, slug],
+    );
+  };
+
   const onCreate = async () => {
+    if (selected.length === 0) {
+      setError("Sélectionne au moins un exercice.");
+      return;
+    }
+
     setLoading(true);
     setError("");
     try {
       const response = await fetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, exerciseCount }),
+        body: JSON.stringify({
+          title,
+          testSlugs: selected,
+          exerciseCount: selected.length,
+        }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -113,6 +149,9 @@ export function CoachCreateSession() {
             </p>
           )}
         </div>
+        <p className="text-sm text-muted">
+          Ordre joueur aléatoire parmi :
+        </p>
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
           {created.exercises.map((slug) => {
             const test = TESTS.find((item) => item.slug === slug);
@@ -156,35 +195,84 @@ export function CoachCreateSession() {
             className="min-h-12 rounded-lg border border-border bg-transparent px-3"
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Nombre d&apos;exercices aléatoires
-          <select
-            value={exerciseCount}
-            onChange={(event) => setExerciseCount(Number(event.target.value))}
-            className="min-h-12 rounded-lg border border-border bg-transparent px-3"
-          >
-            {[1, 2, 3, 4].map((count) => (
-              <option key={count} value={count}>
-                {count}
-              </option>
-            ))}
-          </select>
-        </label>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="text-sm font-medium">Exercices</p>
+            <p className="text-xs text-muted">
+              {selected.length} sélectionné{selected.length > 1 ? "s" : ""} ·
+              clique pour ajouter / retirer
+            </p>
+          </div>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {TESTS.map((test) => {
+              const slug = test.slug as TestSlug;
+              const active = selected.includes(slug);
+              const Icon = TEST_ICONS[slug] ?? Crosshair;
+              return (
+                <li key={slug}>
+                  <button
+                    type="button"
+                    onClick={() => toggleExercise(slug)}
+                    aria-pressed={active}
+                    className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${
+                      active
+                        ? "border-brand bg-brand-soft"
+                        : "border-border bg-surface hover:border-brand/50 hover:bg-surface-hover"
+                    }`}
+                  >
+                    <span
+                      className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border ${
+                        active
+                          ? "border-brand bg-brand text-white"
+                          : "border-border text-muted"
+                      }`}
+                    >
+                      {active ? (
+                        <Check className="size-4" aria-hidden />
+                      ) : (
+                        <Icon className="size-4" aria-hidden />
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold">{test.name}</span>
+                      <span className="mt-0.5 block text-xs text-muted">
+                        {test.description}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
         {error && <p className="text-sm text-danger">{error}</p>}
-        <Button onClick={onCreate} disabled={loading}>
-          {loading ? "Création…" : "Créer la session"}
+        <Button
+          onClick={onCreate}
+          disabled={loading || selected.length === 0}
+        >
+          {loading
+            ? "Création…"
+            : `Créer la session (${selected.length})`}
         </Button>
       </div>
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-semibold">Mes sessions</h2>
-          <Button variant="secondary" onClick={loadSessions} disabled={isPending}>
+          <Button
+            variant="secondary"
+            onClick={loadSessions}
+            disabled={isPending}
+          >
             Rafraîchir
           </Button>
         </div>
         {sessions.length === 0 ? (
-          <p className="text-sm text-muted">Aucune session pour l&apos;instant.</p>
+          <p className="text-sm text-muted">
+            Aucune session pour l&apos;instant.
+          </p>
         ) : (
           <ul className="flex flex-col gap-2">
             {sessions.map((session) => (
@@ -204,7 +292,9 @@ export function CoachCreateSession() {
                   </div>
                   <span
                     className={`text-sm uppercase ${
-                      session.status === "active" ? "text-brand" : "text-muted"
+                      session.status === "active"
+                        ? "text-brand"
+                        : "text-muted"
                     }`}
                   >
                     {session.status}

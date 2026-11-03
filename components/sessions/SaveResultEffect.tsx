@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { motion } from "motion/react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { TestSlug } from "@/lib/db/types";
 import { loadPlayerSession } from "@/lib/sessions/player-session";
 import { submitClientResult } from "@/lib/sessions/submit-client";
-import { TESTS } from "@/lib/tests/registry";
 
 type SaveResultEffectProps = {
   sessionPlayerId: string;
@@ -27,15 +28,17 @@ type ProgressNav = {
   code: string;
   nextExercise: TestSlug | null;
   allDone: boolean;
+  completedCount: number;
+  totalCount: number;
 };
 
 function friendlySaveError(message: string) {
   const lower = message.toLowerCase();
   if (lower.includes("fermée") || lower.includes("expir")) {
-    return "La session est fermée ou a expiré. Réessaie l'envoi — ton score peut encore être accepté.";
+    return "La session est fermée ou a expiré. Réessaie l'envoi.";
   }
   if (lower.includes("déjà")) {
-    return "Ce résultat est déjà enregistré.";
+    return "Déjà enregistré.";
   }
   if (
     lower.includes("réseau") ||
@@ -54,6 +57,7 @@ export function SaveResultEffect({
   result,
   metrics,
 }: SaveResultEffectProps) {
+  const router = useRouter();
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">(
     "idle",
   );
@@ -61,6 +65,7 @@ export function SaveResultEffect({
   const [nav, setNav] = useState<ProgressNav | null>(null);
   const attemptKey = useRef<string | null>(null);
   const inFlight = useRef(false);
+  const redirected = useRef(false);
 
   const resolveNav = useCallback(async () => {
     try {
@@ -73,6 +78,8 @@ export function SaveResultEffect({
           code: progress.session.code,
           nextExercise: progress.nextExercise,
           allDone: progress.allDone,
+          completedCount: progress.completedCount,
+          totalCount: progress.totalCount,
         });
         return;
       }
@@ -87,6 +94,8 @@ export function SaveResultEffect({
       code: stored.code,
       nextExercise: remaining[0] ?? null,
       allDone: remaining.length === 0,
+      completedCount: stored.exercises.length - remaining.length,
+      totalCount: stored.exercises.length,
     });
   }, [sessionPlayerId, testSlug]);
 
@@ -110,26 +119,18 @@ export function SaveResultEffect({
         metrics,
       });
       setStatus("saved");
-      setMessage("Résultat envoyé à l'entraîneur.");
+      setMessage("Enregistré. Passage à la suite…");
       await resolveNav();
     } catch (error) {
       const raw = error instanceof Error ? error.message : "Erreur";
       if (raw.toLowerCase().includes("déjà")) {
         setStatus("saved");
-        setMessage("Résultat déjà enregistré.");
+        setMessage("Déjà enregistré. Passage à la suite…");
         await resolveNav();
         return;
       }
       setStatus("error");
       setMessage(friendlySaveError(raw));
-      const stored = loadPlayerSession();
-      if (stored) {
-        setNav({
-          code: stored.code,
-          nextExercise: null,
-          allDone: false,
-        });
-      }
     } finally {
       inFlight.current = false;
     }
@@ -143,61 +144,61 @@ export function SaveResultEffect({
     void save();
   }, [result, save, sessionPlayerId, testSlug]);
 
+  // Auto-advance — player never picks the next exercise.
+  useEffect(() => {
+    if (status !== "saved" || !nav || redirected.current) return;
+    redirected.current = true;
+    const timer = window.setTimeout(() => {
+      if (nav.allDone || !nav.nextExercise) {
+        router.replace(`/play/${nav.code}?done=1`);
+      } else {
+        router.replace(`/play/${nav.code}/${nav.nextExercise}`);
+      }
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [nav, router, status]);
+
   if (status === "idle") return null;
 
-  const nextTest = nav?.nextExercise
-    ? TESTS.find((test) => test.slug === nav.nextExercise)
-    : null;
-
   return (
-    <div className="flex flex-col gap-3">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-surface px-5 py-8 text-center"
+    >
+      {status === "saving" ? (
+        <Loader2 className="size-12 animate-spin text-brand" aria-hidden />
+      ) : status === "saved" ? (
+        <CheckCircle2 className="size-12 text-brand" aria-hidden />
+      ) : null}
+
       <p
-        className={`rounded-xl border px-3 py-2 text-sm ${
-          status === "error"
-            ? "border-danger/40 text-danger"
-            : status === "saved"
-              ? "border-brand/40 text-brand"
-              : "border-border text-muted"
+        className={`text-sm ${
+          status === "error" ? "text-danger" : "text-muted"
         }`}
       >
-        {status === "saving" ? "Envoi du résultat…" : message}
+        {status === "saving" ? "Envoi en cours…" : message}
       </p>
+
+      {status === "saved" && nav ? (
+        <p className="text-xs uppercase tracking-[0.18em] text-brand">
+          {nav.allDone
+            ? "Session terminée"
+            : `Exercice ${nav.completedCount} / ${nav.totalCount}`}
+        </p>
+      ) : null}
 
       {status === "error" ? (
         <Button
           onClick={() => {
             attemptKey.current = null;
+            redirected.current = false;
             void save();
           }}
         >
-          Réessayer l&apos;envoi
+          Réessayer
         </Button>
       ) : null}
-
-      {nav && status !== "saving" && (
-        <div className="flex flex-col gap-2 sm:flex-row">
-          {status === "saved" && nav.nextExercise && !nav.allDone ? (
-            <Link
-              href={`/play/${nav.code}/${nav.nextExercise}`}
-              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full bg-brand px-6 font-semibold text-white"
-            >
-              Exercice suivant
-              {nextTest ? ` : ${nextTest.name}` : ""}
-            </Link>
-          ) : null}
-          {status === "saved" && nav.allDone ? (
-            <p className="flex-1 rounded-xl border border-brand/40 bg-brand-soft px-3 py-3 text-center text-sm text-brand">
-              Tous les exercices sont terminés. Bravo !
-            </p>
-          ) : null}
-          <Link
-            href={`/play/${nav.code}`}
-            className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full border border-border bg-surface px-6 font-semibold"
-          >
-            Retour à la session
-          </Link>
-        </div>
-      )}
-    </div>
+    </motion.div>
   );
 }

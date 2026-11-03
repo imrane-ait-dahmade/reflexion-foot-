@@ -9,7 +9,7 @@ import {
 import type { TestSlug } from "@/lib/db/types";
 import { generateSessionCode } from "./code";
 import { SESSION_DURATION_MS, SESSION_SUBMIT_GRACE_MS } from "./config";
-import { pickRandomExercises } from "./exercises";
+import { pickRandomExercises, shuffleSlugs } from "./exercises";
 
 type SessionRow = typeof trainingSessions.$inferSelect;
 
@@ -60,10 +60,12 @@ export async function createActiveSession(input: CreateSessionInput) {
   const db = getDb();
   const code = await createUniqueCode();
   const exerciseCount = Math.min(Math.max(input.exerciseCount ?? 2, 1), 4);
-  const slugs =
+  // Coach picks which tests; play order is always shuffled for the player.
+  const slugs = shuffleSlugs(
     input.testSlugs && input.testSlugs.length > 0
-      ? input.testSlugs
-      : pickRandomExercises(exerciseCount);
+      ? [...new Set(input.testSlugs)]
+      : pickRandomExercises(exerciseCount),
+  );
 
   const startsAt = new Date();
   const endsAt = new Date(startsAt.getTime() + SESSION_DURATION_MS);
@@ -75,7 +77,7 @@ export async function createActiveSession(input: CreateSessionInput) {
       code,
       title: input.title.trim(),
       status: "active",
-      randomizeExercises: !input.testSlugs?.length,
+      randomizeExercises: true,
       exerciseCount: slugs.length,
       startsAt,
       endsAt,

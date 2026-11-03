@@ -40,6 +40,10 @@ export async function POST(request: Request) {
       | TestSlug[]
       | undefined;
 
+    if (testSlugs && testSlugs.length === 0) {
+      return jsonError("Sélectionne au moins un exercice.");
+    }
+
     const created = await createActiveSession({
       coachId: coachAuth.coach.id,
       title,

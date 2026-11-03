@@ -69,7 +69,8 @@ export function JoinSessionForm() {
         ),
       });
 
-      router.push(`/play/${data.session.code}`);
+      // Hub auto-redirects to the first unfinished exercise in order.
+      router.replace(`/play/${data.session.code}`);
     } catch (err) {
       setError(
         friendlyJoinError(err instanceof Error ? err.message : "Erreur"),

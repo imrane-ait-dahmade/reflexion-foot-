@@ -11,8 +11,8 @@ export default async function PlaySessionPage({ params }: PageProps) {
   const { code } = await params;
   return (
     <TestShell
-      title="Tes exercices"
-      description="Fais les exercices dans l’ordre. La progression et les scores sont envoyés à ton entraîneur."
+      title="Ton parcours"
+      description="Les exercices s'enchaînent automatiquement. Suis les consignes — ton entraîneur reçoit les résultats."
     >
       <PlayerPlayHub code={code.toUpperCase()} />
     </TestShell>
