@@ -168,3 +168,56 @@ export const testResults = pgTable(
     ),
   ],
 );
+
+export const aiReportTypeEnum = pgEnum("ai_report_type", [
+  "test",
+  "session",
+  "progress",
+]);
+
+export const aiReportStatusEnum = pgEnum("ai_report_status", [
+  "pending",
+  "processing",
+  "completed",
+  "failed",
+  "not_eligible",
+]);
+
+export const aiReports = pgTable(
+  "ai_reports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => trainingSessions.id, { onDelete: "cascade" }),
+    sessionPlayerId: uuid("session_player_id")
+      .notNull()
+      .references(() => sessionPlayers.id, { onDelete: "cascade" }),
+    testResultId: uuid("test_result_id").references(() => testResults.id, {
+      onDelete: "cascade",
+    }),
+    reportType: aiReportTypeEnum("report_type").notNull(),
+    status: aiReportStatusEnum("status").notNull().default("pending"),
+    reportData: jsonb("report_data"),
+    model: text("model"),
+    promptVersion: text("prompt_version"),
+    inputTokens: integer("input_tokens").notNull().default(0),
+    outputTokens: integer("output_tokens").notNull().default(0),
+    errorCode: text("error_code"),
+    generatedAt: timestamp("generated_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("ai_reports_test_uidx")
+      .on(table.sessionPlayerId, table.testResultId, table.reportType)
+      .where(sql`${table.testResultId} IS NOT NULL`),
+    uniqueIndex("ai_reports_player_session_uidx")
+      .on(table.sessionPlayerId, table.sessionId, table.reportType)
+      .where(sql`${table.reportType} IN ('session', 'progress')`),
+  ],
+);

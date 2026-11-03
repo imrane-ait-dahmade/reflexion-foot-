@@ -168,9 +168,10 @@ export function FootballVisualScanningTest({
         </p>
         <dl className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <dt className="text-muted">Précision</dt>
+            <dt className="text-muted">Score</dt>
             <dd className="text-2xl font-bold text-brand">
-              {Math.round((correct / attempts.length) * 100)}%
+              {Math.round((correct / attempts.length) * 100)}
+              <span className="text-base text-muted">/100</span>
             </dd>
           </div>
           <div>
@@ -256,6 +257,10 @@ export function FootballVisualScanningTest({
   const remainingMs = Math.max(0, LIMIT_MS - (clock - startedAt.current));
   const elapsedMs = Math.max(0, clock - exerciseStart.current);
   const formatSeconds = (value: number) => (value / 1000).toFixed(1);
+  const correctSoFar = attempts.filter((item) => item.correct).length;
+  const scoreSoFar = Math.round(
+    (correctSoFar / SCANNING_SEQUENCES.length) * 100,
+  );
 
   return (
     <section className="flex flex-col gap-3">
@@ -282,8 +287,18 @@ export function FootballVisualScanningTest({
           </dd>
         </div>
       </dl>
+      <p className="flex items-baseline justify-between rounded-xl border border-border bg-surface px-3 py-2">
+        <span className="text-xs uppercase tracking-wide text-muted">Score</span>
+        <span className="text-xl font-bold tabular-nums text-brand">
+          {scoreSoFar}
+          <span className="text-sm font-semibold text-muted">/100</span>
+        </span>
+      </p>
       <p className="text-xs text-muted">
-        Vert domicile · blanc extérieur · ballon noir et blanc
+        {correctSoFar} bonne{correctSoFar > 1 ? "s" : ""} réponse
+        {correctSoFar > 1 ? "s" : ""} sur {SCANNING_SEQUENCES.length}. Une bonne
+        réponse augmente le score. Vert domicile · blanc extérieur · ballon
+        noir et blanc.
       </p>
       <Pitch
         players={sequence.players}

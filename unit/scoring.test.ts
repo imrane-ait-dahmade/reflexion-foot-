@@ -123,7 +123,10 @@ describe("exercise mechanics", () => {
     expect(items[0].vx).toBeGreaterThan(0);
 
     expect(findPressedItem(items, 32, 32, 9)?.value).toBe(9);
-    clampMovingItems([{ value: 1, x: 999, y: -20, vx: 1, vy: 1 }], area);
+    const escaped: MovingItem = { value: 1, x: 999, y: -20, vx: 1, vy: 1 };
+    clampMovingItems([escaped], area);
+    expect(escaped.x).toBe(156);
+    expect(escaped.y).toBe(0);
   });
 
   it("places peripheral targets away from the centre", () => {

@@ -10,18 +10,6 @@ import {
   type TrackingPlayer,
 } from "@/lib/tests/football-visual-scanning/answers";
 
-function playersNear(ball: { x: number; y: number }) {
-  return [...SCANNING_SEQUENCES]
-    .flatMap((sequence) => sequence.players)
-    .slice(0, 0)
-    .concat([])
-    .concat(
-      SCANNING_SEQUENCES.flatMap((sequence) =>
-        sequence.id ? [] : [],
-      ),
-    ) && ball;
-}
-
 describe("lecture du jeu", () => {
   it("uses nine real frames with a visible ball and separable players", () => {
     expect(SCANNING_SEQUENCES).toHaveLength(9);
@@ -63,11 +51,11 @@ describe("lecture du jeu", () => {
   it("picks the closest player, the nearest opponent, then the freest teammate", () => {
     const ball = { x: 0.5, y: 0.5 };
     const players: TrackingPlayer[] = [
-      { playerId: "9", teamId: "home", x: 0.52, y: 0.5 },
-      { playerId: "2", teamId: "home", x: 0.2, y: 0.5 },
-      { playerId: "4", teamId: "home", x: 0.8, y: 0.2 },
-      { playerId: "18", teamId: "away", x: 0.55, y: 0.5 },
-      { playerId: "21", teamId: "away", x: 0.9, y: 0.8 },
+      { playerId: "9", teamId: "home", x: 0.5, y: 0.5 },
+      { playerId: "2", teamId: "home", x: 0.56, y: 0.5 },
+      { playerId: "4", teamId: "home", x: 0.05, y: 0.05 },
+      { playerId: "18", teamId: "away", x: 0.58, y: 0.5 },
+      { playerId: "21", teamId: "away", x: 0.62, y: 0.55 },
     ];
     const base = {
       id: "synthetic",
@@ -107,5 +95,3 @@ describe("lecture du jeu", () => {
     expect(correctPlayer(sequence).playerId).toBe("3");
   });
 });
-
-void playersNear;

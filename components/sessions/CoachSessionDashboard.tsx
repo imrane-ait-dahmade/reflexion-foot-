@@ -13,6 +13,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { CoachAnalysisPanel } from "@/components/sessions/CoachAnalysisPanel";
 import { CoachSignOutButton } from "@/components/sessions/CoachSignOutButton";
 import { TESTS } from "@/lib/tests/registry";
 import { formatMs, formatPercent } from "@/lib/format";
@@ -339,6 +340,19 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                           </div>
                         </div>
 
+                        <CoachAnalysisPanel
+                          code={code}
+                          sessionPlayerId={player.sessionPlayerId}
+                          playerName={player.displayName}
+                          sessionTitle={data.session.title}
+                          results={selectedResults.map((result) => ({
+                            name:
+                              TESTS.find((test) => test.slug === result.testSlug)
+                                ?.name ?? result.testSlug,
+                            score: result.score,
+                            lines: metricLines(result),
+                          }))}
+                        />
                         {selectedResults.length === 0 ? (
                           <p className="text-sm text-muted">
                             Aucun résultat encore.

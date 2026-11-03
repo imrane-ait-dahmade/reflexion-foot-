@@ -34,10 +34,14 @@ describe("exercise catalogue", () => {
     for (const slug of EXPECTED) {
       expect(schema).toContain(`'${slug}'`);
     }
-    expect(migration).toContain(
+    const sql = migration
+      .split(/\r?\n/)
+      .filter((line) => !line.trim().startsWith("--"))
+      .join("\n");
+    expect(sql).toContain(
       "ADD VALUE IF NOT EXISTS 'football-visual-scanning'",
     );
-    expect(migration.toLowerCase()).not.toMatch(/\bdrop\b|\bdelete\b|\btruncate\b/);
+    expect(sql.toLowerCase()).not.toMatch(/\bdrop\b|\bdelete\b|\btruncate\b/);
   });
 });
 

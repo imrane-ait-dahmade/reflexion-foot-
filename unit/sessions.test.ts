@@ -7,6 +7,7 @@ import {
   getServerPlayerSession,
   loadPlayerSession,
   savePlayerSession,
+  type PlayerSessionState,
 } from "@/lib/sessions/player-session";
 
 const now = new Date("2026-11-03T18:00:00.000Z").getTime();
@@ -76,13 +77,13 @@ describe("player session storage", () => {
     expect(loadPlayerSession()).toBeNull();
     expect(getServerPlayerSession()).toBeNull();
 
-    const state = {
+    const state: PlayerSessionState = {
       code: "K7MQ2P",
       sessionId: "session-1",
       sessionPlayerId: "player-1",
       displayName: "Amine",
       exercises: ["visual-tracking", "football-visual-scanning"],
-    } as const;
+    };
     savePlayerSession(state);
 
     const first = loadPlayerSession();
