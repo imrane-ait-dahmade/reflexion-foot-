@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s · RealScouting Academy",
   },
   description:
-    "Tests visuels et cognitifs pour footballeurs — RealScouting Academy.",
+    "C'est mental, et ça fait travailler les muscles des yeux. Séances visuelles pour footballeurs — RealScouting Academy.",
   icons: {
     icon: [{ url: "/logo-rs.png", type: "image/png" }],
     shortcut: "/logo-rs.png",
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "RealScouting Academy",
     description:
-      "Tests visuels et cognitifs pour footballeurs — RealScouting Academy.",
+      "C'est mental, et ça fait travailler les muscles des yeux. Séances visuelles pour footballeurs — RealScouting Academy.",
     siteName: "RealScouting Academy",
     type: "website",
     images: [{ url: "/logo-rs.png" }],
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     card: "summary",
     title: "RealScouting Academy",
     description:
-      "Tests visuels et cognitifs pour footballeurs — RealScouting Academy.",
+      "C'est mental, et ça fait travailler les muscles des yeux. Séances visuelles pour footballeurs — RealScouting Academy.",
     images: ["/logo-rs.png"],
   },
 };
