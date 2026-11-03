@@ -30,9 +30,9 @@ export const auth = betterAuth({
     minPasswordLength: 8,
   },
   session: {
+    // Disabled: cookie cache can keep the coach "logged in" after sign-out.
     cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60,
+      enabled: false,
     },
   },
   user: {

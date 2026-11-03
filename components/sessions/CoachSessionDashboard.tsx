@@ -13,6 +13,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { CoachSignOutButton } from "@/components/sessions/CoachSignOutButton";
 import { TESTS } from "@/lib/tests/registry";
 import { formatMs, formatPercent } from "@/lib/format";
 
@@ -249,6 +250,7 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
           >
             Mes sessions
           </Link>
+          <CoachSignOutButton />
         </div>
       </div>
 

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import {
   Check,
@@ -12,7 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { authClient } from "@/lib/auth-client";
+import { CoachSignOutButton } from "@/components/sessions/CoachSignOutButton";
 import type { TestSlug } from "@/lib/db/types";
 import { TESTS } from "@/lib/tests/registry";
 
@@ -53,7 +52,6 @@ function formatEndsAt(endsAt: string | null) {
 }
 
 export function CoachCreateSession() {
-  const router = useRouter();
   const [title, setTitle] = useState("Séance vision");
   const [selected, setSelected] = useState<TestSlug[]>([
     "visual-tracking",
@@ -125,12 +123,6 @@ export function CoachCreateSession() {
     }
   };
 
-  const onSignOut = async () => {
-    await authClient.signOut();
-    router.push("/coach/login");
-    router.refresh();
-  };
-
   if (created) {
     return (
       <section className="flex flex-col gap-4 rounded-xl border border-border p-5">
@@ -180,9 +172,7 @@ export function CoachCreateSession() {
   return (
     <section className="flex flex-col gap-6">
       <div className="flex justify-end">
-        <Button variant="secondary" onClick={onSignOut}>
-          Se déconnecter
-        </Button>
+        <CoachSignOutButton />
       </div>
 
       <div className="flex flex-col gap-4 rounded-xl border border-border p-4">
