@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { textDirection } from "@/lib/ai-analysis/permissions";
 import type { LocalizedReport, ReportContent, StoredReport } from "@/lib/ai-analysis/types";
@@ -255,7 +256,9 @@ export function CoachAnalysisPanel({
           })}
         </ul>
       ) : null}
-      {busyId ? <p className="mb-3 text-sm text-muted">{copy.pending}</p> : null}
+      <AnimatePresence>
+        {busyId ? <AnalysisWait key="analysis-wait" label={copy.pending} /> : null}
+      </AnimatePresence>
       {data && data.reports.every((report) => report.reportType !== "test") && !busyId ? (
         <p className="text-sm text-muted">{copy.empty}</p>
       ) : null}
@@ -277,13 +280,13 @@ export function CoachAnalysisPanel({
                 </p>
               </div>
               {content ? (
-                <>
+                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
                   <p className="mt-2 text-sm">{content.executive_summary}</p>
                   <button type="button" className="mt-2 text-sm text-brand" onClick={() => setOpenId(openId === report.id ? null : report.id)}>
                     {openId === report.id ? "—" : copy.summary}
                   </button>
                   {openId === report.id ? <ReportBody content={content} labels={copy} /> : null}
-                </>
+                </motion.div>
               ) : (
                 <p className="mt-2 text-sm text-muted">{reason ?? report.errorCode ?? copy.pending}</p>
               )}
@@ -297,6 +300,37 @@ export function CoachAnalysisPanel({
         </p>
       ) : null}
     </section>
+  );
+}
+
+function AnalysisWait({ label }: { label: string }) {
+  const reduce = useReducedMotion();
+  return (
+    <motion.div
+      role="status"
+      aria-live="polite"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      className="mb-3 flex items-center gap-3 rounded-lg border border-brand/40 bg-brand-soft px-3 py-3"
+    >
+      <span className="relative flex size-8 shrink-0 items-center justify-center" aria-hidden>
+        {[0, 1, 2].map((index) => (
+          <motion.span
+            key={index}
+            className="absolute size-8 rounded-full border border-brand"
+            animate={reduce ? { opacity: 0.45 } : { scale: [0.45, 1], opacity: [0.75, 0] }}
+            transition={{ duration: 1.4, repeat: Infinity, delay: index * 0.32, ease: "easeOut" }}
+          />
+        ))}
+        <motion.span
+          className="size-2.5 rounded-full bg-brand"
+          animate={reduce ? undefined : { scale: [1, 1.3, 1] }}
+          transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </span>
+      <p className="text-sm">{label}</p>
+    </motion.div>
   );
 }
 
