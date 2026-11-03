@@ -1,4 +1,4 @@
-import { and, desc, eq, ne, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import {
   aiReports,
@@ -70,6 +70,17 @@ export function createAnalysisStore(): AnalysisStore {
         .select()
         .from(testResults)
         .where(eq(testResults.sessionPlayerId, sessionPlayerId));
+      const slugs = [...new Set(results.map((item) => item.testSlug))];
+      const cohortRows = slugs.length
+        ? await db
+            .select({ testSlug: testResults.testSlug, score: testResults.score })
+            .from(testResults)
+            .where(inArray(testResults.testSlug, slugs))
+        : [];
+      const cohortScores: Record<string, number[]> = {};
+      for (const row of cohortRows) {
+        (cohortScores[row.testSlug] ??= []).push(row.score);
+      }
 
       const historyPlayers = await db
         .select({
@@ -110,6 +121,7 @@ export function createAnalysisStore(): AnalysisStore {
         displayName: player.displayName,
         assigned: assigned.map((item) => item.testSlug),
         results: results.map(mapResult),
+        cohortScores,
         history,
       };
     },

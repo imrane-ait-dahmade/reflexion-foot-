@@ -30,11 +30,14 @@ const SECTION_LABELS = {
     plan: "Plan pour l'entraîneur",
     limits: "Limites des données",
     retry: "Relancer",
+    generate: "Générer l'analyse",
     exportPdf: "Exporter PDF",
     results: "Résultats des exercices",
-    empty: "Aucun rapport pour le moment.",
+    empty: "Aucune analyse pour le moment. Elle démarre seulement quand vous cliquez.",
+    basis: "Base : résultats de tous les joueurs sur cet exercice, et repères d'études. Pas l'historique du même joueur.",
     off: "L'analyse IA est désactivée.",
-    pending: "Analyse en cours.",
+    loading: "Chargement…",
+    pending: "Analyse en cours. Merci de patienter.",
   },
   ar: {
     summary: "الملخص",
@@ -46,11 +49,14 @@ const SECTION_LABELS = {
     plan: "خطة المدرب",
     limits: "حدود المعطيات",
     retry: "إعادة المحاولة",
+    generate: "إنشاء التحليل",
     exportPdf: "تصدير PDF",
     results: "نتائج التمارين",
-    empty: "لا يوجد تقرير حالياً.",
+    empty: "لا يوجد تحليل حالياً. يبدأ فقط عند الضغط على الزر.",
+    basis: "الأساس: نتائج كل اللاعبين في هذا التمرين، مع مراجع الدراسات. ليس تاريخ اللاعب نفسه.",
     off: "تحليل الذكاء الاصطناعي متوقف.",
-    pending: "التحليل قيد الإنجاز.",
+    loading: "جارٍ التحميل…",
+    pending: "التحليل قيد الإنجاز. يرجى الانتظار.",
   },
 } as const;
 
@@ -72,6 +78,7 @@ function isReport(data: StoredReport["reportData"]): data is ReportContent {
 }
 
 export type PrintableResult = {
+  id: string;
   name: string;
   score: number;
   lines: { label: string; value: string }[];
@@ -94,6 +101,7 @@ export function CoachAnalysisPanel({
   const [data, setData] = useState<ReportsResponse | null>(null);
   const [error, setError] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   const load = useCallback(async () => {
@@ -103,6 +111,7 @@ export function CoachAnalysisPanel({
     const json = await response.json();
     if (!response.ok) throw new Error(json.error ?? "Erreur");
     setData(json);
+    return json as ReportsResponse;
   }, [code, sessionPlayerId]);
 
   useEffect(() => {
@@ -115,25 +124,39 @@ export function CoachAnalysisPanel({
     });
   }, [load]);
 
-  const retry = async (report: StoredReport) => {
+  const generate = async (testResultId: string) => {
     setError("");
-    const response = await fetch(
-      `/api/sessions/${code}/players/${sessionPlayerId}/reports`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          reportType: report.reportType,
-          testResultId: report.testResultId,
-        }),
-      },
-    );
-    const json = await response.json();
-    if (!response.ok) {
-      setError(json.error ?? "Erreur");
-      return;
+    setBusyId(testResultId);
+    try {
+      const response = await fetch(
+        `/api/sessions/${code}/players/${sessionPlayerId}/reports`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reportType: "test",
+            testResultId,
+          }),
+        },
+      );
+      const json = await response.json();
+      if (!response.ok) {
+        setError(json.error ?? "Erreur");
+        return;
+      }
+      const next = await load();
+      const created = next.reports.find(
+        (report) => report.reportType === "test" && report.testResultId === testResultId,
+      );
+      if (created?.status === "completed") setOpenId(created.id);
+      if (created?.status === "failed") {
+        setError(language === "ar" ? "تعذر إنشاء التحليل." : "L'analyse n'a pas pu être créée.");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setBusyId(null);
     }
-    await load();
   };
 
   const copy = SECTION_LABELS[language];
@@ -204,13 +227,40 @@ export function CoachAnalysisPanel({
         </div>
       </div>
       {error ? <p className="text-sm text-danger">{error}</p> : null}
-      {!data ? <p className="text-sm text-muted">{copy.pending}</p> : null}
+      {!data ? <p className="text-sm text-muted">{copy.loading}</p> : null}
       {data && !data.enabled ? <p className="text-sm text-muted">{copy.off}</p> : null}
-      {data && data.reports.length === 0 ? (
+      {data?.enabled ? <p className="mb-3 text-sm text-muted">{copy.basis}</p> : null}
+      {data?.enabled ? (
+        <ul className="mb-3 flex flex-col gap-2">
+          {results.map((result) => {
+            const existing = data.reports.find(
+              (report) => report.reportType === "test" && report.testResultId === result.id,
+            );
+            const ready = existing?.status === "completed";
+            return (
+              <li key={result.id} className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm">{result.name}</p>
+                {ready ? null : (
+                  <button
+                    type="button"
+                    className="rounded-full bg-brand px-3 py-1 text-sm font-semibold text-black disabled:opacity-60"
+                    disabled={busyId !== null}
+                    onClick={() => generate(result.id)}
+                  >
+                    {busyId === result.id ? copy.pending : existing?.status === "failed" ? copy.retry : copy.generate}
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+      {busyId ? <p className="mb-3 text-sm text-muted">{copy.pending}</p> : null}
+      {data && data.reports.every((report) => report.reportType !== "test") && !busyId ? (
         <p className="text-sm text-muted">{copy.empty}</p>
       ) : null}
       <ul className="flex flex-col gap-3">
-        {data?.reports.map((report) => {
+        {data?.reports.filter((report) => report.reportType === "test").map((report) => {
           const content = isReport(report.reportData) ? report.reportData[language] : null;
           const reason =
             report.reportData && "reason" in report.reportData
@@ -237,11 +287,6 @@ export function CoachAnalysisPanel({
               ) : (
                 <p className="mt-2 text-sm text-muted">{reason ?? report.errorCode ?? copy.pending}</p>
               )}
-              {report.status === "failed" && data?.enabled ? (
-                <button type="button" className="mt-2 text-sm text-brand" onClick={() => retry(report)}>
-                  {copy.retry}
-                </button>
-              ) : null}
             </li>
           );
         })}

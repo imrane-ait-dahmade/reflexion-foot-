@@ -1,9 +1,11 @@
+import { cohortPosition } from "./cohort";
 import {
   metricCatalog,
   sharedComparableSlugs,
   snapshotFromResult,
 } from "./metrics-context";
-import type { AnalysisContext, ReportType } from "./types";
+import { studyForSlug } from "./study-references";
+import type { AnalysisContext, AnalysisReference, ReportType } from "./types";
 
 export type PlayerBundle = {
   sessionId: string;
@@ -11,6 +13,7 @@ export type PlayerBundle = {
   displayName: string;
   assigned: string[];
   results: Parameters<typeof snapshotFromResult>[0][];
+  cohortScores?: Record<string, number[]>;
   history: {
     sessionId: string;
     completedAt: string;
@@ -63,6 +66,18 @@ export function buildContext(
 
   const shown = reportType === "test" && focus ? [focus] : currentTests;
   const catalog = metricCatalog([...shown, ...comparisons.flatMap((item) => item.tests)]);
+  const reference: AnalysisReference =
+    reportType === "test" && focus
+      ? {
+          samePlayerHistoryUsed: false,
+          cohort: cohortPosition(
+            focus.testSlug,
+            focus.score,
+            bundle.cohortScores?.[focus.testSlug] ?? [],
+          ),
+          study: studyForSlug(focus.testSlug),
+        }
+      : { samePlayerHistoryUsed: false, cohort: null, study: null };
   return {
     reportType,
     sessionId: bundle.sessionId,
@@ -71,6 +86,7 @@ export function buildContext(
     assignedTests: bundle.assigned,
     currentTests: shown,
     focusTestSlug: focus?.testSlug,
+    reference,
     comparisons: reportType === "progress" ? comparisons : [],
     metricDefinitions: catalog,
     dataQuality: {
@@ -79,7 +95,7 @@ export function buildContext(
       comparableSessions: reportType === "progress" ? comparisons.length + 1 : 1,
       notes: [
         "Les valeurs sont celles déjà enregistrées. Ne pas les recalculer.",
-        "Un seul passage par exercice. L'échantillon est petit.",
+        "La comparaison utilise les résultats de tous les joueurs sur le même exercice, pas l'historique du même joueur.",
         "Ces exercices de navigateur ne sont pas une évaluation clinique ni un test de match validé.",
       ],
     },

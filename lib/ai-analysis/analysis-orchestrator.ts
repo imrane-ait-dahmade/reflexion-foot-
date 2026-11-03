@@ -34,6 +34,14 @@ export type OrchestratorDeps = {
   enabled: boolean;
 };
 
+function failureCode(error: unknown) {
+  const message = error instanceof Error ? error.message : "provider_error";
+  if (message.includes(".optional()")) return "schema_optional_field";
+  if (message === "missing_api_key") return "missing_api_key";
+  const compact = message.replace(/\s+/g, " ").trim().slice(0, 80);
+  return compact || "provider_error";
+}
+
 function key(
   bundle: PlayerBundle,
   reportType: ReportType,
@@ -80,8 +88,8 @@ async function produce(
       outputTokens: generated.outputTokens,
     });
     return "completed" as ReportStatus;
-  } catch {
-    await deps.store.fail(row.id, "provider_error");
+  } catch (error) {
+    await deps.store.fail(row.id, failureCode(error));
     return "failed" as ReportStatus;
   }
 }

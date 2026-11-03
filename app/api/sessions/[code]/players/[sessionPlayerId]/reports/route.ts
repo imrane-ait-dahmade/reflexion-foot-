@@ -1,4 +1,6 @@
 import { jsonError, jsonOk } from "@/lib/api/http";
+
+export const maxDuration = 60;
 import { listPlayerReports } from "@/lib/ai-analysis/analysis-repository";
 import { analysisEnabled } from "@/lib/ai-analysis/config";
 import { allowManualRetry } from "@/lib/ai-analysis/permissions";

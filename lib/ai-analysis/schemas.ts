@@ -7,7 +7,7 @@ const observation = z
     explanation: z.string().min(1).max(900),
     evidence_metric_keys: z.array(metricKey).max(8),
     interpretation: z.enum(["strength", "development", "neutral", "insufficient"]),
-    priority: z.enum(["low", "medium", "high"]).optional(),
+    priority: z.enum(["low", "medium", "high"]).nullable(),
   })
   .strict();
 

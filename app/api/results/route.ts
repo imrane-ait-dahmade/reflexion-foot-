@@ -1,6 +1,4 @@
-import { after } from "next/server";
 import { jsonError, jsonOk } from "@/lib/api/http";
-import { runAnalysisForPlayer } from "@/lib/ai-analysis/run-analysis";
 import { isTestSlug } from "@/lib/sessions/exercises";
 import { submitResult } from "@/lib/sessions/service";
 
@@ -49,19 +47,7 @@ export async function POST(request: Request) {
       return jsonError(result.error, 400);
     }
 
-    const saved = result.result;
-    after(() =>
-      runAnalysisForPlayer(saved.sessionPlayerId, {
-        testResultId: saved.id,
-      }).catch((error: unknown) => {
-        console.error(
-          "ai-analysis",
-          error instanceof Error ? error.message : "failed",
-        );
-      }),
-    );
-
-    return jsonOk({ id: saved.id, score: saved.score }, 201);
+    return jsonOk({ id: result.result.id, score: result.result.score }, 201);
   } catch (error) {
     console.error(error);
     return jsonError("Impossible d'enregistrer le résultat.", 500);

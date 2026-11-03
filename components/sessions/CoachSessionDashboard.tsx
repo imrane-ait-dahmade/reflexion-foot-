@@ -346,6 +346,7 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                           playerName={player.displayName}
                           sessionTitle={data.session.title}
                           results={selectedResults.map((result) => ({
+                            id: result.id,
                             name:
                               TESTS.find((test) => test.slug === result.testSlug)
                                 ?.name ?? result.testSlug,

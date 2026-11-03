@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { playerFinished } from "@/lib/ai-analysis/analysis-context";
+import { buildContext, playerFinished } from "@/lib/ai-analysis/analysis-context";
+import { analysisPayload } from "@/lib/ai-analysis/analysis-prompts";
+import { cohortPosition } from "@/lib/ai-analysis/cohort";
 import {
   orchestratePlayerResult,
   type AnalysisStore,
@@ -53,6 +55,7 @@ function sample(type: ReportType): ReportContent {
     explanation: "Le score enregistré est utilisé tel quel.",
     evidence_metric_keys: ["score"],
     interpretation: "neutral" as const,
+    priority: null,
   };
   const recommendation = {
     title: "Jeu réduit",
@@ -374,6 +377,41 @@ describe("AI analysis orchestration", () => {
     expect(textDirection("ar")).toBe("rtl");
     expect(textDirection("fr")).toBe("ltr");
     resetRetryWindow();
+  });
+
+  it("compares a player with all stored results, not with his own previous score", () => {
+    const player = bundle(
+      "a",
+      ["reaction-time"],
+      [result("r1", "reaction-time", 80)],
+      [{
+        sessionId: "old",
+        completedAt: "2026-10-01T00:00:00.000Z",
+        results: [result("old", "reaction-time", 20)],
+      }],
+    );
+    player.cohortScores = {
+      "reaction-time": [40, 50, 60, 70, 80, 80, 90, 100],
+    };
+    const context = buildContext(player, "test", "r1");
+    expect("eligible" in context).toBe(false);
+    if ("eligible" in context) return;
+    expect(context.comparisons).toEqual([]);
+    expect(context.reference.samePlayerHistoryUsed).toBe(false);
+    expect(context.reference.cohort).toMatchObject({
+      sampleSize: 8,
+      meanScore: 71.3,
+      medianScore: 75,
+      playerScore: 80,
+      percentile: 63,
+      basis: "app_players",
+    });
+    expect(context.reference.study?.publishedValue).toContain("231 ms");
+    const payload = analysisPayload(context);
+    expect(payload.reference.cohort?.basis).toBe("app_players");
+    expect(payload).not.toHaveProperty("history");
+    expect(cohortPosition("reaction-time", 80, [40, 50, 60]).percentile).toBeNull();
+    expect(cohortPosition("reaction-time", 80, [40, 50, 60]).basis).toBe("too_small");
   });
 
   it("does nothing when analysis is disabled", async () => {

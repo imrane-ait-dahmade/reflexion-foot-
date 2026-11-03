@@ -10,7 +10,7 @@ export const REPORT_STATUSES = [
 ] as const;
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
 
-export const PROMPT_VERSION = "2026-11-03.1";
+export const PROMPT_VERSION = "2026-11-03.2";
 
 export type MetricValue = number | string | boolean | null;
 
@@ -35,6 +35,29 @@ export type TestSnapshot = {
   completedAt: string;
 };
 
+export type CohortReference = {
+  testSlug: string;
+  sampleSize: number;
+  meanScore: number | null;
+  medianScore: number | null;
+  playerScore: number;
+  percentile: number | null;
+  basis: "app_players" | "too_small";
+};
+
+export type StudyReference = {
+  construct: string;
+  source: string;
+  publishedValue: string | null;
+  useRule: string;
+};
+
+export type AnalysisReference = {
+  samePlayerHistoryUsed: false;
+  cohort: CohortReference | null;
+  study: StudyReference | null;
+};
+
 export type AnalysisContext = {
   reportType: ReportType;
   sessionId: string;
@@ -43,6 +66,7 @@ export type AnalysisContext = {
   assignedTests: string[];
   currentTests: TestSnapshot[];
   focusTestSlug?: string;
+  reference: AnalysisReference;
   comparisons: {
     sessionId: string;
     completedAt: string;
@@ -63,7 +87,7 @@ export type Observation = {
   explanation: string;
   evidence_metric_keys: string[];
   interpretation: "strength" | "development" | "neutral" | "insufficient";
-  priority?: "low" | "medium" | "high";
+  priority: "low" | "medium" | "high" | null;
 };
 
 export type TrainingRecommendation = {
