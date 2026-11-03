@@ -21,7 +21,7 @@ export function SiteFooter() {
     <footer className="mt-auto border-t border-border">
       <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-4 px-4 py-6 sm:flex-row sm:justify-between">
         <p className="text-center text-xs text-muted sm:text-left">
-          © {new Date().getFullYear()} RealScouting Academy
+          © 2026 RealScouting Academy
         </p>
 
         <nav aria-label="Liens externes" className="flex items-center gap-2">
