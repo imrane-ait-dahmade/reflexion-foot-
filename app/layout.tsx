@@ -14,12 +14,33 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  applicationName: "RealScouting Academy",
   title: {
     default: "RealScouting Academy",
-    template: "%s | RealScouting Academy",
+    template: "%s · RealScouting Academy",
   },
   description:
     "Tests visuels et cognitifs pour footballeurs — RealScouting Academy.",
+  icons: {
+    icon: [{ url: "/logo-rs.png", type: "image/png" }],
+    shortcut: "/logo-rs.png",
+    apple: "/logo-rs.png",
+  },
+  openGraph: {
+    title: "RealScouting Academy",
+    description:
+      "Tests visuels et cognitifs pour footballeurs — RealScouting Academy.",
+    siteName: "RealScouting Academy",
+    type: "website",
+    images: [{ url: "/logo-rs.png" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "RealScouting Academy",
+    description:
+      "Tests visuels et cognitifs pour footballeurs — RealScouting Academy.",
+    images: ["/logo-rs.png"],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
