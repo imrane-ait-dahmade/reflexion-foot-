@@ -3,14 +3,14 @@ import { ReactionTimeTest } from "@/components/tests/ReactionTimeTest";
 import { TestShell } from "@/components/tests/shared/TestShell";
 
 export const metadata: Metadata = {
-  title: "Reaction Time | Football Vision Lab",
+  title: "Temps de réaction | RealScouting Academy",
 };
 
 export default function ReactionTimePage() {
   return (
     <TestShell
-      title="Reaction Time"
-      description="Wait for the circle to appear, then tap it as fast as you can."
+      title="Temps de réaction"
+      description="Attends l'apparition du cercle, puis touche-le le plus vite possible."
     >
       <ReactionTimeTest />
     </TestShell>

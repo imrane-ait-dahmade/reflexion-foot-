@@ -5,8 +5,8 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: "bg-foreground text-background hover:opacity-90",
-  secondary: "border border-foreground/30 hover:bg-foreground/5",
+  primary: "bg-brand text-white hover:bg-brand-hover",
+  secondary: "border border-border bg-surface text-foreground hover:bg-surface-hover",
 };
 
 export function Button({
@@ -18,7 +18,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={`min-h-12 rounded-lg px-6 font-semibold transition disabled:opacity-50 ${VARIANT_CLASSES[variant]} ${className}`}
+      className={`min-h-12 rounded-full px-6 font-semibold transition disabled:opacity-50 ${VARIANT_CLASSES[variant]} ${className}`}
       {...props}
     />
   );

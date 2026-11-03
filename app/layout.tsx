@@ -13,17 +13,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Football Vision Lab",
-  description: "Visual and cognitive tests for football players.",
+  title: {
+    default: "RealScouting Academy",
+    template: "%s | RealScouting Academy",
+  },
+  description:
+    "Tests visuels et cognitifs pour footballeurs — RealScouting Academy.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="fr"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex min-h-full flex-col bg-background text-foreground">
+        {children}
+      </body>
     </html>
   );
 }

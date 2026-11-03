@@ -3,14 +3,14 @@ import { PeripheralVisionTest } from "@/components/tests/PeripheralVisionTest";
 import { TestShell } from "@/components/tests/shared/TestShell";
 
 export const metadata: Metadata = {
-  title: "Peripheral Vision | Football Vision Lab",
+  title: "Vision périphérique | RealScouting Academy",
 };
 
 export default function PeripheralVisionPage() {
   return (
     <TestShell
-      title="Peripheral Vision"
-      description="Keep your eyes on the center. Detect the target appearing in your peripheral vision."
+      title="Vision périphérique"
+      description="Fixe le centre. Détecte la cible qui flash dans ta vision périphérique."
     >
       <PeripheralVisionTest />
     </TestShell>

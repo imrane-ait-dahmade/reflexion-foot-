@@ -121,7 +121,7 @@ export const TrackingArea = memo(function TrackingArea({
     <div
       ref={containerRef}
       onPointerDown={handlePointerDown}
-      className="relative aspect-[3/4] w-full touch-manipulation select-none overflow-hidden rounded-xl border border-foreground/20 bg-foreground/[0.03] sm:aspect-[4/3]"
+      className="relative aspect-[3/4] w-full touch-manipulation select-none overflow-hidden rounded-xl border border-border bg-surface sm:aspect-[4/3]"
     >
       {numbers.map((value, index) => (
         <span
@@ -130,7 +130,7 @@ export const TrackingArea = memo(function TrackingArea({
             elementsRef.current[index] = element;
           }}
           style={{ width: itemSize, height: itemSize }}
-          className={`pointer-events-none absolute left-0 top-0 flex items-center justify-center rounded-full border border-foreground/30 bg-background text-lg font-semibold tabular-nums will-change-transform ${
+          className={`pointer-events-none absolute left-0 top-0 flex items-center justify-center rounded-full border border-border bg-background text-lg font-semibold tabular-nums will-change-transform ${
             running ? "" : "opacity-50"
           }`}
         >

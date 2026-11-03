@@ -1,103 +1,197 @@
 "use client";
 
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
+import { CountdownOverlay } from "@/components/tests/shared/CountdownOverlay";
 import { StatCard } from "@/components/tests/shared/StatCard";
+import { TestInstructions } from "@/components/tests/shared/TestInstructions";
 import { TestResults } from "@/components/tests/shared/TestResults";
+import { useCountdownStart } from "@/hooks/useCountdownStart";
+import { useLeaveGuard } from "@/hooks/useLeaveGuard";
 import { usePeripheralVisionTest } from "@/hooks/usePeripheralVisionTest";
 import { formatMs, formatPercent, formatSeconds } from "@/lib/format";
 import {
   PERIPHERAL_VISION_CONFIG,
   PERIPHERAL_VISION_SCORING,
 } from "@/lib/tests/peripheral-vision/config";
+import { SaveResultEffect } from "@/components/sessions/SaveResultEffect";
 import type { Side } from "@/lib/tests/peripheral-vision/types";
 
 const { durationMs, stimulusVisibleMs } = PERIPHERAL_VISION_CONFIG;
 
 const DISCLAIMER =
-  "This is a performance exercise, not a medical or eye-health assessment.";
+  "Exercice de performance, pas un bilan médical ou ophtalmologique.";
 
 const RESPONSE_BUTTONS: { side: Side; label: string }[] = [
-  { side: "left", label: "LEFT" },
-  { side: "right", label: "RIGHT" },
+  { side: "left", label: "GAUCHE" },
+  { side: "right", label: "DROITE" },
 ];
 
-export function PeripheralVisionTest() {
+type Feedback = "correct" | "wrong" | "missed";
+
+type PeripheralVisionTestProps = {
+  sessionPlayerId?: string;
+};
+
+export function PeripheralVisionTest({
+  sessionPlayerId,
+}: PeripheralVisionTestProps = {}) {
   const test = usePeripheralVisionTest();
+  const countdown = useCountdownStart(test.start);
   const isRunning = test.phase === "running";
+  const sessionMode = Boolean(sessionPlayerId);
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [, startTransition] = useTransition();
+  const prev = useRef({
+    correct: 0,
+    wrong: 0,
+    missed: 0,
+    running: false,
+  });
+
+  useLeaveGuard(isRunning || countdown.isCounting);
+
+  useEffect(() => {
+    if (!isRunning) {
+      prev.current = { correct: 0, wrong: 0, missed: 0, running: false };
+      return;
+    }
+
+    const wasRunning = prev.current.running;
+    let next: Feedback | null = null;
+    if (wasRunning) {
+      if (test.correctAnswers > prev.current.correct) next = "correct";
+      else if (test.wrongAnswers > prev.current.wrong) next = "wrong";
+      else if (test.missed > prev.current.missed) next = "missed";
+    }
+
+    prev.current = {
+      correct: test.correctAnswers,
+      wrong: test.wrongAnswers,
+      missed: test.missed,
+      running: true,
+    };
+
+    if (!next) return;
+
+    startTransition(() => setFeedback(next));
+    const id = window.setTimeout(() => {
+      startTransition(() => setFeedback(null));
+    }, 450);
+    return () => window.clearTimeout(id);
+  }, [isRunning, startTransition, test.correctAnswers, test.wrongAnswers, test.missed]);
 
   if (test.phase === "finished" && test.result) {
     const { result } = test;
     return (
       <div className="flex flex-col gap-3">
+        {sessionPlayerId && (
+          <SaveResultEffect
+            sessionPlayerId={sessionPlayerId}
+            testSlug="peripheral-vision"
+            result={result}
+            metrics={{
+              trials: result.trials,
+              missed: result.missed,
+              wrongAnswers: result.wrongAnswers,
+              leftAccuracy: result.leftAccuracy,
+              rightAccuracy: result.rightAccuracy,
+            }}
+          />
+        )}
         <TestResults
-          title="Peripheral Visual Performance"
+          title="Résultat — Vision périphérique"
           score={`${result.score} / ${PERIPHERAL_VISION_SCORING.maxScore}`}
           onRestart={test.start}
+          sessionMode={sessionMode}
           items={[
-            { label: "Trials", value: String(result.trials) },
-            { label: "Correct", value: String(result.correctAnswers) },
-            { label: "Wrong", value: String(result.wrongAnswers) },
-            { label: "Missed", value: String(result.missed) },
-            { label: "Accuracy", value: formatPercent(result.accuracy) },
+            { label: "Essais", value: String(result.trials) },
+            { label: "Corrects", value: String(result.correctAnswers) },
+            { label: "Faux", value: String(result.wrongAnswers) },
+            { label: "Manqués", value: String(result.missed) },
+            { label: "Précision", value: formatPercent(result.accuracy) },
             {
-              label: "Average reaction",
+              label: "Réaction moyenne",
               value: formatMs(result.averageReactionTime),
             },
             {
-              label: "Best reaction",
+              label: "Meilleure réaction",
               value: formatMs(result.bestReactionTime),
             },
-            { label: "Left accuracy", value: formatPercent(result.leftAccuracy) },
+            { label: "Précision gauche", value: formatPercent(result.leftAccuracy) },
             {
-              label: "Right accuracy",
+              label: "Précision droite",
               value: formatPercent(result.rightAccuracy),
             },
           ]}
         />
-        <p className="text-center text-xs text-foreground/60">{DISCLAIMER}</p>
+        <p className="text-center text-xs text-muted">{DISCLAIMER}</p>
       </div>
     );
   }
 
+  const activeFeedback = isRunning ? feedback : null;
+  const feedbackLabel =
+    activeFeedback === "correct"
+      ? "Bien !"
+      : activeFeedback === "wrong"
+        ? "Mauvais côté"
+        : activeFeedback === "missed"
+          ? "Trop lent"
+          : null;
+
   return (
     <section className="flex flex-col gap-4">
-      {!isRunning && (
-        <div className="rounded-xl border border-foreground/15 p-4 text-sm leading-relaxed text-foreground/80">
-          <p className="mb-2 font-semibold text-foreground">How it works</p>
-          <ul className="list-disc space-y-1 pl-5">
-            <li>Keep looking at the “+” in the center during the whole test.</li>
-            <li>A target flashes for {stimulusVisibleMs} ms near an edge.</li>
-            <li>Answer LEFT or RIGHT before it disappears.</li>
-            <li>The test stops after {durationMs / 1000} seconds.</li>
-          </ul>
-          <p className="mt-2 text-xs text-foreground/60">{DISCLAIMER}</p>
-        </div>
+      {!isRunning && !countdown.isCounting && (
+        <TestInstructions
+          tip="Fixe le « + » au centre. Réponds GAUCHE ou DROITE sans regarder la cible."
+          steps={[
+            "Garde le regard sur le « + » pendant tout le test.",
+            `Une cible flash ${stimulusVisibleMs} ms près d'un bord.`,
+            "Réponds GAUCHE ou DROITE avant qu'elle disparaisse.",
+            `Le test s'arrête après ${durationMs / 1000} secondes.`,
+          ]}
+        />
       )}
 
       <div className="grid grid-cols-4 gap-2">
-        <StatCard label="Time" value={formatSeconds(test.remainingMs)} />
-        <StatCard label="Correct" value={test.correctAnswers} />
-        <StatCard label="Wrong" value={test.wrongAnswers} />
-        <StatCard label="Missed" value={test.missed} />
+        <StatCard label="Temps" value={formatSeconds(test.remainingMs)} />
+        <StatCard label="Corrects" value={test.correctAnswers} />
+        <StatCard label="Faux" value={test.wrongAnswers} />
+        <StatCard label="Manqués" value={test.missed} />
       </div>
 
-      <div className="relative aspect-[4/3] w-full select-none overflow-hidden rounded-xl border border-foreground/20 bg-foreground/[0.03]">
-        <span
-          aria-hidden
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl font-bold leading-none"
-        >
-          +
-        </span>
-        {test.position && (
+      <div className="relative">
+        <CountdownOverlay count={countdown.count} onCancel={countdown.cancel} />
+        <div className="relative aspect-[4/3] w-full select-none overflow-hidden rounded-xl border border-border bg-surface">
           <span
-            data-testid="peripheral-target"
-            className="absolute size-8 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground sm:size-10"
-            style={{
-              left: `${test.position.xPercent}%`,
-              top: `${test.position.yPercent}%`,
-            }}
-          />
-        )}
+            aria-hidden
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl font-bold leading-none"
+          >
+            +
+          </span>
+          {test.position && (
+            <span
+              data-testid="peripheral-target"
+              className="absolute size-8 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand sm:size-10"
+              style={{
+                left: `${test.position.xPercent}%`,
+                top: `${test.position.yPercent}%`,
+              }}
+            />
+          )}
+          {feedbackLabel && (
+            <p
+              className={`absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-sm font-semibold ${
+                activeFeedback === "correct"
+                  ? "bg-brand-soft text-brand"
+                  : "bg-danger/20 text-danger"
+              }`}
+            >
+              {feedbackLabel}
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -105,24 +199,33 @@ export function PeripheralVisionTest() {
           <Button
             key={side}
             variant="secondary"
-            disabled={!isRunning}
+            disabled={!isRunning || countdown.isCounting}
             onPointerDown={(event) => {
               if (event.button !== 0) return;
               event.preventDefault();
               test.respond(side);
             }}
             onClick={(event) => {
-              // detail === 0 means keyboard activation (Enter / Space).
               if (event.detail === 0) test.respond(side);
             }}
-            className="min-h-16 touch-manipulation select-none text-lg"
+            className="min-h-20 touch-manipulation select-none text-xl"
           >
             {label}
           </Button>
         ))}
       </div>
 
-      {!isRunning && <Button onClick={test.start}>Start</Button>}
+      {!isRunning && !countdown.isCounting && (
+        <>
+          <Button onClick={countdown.begin}>Commencer</Button>
+          <p className="text-center text-xs text-muted">{DISCLAIMER}</p>
+        </>
+      )}
+      {isRunning && (
+        <p className="text-center text-xs text-muted">
+          Yeux sur le + · réponds avec les gros boutons
+        </p>
+      )}
     </section>
   );
 }

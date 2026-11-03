@@ -13,9 +13,9 @@ type MemoryGridProps = {
 // No CSS transitions: highlights must disappear instantly, leaving no trace.
 const BASE_CELL =
   "aspect-square min-h-12 touch-manipulation select-none rounded-lg border";
-const IDLE_CELL = "border-foreground/20 bg-foreground/5";
-const HIGHLIGHT_CELL = "border-sky-500 bg-sky-500";
-const SELECTED_CELL = "border-emerald-500 bg-emerald-500";
+const IDLE_CELL = "border-border bg-surface";
+const HIGHLIGHT_CELL = "border-brand bg-brand";
+const SELECTED_CELL = "border-brand bg-brand-soft text-brand";
 
 export function MemoryGrid({
   cellCount,
@@ -44,7 +44,7 @@ export function MemoryGrid({
             // Re-keying restarts the error animation on repeated wrong clicks.
             key={isFlashing ? `${index}-${wrongFlash.id}` : index}
             type="button"
-            aria-label={`Cell ${index + 1}`}
+            aria-label={`Case ${index + 1}`}
             disabled={disabled}
             onPointerDown={(event) => {
               if (event.button !== 0) return;

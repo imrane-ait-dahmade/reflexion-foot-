@@ -3,29 +3,29 @@ import type { TestDefinition } from "./types";
 export const TESTS: TestDefinition[] = [
   {
     slug: "visual-tracking",
-    name: "Dynamic Number Tracking",
+    name: "Suivi de numéros",
     description:
-      "Track one target number while all 30 numbers move around the field.",
+      "Suis le numéro cible pendant que 30 chiffres bougent sur le terrain.",
     href: "/tests/visual-tracking",
   },
   {
     slug: "visual-memory",
-    name: "Visual Memory Test",
+    name: "Mémoire visuelle",
     description:
-      "Memorize 5 highlighted positions on a 5 × 5 grid, then select them.",
+      "Mémorise 5 cases allumées sur une grille 5 × 5, puis retrouve-les.",
     href: "/tests/visual-memory",
   },
   {
     slug: "reaction-time",
-    name: "Reaction Time",
-    description: "Tap the target as soon as it appears, 10 times.",
+    name: "Temps de réaction",
+    description: "Touche la cible dès qu'elle apparaît, 10 fois.",
     href: "/tests/reaction-time",
   },
   {
     slug: "peripheral-vision",
-    name: "Peripheral Vision",
+    name: "Vision périphérique",
     description:
-      "Keep your eyes on the center and report on which side a target flashes.",
+      "Garde les yeux au centre et indique de quel côté la cible flash.",
     href: "/tests/peripheral-vision",
   },
 ];
