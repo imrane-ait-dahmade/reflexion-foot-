@@ -1,18 +1,6 @@
-import type { Metadata } from "next";
-import { VisualMemoryTest } from "@/components/tests/VisualMemoryTest";
-import { TestShell } from "@/components/tests/shared/TestShell";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Mémoire visuelle | RealScouting Academy",
-};
-
+/** Free tests disabled — join a session with a code. */
 export default function VisualMemoryPage() {
-  return (
-    <TestShell
-      title="Mémoire visuelle"
-      description="Mémorise les cases allumées, puis sélectionne-les une fois éteintes."
-    >
-      <VisualMemoryTest />
-    </TestShell>
-  );
+  redirect("/join");
 }

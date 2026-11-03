@@ -60,6 +60,7 @@ const TEST_ICONS: Record<string, typeof Zap> = {
   "visual-memory": Grid3X3,
   "reaction-time": Zap,
   "peripheral-vision": Eye,
+  "football-visual-scanning": Crosshair,
 };
 
 function formatEndsAt(endsAt: string | null) {
@@ -115,6 +116,20 @@ function metricLines(result: ResultRow) {
       label: "Précision droite",
       value: formatPercent(metrics.rightAccuracy),
     });
+  }
+  if (typeof metrics.incorrect === "number") {
+    lines.push({ label: "Incorrects", value: String(metrics.incorrect) });
+  }
+  for (const [key, label] of [
+    ["closest", "Proche du ballon"],
+    ["defender", "Défenseur"],
+    ["free", "Joueur libre"],
+  ] as const) {
+    const hits = metrics[`${key}Correct`];
+    const total = metrics[`${key}Total`];
+    if (typeof hits === "number" && typeof total === "number") {
+      lines.push({ label, value: `${hits}/${total}` });
+    }
   }
 
   return lines;

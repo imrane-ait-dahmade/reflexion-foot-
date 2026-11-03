@@ -1,18 +1,6 @@
-import type { Metadata } from "next";
-import { PeripheralVisionTest } from "@/components/tests/PeripheralVisionTest";
-import { TestShell } from "@/components/tests/shared/TestShell";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Vision périphérique | RealScouting Academy",
-};
-
+/** Free tests disabled — join a session with a code. */
 export default function PeripheralVisionPage() {
-  return (
-    <TestShell
-      title="Vision périphérique"
-      description="Fixe le centre. Détecte la cible qui flash dans ta vision périphérique."
-    >
-      <PeripheralVisionTest />
-    </TestShell>
-  );
+  redirect("/join");
 }

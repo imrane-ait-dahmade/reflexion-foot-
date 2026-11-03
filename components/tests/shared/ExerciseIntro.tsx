@@ -36,6 +36,11 @@ const VISUALS: Record<
     accent: "from-violet-400/20 to-transparent",
     hint: "Fixe le + · gauche ou droite",
   },
+  "football-visual-scanning": {
+    Icon: Crosshair,
+    accent: "from-brand/25 to-transparent",
+    hint: "Lis l'action · touche le joueur",
+  },
 };
 
 type ExerciseIntroProps = {

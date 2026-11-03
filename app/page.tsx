@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardList, UserRound } from "lucide-react";
+import { ClipboardList, Crosshair, UserRound } from "lucide-react";
 import { BrandMark } from "@/components/brand/BrandMark";
 
 export default function Home() {
@@ -29,6 +29,15 @@ export default function Home() {
             <UserRound className="size-8" strokeWidth={1.6} aria-hidden />
           </span>
           <span className="text-lg font-semibold">Joueur</span>
+        </Link>
+        <Link
+          href="/exercises/football-visual-scanning"
+          className="group flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-8 text-center transition hover:border-brand hover:bg-surface-hover sm:col-span-2"
+        >
+          <span className="flex size-16 items-center justify-center rounded-full border border-brand/40 bg-brand-soft text-brand transition group-hover:bg-brand group-hover:text-white">
+            <Crosshair className="size-8" strokeWidth={1.6} aria-hidden />
+          </span>
+          <span className="text-lg font-semibold">Lecture du jeu</span>
         </Link>
       </div>
     </main>

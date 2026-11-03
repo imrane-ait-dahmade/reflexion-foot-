@@ -4,6 +4,11 @@ import { getSessionCookie } from "better-auth/cookies";
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Free tests are disabled — players must join with a session code.
+  if (pathname === "/tests" || pathname.startsWith("/tests/")) {
+    return NextResponse.redirect(new URL("/join", request.url));
+  }
+
   const isCoachArea =
     pathname === "/coach" || pathname.startsWith("/coach/sessions");
   const isPublicCoachAuth =
@@ -20,5 +25,10 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/coach", "/coach/sessions/:path*"],
+  matcher: [
+    "/coach",
+    "/coach/sessions/:path*",
+    "/tests",
+    "/tests/:path*",
+  ],
 };

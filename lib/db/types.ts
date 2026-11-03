@@ -11,7 +11,8 @@ export type TestSlug =
   | "visual-tracking"
   | "visual-memory"
   | "reaction-time"
-  | "peripheral-vision";
+  | "peripheral-vision"
+  | "football-visual-scanning";
 
 export type User = {
   id: string;

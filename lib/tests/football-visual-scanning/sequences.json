@@ -1,0 +1,1326 @@
+{
+  "source": "Metrica Sports sample-data / Sample Game 1",
+  "attribution": "Tracking data © Metrica Sports. https://github.com/metrica-sports/sample-data",
+  "pitch": {
+    "widthMeters": 105,
+    "heightMeters": 68,
+    "origin": "top-left",
+    "range": "0-1"
+  },
+  "sequences": [
+    {
+      "id": "g1-1154",
+      "matchId": "sample-game-1",
+      "challenge": "closest",
+      "period": 1,
+      "frame": 1154,
+      "time": 46.16,
+      "ball": {
+        "x": 0.31238,
+        "y": 0.78099
+      },
+      "players": [
+        {
+          "playerId": "11",
+          "teamId": "home",
+          "x": 0.04809,
+          "y": 0.50273
+        },
+        {
+          "playerId": "1",
+          "teamId": "home",
+          "x": 0.21925,
+          "y": 0.86896
+        },
+        {
+          "playerId": "2",
+          "teamId": "home",
+          "x": 0.22004,
+          "y": 0.69415
+        },
+        {
+          "playerId": "3",
+          "teamId": "home",
+          "x": 0.22169,
+          "y": 0.57993
+        },
+        {
+          "playerId": "4",
+          "teamId": "home",
+          "x": 0.23325,
+          "y": 0.40729
+        },
+        {
+          "playerId": "5",
+          "teamId": "home",
+          "x": 0.32443,
+          "y": 0.89771
+        },
+        {
+          "playerId": "6",
+          "teamId": "home",
+          "x": 0.31235,
+          "y": 0.78046
+        },
+        {
+          "playerId": "7",
+          "teamId": "home",
+          "x": 0.30014,
+          "y": 0.68228
+        },
+        {
+          "playerId": "8",
+          "teamId": "home",
+          "x": 0.32912,
+          "y": 0.40506
+        },
+        {
+          "playerId": "9",
+          "teamId": "home",
+          "x": 0.48363,
+          "y": 0.53986
+        },
+        {
+          "playerId": "10",
+          "teamId": "home",
+          "x": 0.40025,
+          "y": 0.74036
+        },
+        {
+          "playerId": "25",
+          "teamId": "away",
+          "x": 0.77832,
+          "y": 0.51402
+        },
+        {
+          "playerId": "15",
+          "teamId": "away",
+          "x": 0.49799,
+          "y": 0.43923
+        },
+        {
+          "playerId": "16",
+          "teamId": "away",
+          "x": 0.52567,
+          "y": 0.63208
+        },
+        {
+          "playerId": "17",
+          "teamId": "away",
+          "x": 0.43328,
+          "y": 0.79828
+        },
+        {
+          "playerId": "18",
+          "teamId": "away",
+          "x": 0.29444,
+          "y": 0.19231
+        },
+        {
+          "playerId": "19",
+          "teamId": "away",
+          "x": 0.37948,
+          "y": 0.55666
+        },
+        {
+          "playerId": "20",
+          "teamId": "away",
+          "x": 0.36104,
+          "y": 0.77279
+        },
+        {
+          "playerId": "21",
+          "teamId": "away",
+          "x": 0.29644,
+          "y": 0.84793
+        },
+        {
+          "playerId": "22",
+          "teamId": "away",
+          "x": 0.25708,
+          "y": 0.98389
+        },
+        {
+          "playerId": "23",
+          "teamId": "away",
+          "x": 0.26858,
+          "y": 0.66986
+        },
+        {
+          "playerId": "24",
+          "teamId": "away",
+          "x": 0.25592,
+          "y": 0.5893
+        }
+      ]
+    },
+    {
+      "id": "g1-3687",
+      "matchId": "sample-game-1",
+      "challenge": "defender",
+      "period": 1,
+      "frame": 3687,
+      "time": 147.48,
+      "ball": {
+        "x": 0.53011,
+        "y": 0.5056
+      },
+      "players": [
+        {
+          "playerId": "11",
+          "teamId": "home",
+          "x": 0.03526,
+          "y": 0.48369
+        },
+        {
+          "playerId": "1",
+          "teamId": "home",
+          "x": 0.35854,
+          "y": 0.70891
+        },
+        {
+          "playerId": "2",
+          "teamId": "home",
+          "x": 0.37637,
+          "y": 0.5488
+        },
+        {
+          "playerId": "3",
+          "teamId": "home",
+          "x": 0.37561,
+          "y": 0.47222
+        },
+        {
+          "playerId": "4",
+          "teamId": "home",
+          "x": 0.36008,
+          "y": 0.27762
+        },
+        {
+          "playerId": "5",
+          "teamId": "home",
+          "x": 0.44729,
+          "y": 0.77928
+        },
+        {
+          "playerId": "6",
+          "teamId": "home",
+          "x": 0.41941,
+          "y": 0.56045
+        },
+        {
+          "playerId": "7",
+          "teamId": "home",
+          "x": 0.4193,
+          "y": 0.45257
+        },
+        {
+          "playerId": "8",
+          "teamId": "home",
+          "x": 0.44153,
+          "y": 0.26166
+        },
+        {
+          "playerId": "9",
+          "teamId": "home",
+          "x": 0.49461,
+          "y": 0.63535
+        },
+        {
+          "playerId": "10",
+          "teamId": "home",
+          "x": 0.50042,
+          "y": 0.35375
+        },
+        {
+          "playerId": "25",
+          "teamId": "away",
+          "x": 0.90541,
+          "y": 0.48651
+        },
+        {
+          "playerId": "15",
+          "teamId": "away",
+          "x": 0.63756,
+          "y": 0.25886
+        },
+        {
+          "playerId": "16",
+          "teamId": "away",
+          "x": 0.68727,
+          "y": 0.4997
+        },
+        {
+          "playerId": "17",
+          "teamId": "away",
+          "x": 0.66062,
+          "y": 0.76085
+        },
+        {
+          "playerId": "18",
+          "teamId": "away",
+          "x": 0.60791,
+          "y": 0.13698
+        },
+        {
+          "playerId": "19",
+          "teamId": "away",
+          "x": 0.49132,
+          "y": 0.49331
+        },
+        {
+          "playerId": "20",
+          "teamId": "away",
+          "x": 0.58046,
+          "y": 0.68848
+        },
+        {
+          "playerId": "21",
+          "teamId": "away",
+          "x": 0.58361,
+          "y": 0.51366
+        },
+        {
+          "playerId": "22",
+          "teamId": "away",
+          "x": 0.5162,
+          "y": 0.91618
+        },
+        {
+          "playerId": "23",
+          "teamId": "away",
+          "x": 0.493,
+          "y": 0.14087
+        },
+        {
+          "playerId": "24",
+          "teamId": "away",
+          "x": 0.49258,
+          "y": 0.24465
+        }
+      ]
+    },
+    {
+      "id": "g1-7163",
+      "matchId": "sample-game-1",
+      "challenge": "free",
+      "period": 1,
+      "frame": 7163,
+      "time": 286.52,
+      "ball": {
+        "x": 0.05299,
+        "y": 0.01077
+      },
+      "players": [
+        {
+          "playerId": "11",
+          "teamId": "home",
+          "x": 0.01446,
+          "y": 0.42177
+        },
+        {
+          "playerId": "1",
+          "teamId": "home",
+          "x": 0.11381,
+          "y": 0.6669
+        },
+        {
+          "playerId": "2",
+          "teamId": "home",
+          "x": 0.08272,
+          "y": 0.5284
+        },
+        {
+          "playerId": "3",
+          "teamId": "home",
+          "x": 0.08222,
+          "y": 0.35714
+        },
+        {
+          "playerId": "4",
+          "teamId": "home",
+          "x": 0.05469,
+          "y": 0.01027
+        },
+        {
+          "playerId": "5",
+          "teamId": "home",
+          "x": 0.278,
+          "y": 0.69079
+        },
+        {
+          "playerId": "6",
+          "teamId": "home",
+          "x": 0.20397,
+          "y": 0.50347
+        },
+        {
+          "playerId": "7",
+          "teamId": "home",
+          "x": 0.1367,
+          "y": 0.29054
+        },
+        {
+          "playerId": "8",
+          "teamId": "home",
+          "x": 0.31812,
+          "y": 0.22511
+        },
+        {
+          "playerId": "9",
+          "teamId": "home",
+          "x": 0.42932,
+          "y": 0.5921
+        },
+        {
+          "playerId": "10",
+          "teamId": "home",
+          "x": 0.45219,
+          "y": 0.26949
+        },
+        {
+          "playerId": "25",
+          "teamId": "away",
+          "x": 0.78486,
+          "y": 0.47473
+        },
+        {
+          "playerId": "15",
+          "teamId": "away",
+          "x": 0.45985,
+          "y": 0.21997
+        },
+        {
+          "playerId": "16",
+          "teamId": "away",
+          "x": 0.49688,
+          "y": 0.37072
+        },
+        {
+          "playerId": "17",
+          "teamId": "away",
+          "x": 0.4632,
+          "y": 0.59492
+        },
+        {
+          "playerId": "18",
+          "teamId": "away",
+          "x": 0.17457,
+          "y": 0.0793
+        },
+        {
+          "playerId": "19",
+          "teamId": "away",
+          "x": 0.23994,
+          "y": 0.19466
+        },
+        {
+          "playerId": "20",
+          "teamId": "away",
+          "x": 0.36915,
+          "y": 0.45478
+        },
+        {
+          "playerId": "21",
+          "teamId": "away",
+          "x": 0.21626,
+          "y": 0.33288
+        },
+        {
+          "playerId": "22",
+          "teamId": "away",
+          "x": 0.35055,
+          "y": 0.77954
+        },
+        {
+          "playerId": "23",
+          "teamId": "away",
+          "x": 0.0733,
+          "y": 0.44363
+        },
+        {
+          "playerId": "24",
+          "teamId": "away",
+          "x": 0.04138,
+          "y": 0.38659
+        }
+      ]
+    },
+    {
+      "id": "g1-8919",
+      "matchId": "sample-game-1",
+      "challenge": "closest",
+      "period": 1,
+      "frame": 8919,
+      "time": 356.76,
+      "ball": {
+        "x": 0.7127,
+        "y": 0.107
+      },
+      "players": [
+        {
+          "playerId": "11",
+          "teamId": "home",
+          "x": 0.17919,
+          "y": 0.45693
+        },
+        {
+          "playerId": "1",
+          "teamId": "home",
+          "x": 0.48621,
+          "y": 0.55816
+        },
+        {
+          "playerId": "2",
+          "teamId": "home",
+          "x": 0.47198,
+          "y": 0.38606
+        },
+        {
+          "playerId": "3",
+          "teamId": "home",
+          "x": 0.49787,
+          "y": 0.25745
+        },
+        {
+          "playerId": "4",
+          "teamId": "home",
+          "x": 0.54378,
+          "y": 0.10195
+        },
+        {
+          "playerId": "5",
+          "teamId": "home",
+          "x": 0.66877,
+          "y": 0.63644
+        },
+        {
+          "playerId": "6",
+          "teamId": "home",
+          "x": 0.62417,
+          "y": 0.37096
+        },
+        {
+          "playerId": "7",
+          "teamId": "home",
+          "x": 0.65459,
+          "y": 0.16427
+        },
+        {
+          "playerId": "8",
+          "teamId": "home",
+          "x": 0.76562,
+          "y": -0.02889
+        },
+        {
+          "playerId": "9",
+          "teamId": "home",
+          "x": 0.79055,
+          "y": 0.43056
+        },
+        {
+          "playerId": "10",
+          "teamId": "home",
+          "x": 0.7646,
+          "y": 0.14537
+        },
+        {
+          "playerId": "25",
+          "teamId": "away",
+          "x": 0.97381,
+          "y": 0.47674
+        },
+        {
+          "playerId": "15",
+          "teamId": "away",
+          "x": 0.85063,
+          "y": 0.0722
+        },
+        {
+          "playerId": "16",
+          "teamId": "away",
+          "x": 0.84576,
+          "y": 0.31246
+        },
+        {
+          "playerId": "17",
+          "teamId": "away",
+          "x": 0.80543,
+          "y": 0.51517
+        },
+        {
+          "playerId": "18",
+          "teamId": "away",
+          "x": 0.70452,
+          "y": -0.01288
+        },
+        {
+          "playerId": "19",
+          "teamId": "away",
+          "x": 0.71244,
+          "y": 0.1075
+        },
+        {
+          "playerId": "20",
+          "teamId": "away",
+          "x": 0.76912,
+          "y": 0.34716
+        },
+        {
+          "playerId": "21",
+          "teamId": "away",
+          "x": 0.69139,
+          "y": 0.46311
+        },
+        {
+          "playerId": "22",
+          "teamId": "away",
+          "x": 0.68907,
+          "y": 0.70365
+        },
+        {
+          "playerId": "23",
+          "teamId": "away",
+          "x": 0.52714,
+          "y": 0.34408
+        },
+        {
+          "playerId": "24",
+          "teamId": "away",
+          "x": 0.52254,
+          "y": 0.22445
+        }
+      ]
+    },
+    {
+      "id": "g1-13549",
+      "matchId": "sample-game-1",
+      "challenge": "defender",
+      "period": 1,
+      "frame": 13549,
+      "time": 541.96,
+      "ball": {
+        "x": 0.07262,
+        "y": 0.46867
+      },
+      "players": [
+        {
+          "playerId": "11",
+          "teamId": "home",
+          "x": 0.0483,
+          "y": 0.44105
+        },
+        {
+          "playerId": "1",
+          "teamId": "home",
+          "x": 0.42301,
+          "y": 0.80524
+        },
+        {
+          "playerId": "2",
+          "teamId": "home",
+          "x": 0.38071,
+          "y": 0.65254
+        },
+        {
+          "playerId": "3",
+          "teamId": "home",
+          "x": 0.37439,
+          "y": 0.40495
+        },
+        {
+          "playerId": "4",
+          "teamId": "home",
+          "x": 0.42454,
+          "y": 0.24061
+        },
+        {
+          "playerId": "5",
+          "teamId": "home",
+          "x": 0.59003,
+          "y": 0.89746
+        },
+        {
+          "playerId": "6",
+          "teamId": "home",
+          "x": 0.4632,
+          "y": 0.61524
+        },
+        {
+          "playerId": "7",
+          "teamId": "home",
+          "x": 0.45112,
+          "y": 0.44381
+        },
+        {
+          "playerId": "8",
+          "teamId": "home",
+          "x": 0.58024,
+          "y": 0.23543
+        },
+        {
+          "playerId": "9",
+          "teamId": "home",
+          "x": 0.63081,
+          "y": 0.37725
+        },
+        {
+          "playerId": "10",
+          "teamId": "home",
+          "x": 0.58552,
+          "y": 0.6955
+        },
+        {
+          "playerId": "25",
+          "teamId": "away",
+          "x": 0.87399,
+          "y": 0.49334
+        },
+        {
+          "playerId": "15",
+          "teamId": "away",
+          "x": 0.61808,
+          "y": 0.26466
+        },
+        {
+          "playerId": "16",
+          "teamId": "away",
+          "x": 0.62113,
+          "y": 0.42837
+        },
+        {
+          "playerId": "17",
+          "teamId": "away",
+          "x": 0.60933,
+          "y": 0.65242
+        },
+        {
+          "playerId": "18",
+          "teamId": "away",
+          "x": 0.54101,
+          "y": 0.25686
+        },
+        {
+          "playerId": "19",
+          "teamId": "away",
+          "x": 0.56874,
+          "y": 0.34342
+        },
+        {
+          "playerId": "20",
+          "teamId": "away",
+          "x": 0.5302,
+          "y": 0.54624
+        },
+        {
+          "playerId": "21",
+          "teamId": "away",
+          "x": 0.45426,
+          "y": 0.69366
+        },
+        {
+          "playerId": "22",
+          "teamId": "away",
+          "x": 0.59527,
+          "y": 0.80324
+        },
+        {
+          "playerId": "23",
+          "teamId": "away",
+          "x": 0.39921,
+          "y": 0.52421
+        },
+        {
+          "playerId": "24",
+          "teamId": "away",
+          "x": 0.403,
+          "y": 0.34216
+        }
+      ]
+    },
+    {
+      "id": "g1-14854",
+      "matchId": "sample-game-1",
+      "challenge": "free",
+      "period": 1,
+      "frame": 14854,
+      "time": 594.16,
+      "ball": {
+        "x": 0.84854,
+        "y": 0.22813
+      },
+      "players": [
+        {
+          "playerId": "11",
+          "teamId": "home",
+          "x": 0.25289,
+          "y": 0.44448
+        },
+        {
+          "playerId": "1",
+          "teamId": "home",
+          "x": 0.56745,
+          "y": 0.53308
+        },
+        {
+          "playerId": "2",
+          "teamId": "home",
+          "x": 0.48437,
+          "y": 0.37265
+        },
+        {
+          "playerId": "3",
+          "teamId": "home",
+          "x": 0.53332,
+          "y": 0.20828
+        },
+        {
+          "playerId": "4",
+          "teamId": "home",
+          "x": 0.7221,
+          "y": 0.15106
+        },
+        {
+          "playerId": "5",
+          "teamId": "home",
+          "x": 0.77487,
+          "y": 0.60055
+        },
+        {
+          "playerId": "6",
+          "teamId": "home",
+          "x": 0.71338,
+          "y": 0.36786
+        },
+        {
+          "playerId": "7",
+          "teamId": "home",
+          "x": 0.77489,
+          "y": 0.27968
+        },
+        {
+          "playerId": "8",
+          "teamId": "home",
+          "x": 0.87503,
+          "y": 0.28282
+        },
+        {
+          "playerId": "9",
+          "teamId": "home",
+          "x": 0.87711,
+          "y": 0.56418
+        },
+        {
+          "playerId": "10",
+          "teamId": "home",
+          "x": 0.81892,
+          "y": 0.41132
+        },
+        {
+          "playerId": "25",
+          "teamId": "away",
+          "x": 0.99259,
+          "y": 0.458
+        },
+        {
+          "playerId": "15",
+          "teamId": "away",
+          "x": 0.91961,
+          "y": 0.27333
+        },
+        {
+          "playerId": "16",
+          "teamId": "away",
+          "x": 0.89017,
+          "y": 0.33596
+        },
+        {
+          "playerId": "17",
+          "teamId": "away",
+          "x": 0.85392,
+          "y": 0.51076
+        },
+        {
+          "playerId": "18",
+          "teamId": "away",
+          "x": 0.86137,
+          "y": 0.18685
+        },
+        {
+          "playerId": "19",
+          "teamId": "away",
+          "x": 0.77587,
+          "y": 0.33027
+        },
+        {
+          "playerId": "20",
+          "teamId": "away",
+          "x": 0.84524,
+          "y": 0.37446
+        },
+        {
+          "playerId": "21",
+          "teamId": "away",
+          "x": 0.80664,
+          "y": 0.15306
+        },
+        {
+          "playerId": "22",
+          "teamId": "away",
+          "x": 0.8114,
+          "y": 0.65419
+        },
+        {
+          "playerId": "23",
+          "teamId": "away",
+          "x": 0.68239,
+          "y": 0.39234
+        },
+        {
+          "playerId": "24",
+          "teamId": "away",
+          "x": 0.54622,
+          "y": 0.12995
+        }
+      ]
+    },
+    {
+      "id": "g1-15930",
+      "matchId": "sample-game-1",
+      "challenge": "closest",
+      "period": 1,
+      "frame": 15930,
+      "time": 637.2,
+      "ball": {
+        "x": 0.36266,
+        "y": 0.54148
+      },
+      "players": [
+        {
+          "playerId": "11",
+          "teamId": "home",
+          "x": 0.10937,
+          "y": 0.47466
+        },
+        {
+          "playerId": "1",
+          "teamId": "home",
+          "x": 0.3913,
+          "y": 0.87181
+        },
+        {
+          "playerId": "2",
+          "teamId": "home",
+          "x": 0.29919,
+          "y": 0.63514
+        },
+        {
+          "playerId": "3",
+          "teamId": "home",
+          "x": 0.34562,
+          "y": 0.43663
+        },
+        {
+          "playerId": "4",
+          "teamId": "home",
+          "x": 0.37,
+          "y": 0.22268
+        },
+        {
+          "playerId": "5",
+          "teamId": "home",
+          "x": 0.57341,
+          "y": 0.83796
+        },
+        {
+          "playerId": "6",
+          "teamId": "home",
+          "x": 0.41556,
+          "y": 0.55621
+        },
+        {
+          "playerId": "7",
+          "teamId": "home",
+          "x": 0.42519,
+          "y": 0.3928
+        },
+        {
+          "playerId": "8",
+          "teamId": "home",
+          "x": 0.56624,
+          "y": 0.11813
+        },
+        {
+          "playerId": "9",
+          "teamId": "home",
+          "x": 0.56986,
+          "y": 0.6709
+        },
+        {
+          "playerId": "10",
+          "teamId": "home",
+          "x": 0.56254,
+          "y": 0.3194
+        },
+        {
+          "playerId": "25",
+          "teamId": "away",
+          "x": 0.87716,
+          "y": 0.49229
+        },
+        {
+          "playerId": "15",
+          "teamId": "away",
+          "x": 0.60132,
+          "y": 0.3005
+        },
+        {
+          "playerId": "16",
+          "teamId": "away",
+          "x": 0.60164,
+          "y": 0.49117
+        },
+        {
+          "playerId": "17",
+          "teamId": "away",
+          "x": 0.60463,
+          "y": 0.65545
+        },
+        {
+          "playerId": "18",
+          "teamId": "away",
+          "x": 0.5268,
+          "y": 0.23541
+        },
+        {
+          "playerId": "19",
+          "teamId": "away",
+          "x": 0.47269,
+          "y": 0.55807
+        },
+        {
+          "playerId": "20",
+          "teamId": "away",
+          "x": 0.55238,
+          "y": 0.40335
+        },
+        {
+          "playerId": "21",
+          "teamId": "away",
+          "x": 0.4562,
+          "y": 0.41369
+        },
+        {
+          "playerId": "22",
+          "teamId": "away",
+          "x": 0.56694,
+          "y": 0.77177
+        },
+        {
+          "playerId": "23",
+          "teamId": "away",
+          "x": 0.42135,
+          "y": 0.61003
+        },
+        {
+          "playerId": "24",
+          "teamId": "away",
+          "x": 0.39698,
+          "y": 0.43577
+        }
+      ]
+    },
+    {
+      "id": "g1-20667",
+      "matchId": "sample-game-1",
+      "challenge": "defender",
+      "period": 1,
+      "frame": 20667,
+      "time": 826.68,
+      "ball": {
+        "x": 0.50372,
+        "y": 0.85572
+      },
+      "players": [
+        {
+          "playerId": "11",
+          "teamId": "home",
+          "x": 0.09156,
+          "y": 0.49082
+        },
+        {
+          "playerId": "1",
+          "teamId": "home",
+          "x": 0.44489,
+          "y": 0.96598
+        },
+        {
+          "playerId": "2",
+          "teamId": "home",
+          "x": 0.31211,
+          "y": 0.69803
+        },
+        {
+          "playerId": "3",
+          "teamId": "home",
+          "x": 0.32267,
+          "y": 0.43771
+        },
+        {
+          "playerId": "4",
+          "teamId": "home",
+          "x": 0.38879,
+          "y": 0.20235
+        },
+        {
+          "playerId": "5",
+          "teamId": "home",
+          "x": 0.52069,
+          "y": 0.95424
+        },
+        {
+          "playerId": "6",
+          "teamId": "home",
+          "x": 0.43825,
+          "y": 0.66158
+        },
+        {
+          "playerId": "7",
+          "teamId": "home",
+          "x": 0.44924,
+          "y": 0.42966
+        },
+        {
+          "playerId": "8",
+          "teamId": "home",
+          "x": 0.60567,
+          "y": 0.24001
+        },
+        {
+          "playerId": "9",
+          "teamId": "home",
+          "x": 0.52163,
+          "y": 0.69068
+        },
+        {
+          "playerId": "10",
+          "teamId": "home",
+          "x": 0.6442,
+          "y": 0.50531
+        },
+        {
+          "playerId": "25",
+          "teamId": "away",
+          "x": 0.87318,
+          "y": 0.52986
+        },
+        {
+          "playerId": "15",
+          "teamId": "away",
+          "x": 0.63135,
+          "y": 0.36824
+        },
+        {
+          "playerId": "16",
+          "teamId": "away",
+          "x": 0.64892,
+          "y": 0.60697
+        },
+        {
+          "playerId": "17",
+          "teamId": "away",
+          "x": 0.48735,
+          "y": 0.90509
+        },
+        {
+          "playerId": "18",
+          "teamId": "away",
+          "x": 0.53083,
+          "y": 0.22384
+        },
+        {
+          "playerId": "19",
+          "teamId": "away",
+          "x": 0.47945,
+          "y": 0.41114
+        },
+        {
+          "playerId": "20",
+          "teamId": "away",
+          "x": 0.5825,
+          "y": 0.65967
+        },
+        {
+          "playerId": "21",
+          "teamId": "away",
+          "x": 0.53541,
+          "y": 0.36789
+        },
+        {
+          "playerId": "22",
+          "teamId": "away",
+          "x": 0.62289,
+          "y": 0.8619
+        },
+        {
+          "playerId": "23",
+          "teamId": "away",
+          "x": 0.35258,
+          "y": 0.32552
+        },
+        {
+          "playerId": "24",
+          "teamId": "away",
+          "x": 0.47977,
+          "y": 0.63068
+        }
+      ]
+    },
+    {
+      "id": "g1-21390",
+      "matchId": "sample-game-1",
+      "challenge": "free",
+      "period": 1,
+      "frame": 21390,
+      "time": 855.6,
+      "ball": {
+        "x": 0.3699,
+        "y": 0.37343
+      },
+      "players": [
+        {
+          "playerId": "11",
+          "teamId": "home",
+          "x": 0.05279,
+          "y": 0.48602
+        },
+        {
+          "playerId": "1",
+          "teamId": "home",
+          "x": 0.22534,
+          "y": 0.64366
+        },
+        {
+          "playerId": "2",
+          "teamId": "home",
+          "x": 0.23023,
+          "y": 0.50414
+        },
+        {
+          "playerId": "3",
+          "teamId": "home",
+          "x": 0.24235,
+          "y": 0.39418
+        },
+        {
+          "playerId": "4",
+          "teamId": "home",
+          "x": 0.23454,
+          "y": 0.20792
+        },
+        {
+          "playerId": "5",
+          "teamId": "home",
+          "x": 0.31935,
+          "y": 0.62795
+        },
+        {
+          "playerId": "6",
+          "teamId": "home",
+          "x": 0.32789,
+          "y": 0.3889
+        },
+        {
+          "playerId": "7",
+          "teamId": "home",
+          "x": 0.3705,
+          "y": 0.29221
+        },
+        {
+          "playerId": "8",
+          "teamId": "home",
+          "x": 0.33045,
+          "y": 0.18778
+        },
+        {
+          "playerId": "9",
+          "teamId": "home",
+          "x": 0.40825,
+          "y": 0.50998
+        },
+        {
+          "playerId": "10",
+          "teamId": "home",
+          "x": 0.40895,
+          "y": 0.34138
+        },
+        {
+          "playerId": "25",
+          "teamId": "away",
+          "x": 0.79949,
+          "y": 0.47624
+        },
+        {
+          "playerId": "15",
+          "teamId": "away",
+          "x": 0.50188,
+          "y": 0.17631
+        },
+        {
+          "playerId": "16",
+          "teamId": "away",
+          "x": 0.54513,
+          "y": 0.46573
+        },
+        {
+          "playerId": "17",
+          "teamId": "away",
+          "x": 0.50577,
+          "y": 0.72168
+        },
+        {
+          "playerId": "18",
+          "teamId": "away",
+          "x": 0.28567,
+          "y": 0.04627
+        },
+        {
+          "playerId": "19",
+          "teamId": "away",
+          "x": 0.32944,
+          "y": 0.47336
+        },
+        {
+          "playerId": "20",
+          "teamId": "away",
+          "x": 0.36901,
+          "y": 0.37245
+        },
+        {
+          "playerId": "21",
+          "teamId": "away",
+          "x": 0.41643,
+          "y": 0.25958
+        },
+        {
+          "playerId": "22",
+          "teamId": "away",
+          "x": 0.25039,
+          "y": 0.95086
+        },
+        {
+          "playerId": "23",
+          "teamId": "away",
+          "x": 0.30895,
+          "y": 0.28785
+        },
+        {
+          "playerId": "24",
+          "teamId": "away",
+          "x": 0.2535,
+          "y": 0.53981
+        }
+      ]
+    }
+  ]
+}

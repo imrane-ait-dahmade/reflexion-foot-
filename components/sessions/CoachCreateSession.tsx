@@ -37,6 +37,7 @@ const TEST_ICONS: Record<string, LucideIcon> = {
   "visual-memory": Grid3X3,
   "reaction-time": Zap,
   "peripheral-vision": Eye,
+  "football-visual-scanning": Crosshair,
 };
 
 function formatEndsAt(endsAt: string | null) {

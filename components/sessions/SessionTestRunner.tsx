@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { FootballVisualScanningTest } from "@/components/tests/FootballVisualScanningTest";
 import { PeripheralVisionTest } from "@/components/tests/PeripheralVisionTest";
 import { ReactionTimeTest } from "@/components/tests/ReactionTimeTest";
 import { VisualMemoryTest } from "@/components/tests/VisualMemoryTest";
@@ -101,12 +102,16 @@ export function SessionTestRunner({ code, testSlug }: SessionTestRunnerProps) {
   if (!stored) {
     return (
       <section className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-5">
-        <p>Session joueur introuvable sur cet appareil.</p>
+        <p className="font-semibold">Accès réservé</p>
+        <p className="text-sm text-muted">
+          Tu dois entrer le code de session donné par ton entraîneur avant de
+          faire un exercice.
+        </p>
         <Link
           href="/join"
           className="inline-flex min-h-12 items-center justify-center rounded-full bg-brand px-6 font-semibold text-white"
         >
-          Rejoindre
+          Entrer le code
         </Link>
       </section>
     );
@@ -159,5 +164,7 @@ export function SessionTestRunner({ code, testSlug }: SessionTestRunnerProps) {
       return <ReactionTimeTest {...common} />;
     case "peripheral-vision":
       return <PeripheralVisionTest {...common} />;
+    case "football-visual-scanning":
+      return <FootballVisualScanningTest {...common} />;
   }
 }
