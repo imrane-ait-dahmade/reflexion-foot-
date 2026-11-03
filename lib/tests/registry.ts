@@ -33,6 +33,6 @@ export const TESTS: TestDefinition[] = [
     name: "Lecture du jeu",
     description:
       "Sur des actions réelles, repère le joueur proche du ballon, le défenseur et le joueur libre.",
-    href: "/exercises/football-visual-scanning",
+    href: "/join",
   },
 ];

@@ -5,7 +5,12 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Free tests are disabled — players must join with a session code.
-  if (pathname === "/tests" || pathname.startsWith("/tests/")) {
+  if (
+    pathname === "/tests" ||
+    pathname.startsWith("/tests/") ||
+    pathname === "/exercises" ||
+    pathname.startsWith("/exercises/")
+  ) {
     return NextResponse.redirect(new URL("/join", request.url));
   }
 
@@ -30,5 +35,7 @@ export const config = {
     "/coach/sessions/:path*",
     "/tests",
     "/tests/:path*",
+    "/exercises",
+    "/exercises/:path*",
   ],
 };

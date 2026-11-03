@@ -7,8 +7,9 @@ import {
   trainingSessions,
 } from "@/lib/db/drizzle-schema";
 import type { TestSlug } from "@/lib/db/types";
+import { canAcceptResult, isJoinable } from "./access";
 import { generateSessionCode } from "./code";
-import { SESSION_DURATION_MS, SESSION_SUBMIT_GRACE_MS } from "./config";
+import { SESSION_DURATION_MS } from "./config";
 import { pickRandomExercises, shuffleSlugs } from "./exercises";
 
 type SessionRow = typeof trainingSessions.$inferSelect;
@@ -25,13 +26,6 @@ async function ensureSessionNotExpired(session: SessionRow) {
     .where(eq(trainingSessions.id, session.id))
     .returning();
   return closed ?? { ...session, status: "closed" as const };
-}
-
-function isJoinable(session: SessionRow) {
-  return (
-    session.status === "active" &&
-    (!session.endsAt || session.endsAt.getTime() > Date.now())
-  );
 }
 
 async function createUniqueCode() {
@@ -169,19 +163,6 @@ export type SubmitResultInput = {
   durationMs: number;
   metrics?: Record<string, unknown>;
 };
-
-function canAcceptResult(session: SessionRow) {
-  if (session.status === "active") {
-    if (!session.endsAt) return true;
-    return session.endsAt.getTime() + SESSION_SUBMIT_GRACE_MS > Date.now();
-  }
-  if (session.status === "closed") {
-    const closedAt = session.updatedAt?.getTime() ?? session.endsAt?.getTime();
-    if (!closedAt) return true;
-    return closedAt + SESSION_SUBMIT_GRACE_MS > Date.now();
-  }
-  return false;
-}
 
 export async function submitResult(input: SubmitResultInput) {
   const db = getDb();

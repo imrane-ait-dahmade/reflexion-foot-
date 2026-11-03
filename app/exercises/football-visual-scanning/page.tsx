@@ -1,18 +1,6 @@
-import type { Metadata } from "next";
-import { FootballVisualScanningTest } from "@/components/tests/FootballVisualScanningTest";
-import { TestShell } from "@/components/tests/shared/TestShell";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Lecture du jeu",
-};
-
+/** Free play disabled — the coach assigns this exercise in a session. */
 export default function FootballVisualScanningPage() {
-  return (
-    <TestShell
-      title="Lecture du jeu"
-      description="Analyse une action réelle : qui est proche du ballon, qui défend, qui est libre."
-    >
-      <FootballVisualScanningTest />
-    </TestShell>
-  );
+  redirect("/join");
 }
