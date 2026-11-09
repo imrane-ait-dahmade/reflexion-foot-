@@ -29,5 +29,6 @@ export type PeripheralVisionTestResult = TestResult & {
   /** Percentages between 0 and 100. 0 when the side was never shown. */
   leftAccuracy: number;
   rightAccuracy: number;
+  sideStats: Record<Side, SideStats>;
   reactionTimes: number[];
 };

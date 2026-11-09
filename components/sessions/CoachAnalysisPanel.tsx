@@ -81,7 +81,8 @@ function isReport(data: StoredReport["reportData"]): data is ReportContent {
 export type PrintableResult = {
   id: string;
   name: string;
-  score: number;
+  headline: string;
+  note: string;
   lines: { label: string; value: string }[];
 };
 
@@ -184,7 +185,8 @@ export function CoachAnalysisPanel({
     const resultBlocks = results
       .map(
         (result) => `
-          <h3>${escapeHtml(result.name)} — ${result.score}/100</h3>
+          <h3>${escapeHtml(result.name)} — ${escapeHtml(result.headline)}</h3>
+          <p>${escapeHtml(result.note)}</p>
           <ul>${result.lines.map((line) => `<li>${escapeHtml(line.label)} : ${escapeHtml(line.value)}</li>`).join("")}</ul>
         `,
       )

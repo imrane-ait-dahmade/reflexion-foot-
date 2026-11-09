@@ -1,5 +1,5 @@
 import { calculateAccuracy } from "@/lib/tests/scoring";
-import { readChallenge, signChallenge } from "@/lib/tests/challenge-token";
+import { challengeSeed, readChallenge, signChallenge } from "@/lib/tests/challenge-token";
 import { DIGIT_LEVELS, DIGIT_VISIBLE_MS, digitLength } from "./config";
 import { digitSequence, gradeDigitSequence } from "./sequence";
 
@@ -7,6 +7,7 @@ export type DigitToken = {
   kind: "digit-memory";
   sessionPlayerId: string;
   sessionId: string;
+  seed: string;
   level: number;
   phase: "present" | "answer";
   shown: number;
@@ -25,6 +26,7 @@ export function beginDigitAttempt(sessionPlayerId: string, sessionId: string, no
     kind: "digit-memory",
     sessionPlayerId,
     sessionId,
+    seed: challengeSeed(),
     level: 1,
     phase: "present",
     shown: 0,
@@ -42,14 +44,16 @@ export function beginDigitAttempt(sessionPlayerId: string, sessionId: string, no
 
 export function revealNextDigit(signed: string, secret: string, now: number) {
   const token = readChallenge<DigitToken>(signed, secret);
-  if (!token || token.kind !== "digit-memory") return { error: "Jeton invalide." as const };
+  if (!token || token.kind !== "digit-memory" || !token.seed) {
+    return { error: "Jeton invalide." as const };
+  }
   if (token.phase !== "present") return { error: "La séquence est déjà terminée." as const };
   const length = digitLength(token.level);
   if (!length || token.shown >= length) return { error: "Chiffre indisponible." as const };
   if (token.shown > 0 && now < token.lastDigitAt + DIGIT_VISIBLE_MS) {
     return { error: "Trop tôt." as const };
   }
-  const digit = digitSequence(token.sessionId, token.level, secret)[token.shown];
+  const digit = digitSequence(token.seed, token.level, secret)[token.shown];
   const shown = token.shown + 1;
   const next: DigitToken = {
     ...token,
@@ -73,12 +77,14 @@ export function answerDigitSequence(
   now: number,
 ) {
   const token = readChallenge<DigitToken>(signed, secret);
-  if (!token || token.kind !== "digit-memory") return { error: "Jeton invalide." as const };
+  if (!token || token.kind !== "digit-memory" || !token.seed) {
+    return { error: "Jeton invalide." as const };
+  }
   if (token.phase !== "answer") return { error: "La séquence n'est pas terminée." as const };
   if (!answer.every((digit) => Number.isInteger(digit) && digit >= 0 && digit <= 9)) {
     return { error: "Réponse invalide." as const };
   }
-  const expected = digitSequence(token.sessionId, token.level, secret);
+  const expected = digitSequence(token.seed, token.level, secret);
   const grade = gradeDigitSequence(expected, answer);
   const next: DigitToken = {
     ...token,

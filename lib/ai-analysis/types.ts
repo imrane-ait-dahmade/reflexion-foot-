@@ -10,7 +10,7 @@ export const REPORT_STATUSES = [
 ] as const;
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
 
-export const PROMPT_VERSION = "2026-11-03.2";
+export const PROMPT_VERSION = "2026-11-09.3";
 
 export type MetricValue = number | string | boolean | null;
 

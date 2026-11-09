@@ -47,6 +47,7 @@ export function VisualTrackingTest({
           metrics={{
             targetsFound: test.result.targetsFound,
             wrongClicks: test.result.errors,
+            reactionTimes: test.result.reactionTimes,
           }}
         />
       );

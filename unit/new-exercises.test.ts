@@ -23,12 +23,12 @@ import {
 import {
   beginDualAttempt,
   gradeDualRound,
+  type DualToken,
 } from "@/lib/tests/dual-target-tracking/progress";
 import { isTestSlug } from "@/lib/sessions/exercises";
 
 const SECRET = "test-secret";
 const SESSION = "11111111-1111-4111-8111-111111111111";
-const OTHER = "22222222-2222-4222-8222-222222222222";
 
 function playDigitLevel(token: string, answer: number[] | "correct", now: number) {
   let current = token;
@@ -49,22 +49,25 @@ function playDigitLevel(token: string, answer: number[] | "correct", now: number
 describe("digit memory", () => {
   it("builds a valid sequence whose length matches the level", () => {
     DIGIT_LEVELS.forEach((length, index) => {
-      const digits = digitSequence(SESSION, index + 1, SECRET);
+      const digits = digitSequence("seed-a", index + 1, SECRET);
       expect(digits).toHaveLength(length);
       expect(digits.every((digit) => digit >= 0 && digit <= 9)).toBe(true);
     });
-    expect(sequencesDifferAcrossLevels(SESSION, SECRET)).toBe(true);
+    expect(sequencesDifferAcrossLevels("seed-a", SECRET)).toBe(true);
+    expect(digitSequence("seed-a", 8, SECRET)).not.toEqual(digitSequence("seed-b", 8, SECRET));
   });
 
-  it("gives every player in the session the same sequence and keeps it out of the token", () => {
+  it("draws a new sequence for each attempt and keeps it out of the token", () => {
     const first = beginDigitAttempt("player-a", SESSION, 1_000, SECRET);
-    const second = beginDigitAttempt("player-b", SESSION, 2_000, SECRET);
+    const second = beginDigitAttempt("player-b", SESSION, 1_000, SECRET);
+    const firstToken = readChallenge<DigitToken>(first, SECRET);
+    const secondToken = readChallenge<DigitToken>(second, SECRET);
+    expect(firstToken?.seed).toBeTruthy();
+    expect(firstToken?.seed).not.toBe(secondToken?.seed);
     const firstPlay = playDigitLevel(first, "correct", 1_000);
-    const secondPlay = playDigitLevel(second, "correct", 2_000);
-    expect(firstPlay.revealed).toEqual(secondPlay.revealed);
-    expect(digitSequence(SESSION, 1, SECRET)).not.toEqual(digitSequence(OTHER, 1, SECRET));
-    const decoded = readChallenge<DigitToken>(first, SECRET);
-    expect(decoded && "sequence" in decoded).toBe(false);
+    expect(firstPlay.revealed).toEqual(digitSequence(firstToken!.seed, 1, SECRET));
+    expect(JSON.stringify(firstToken)).not.toContain(firstPlay.revealed.join(","));
+    expect(firstToken && "sequence" in firstToken).toBe(false);
   });
 
   it("accepts the exact sequence and rejects a position error", () => {
@@ -115,14 +118,16 @@ describe("dual target tracking", () => {
   it("creates the configured objects and exactly two stable targets", () => {
     DUAL_LEVELS.forEach((level, index) => {
       const orbs = createOrbs(SESSION, index + 1);
-      const targets = targetPair(SESSION, index + 1, SECRET);
+      const targets = targetPair("seed-a", index + 1, SECRET);
       expect(orbs).toHaveLength(level.objects);
       expect(new Set(orbs.map((orb) => orb.id)).size).toBe(level.objects);
       expect(targets).toHaveLength(2);
       expect(targets[0]).not.toBe(targets[1]);
-      expect(targetPair(SESSION, index + 1, SECRET)).toEqual(targets);
+      expect(targetPair("seed-a", index + 1, SECRET)).toEqual(targets);
     });
-    expect(targetPair(SESSION, 1, SECRET)).not.toEqual(targetPair(OTHER, 1, SECRET));
+    const pairs = (seed: string) =>
+      DUAL_LEVELS.map((_, index) => targetPair(seed, index + 1, SECRET).join(",")).join("|");
+    expect(pairs("seed-a")).not.toBe(pairs("seed-b"));
   });
 
   it("keeps identities and positions inside the area while moving", () => {
@@ -139,7 +144,7 @@ describe("dual target tracking", () => {
   });
 
   it("scores both, one, or neither target and rejects a duplicate", () => {
-    const targets = targetPair(SESSION, 1, SECRET);
+    const targets = targetPair("seed-a", 1, SECRET);
     expect(gradeTargetSelection(targets, [...targets]).both).toBe(true);
     const partial = gradeTargetSelection(targets, [targets[0], 99]);
     expect(partial).toMatchObject({
@@ -158,12 +163,14 @@ describe("dual target tracking", () => {
     );
   });
 
-  it("lets two players answer the same targets independently", () => {
+  it("draws new targets for each attempt and scores each player alone", () => {
     const first = beginDualAttempt("player-a", SESSION, 10_000, SECRET);
     const second = beginDualAttempt("player-b", SESSION, 10_000, SECRET);
-    expect(first.challenge?.highlightIds).toEqual(second.challenge?.highlightIds);
+    const firstToken = readChallenge<DualToken>(first.token, SECRET);
+    const secondToken = readChallenge<DualToken>(second.token, SECRET);
+    expect(firstToken?.seed).not.toBe(secondToken?.seed);
     const targets: number[] = first.challenge?.highlightIds ?? [];
-    const wrong = [0, 1, 2, 3].filter((id) => !targets.includes(id)).slice(0, 2);
+    const wrong = [0, 1, 2, 3].filter((id) => !second.challenge?.highlightIds.includes(id)).slice(0, 2);
     const readyAt = 10_000 + 2000 + DUAL_LEVELS[0].durationMs;
     const good = gradeDualRound(first.token, targets, SECRET, readyAt);
     const bad = gradeDualRound(second.token, wrong, SECRET, readyAt);

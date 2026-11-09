@@ -250,6 +250,7 @@ export function buildPeripheralVisionResult(params: {
     accuracy,
     leftAccuracy: sideAccuracy(sideStats.left),
     rightAccuracy: sideAccuracy(sideStats.right),
+    sideStats,
     ...reactionStats,
     reactionTimes,
     duration: Math.round(duration),

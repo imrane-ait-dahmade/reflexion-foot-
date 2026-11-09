@@ -1,7 +1,7 @@
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { isTestSlug } from "@/lib/sessions/exercises";
 import { submitResult } from "@/lib/sessions/service";
-import { sequentialSubmissionError } from "@/lib/tests/sequential-visual-search/result";
+import { authorizeResult } from "@/lib/tests/results/authorize";
 
 export async function POST(request: Request) {
   try {
@@ -31,33 +31,23 @@ export async function POST(request: Request) {
       return jsonError("Champs de score incomplets.");
     }
 
-    if (body.testSlug === "sequential-visual-search") {
-      const invalid = sequentialSubmissionError({
-        score: body.score,
-        accuracy: body.accuracy,
-        correctAnswers: body.correctAnswers,
-        errors: body.errors,
-        durationMs: body.durationMs ?? 0,
-        metrics: body.metrics,
-      });
-      if (invalid) return jsonError(invalid);
-    }
-
-    if (body.testSlug === "digit-memory" || body.testSlug === "dual-target-tracking") {
-      return jsonError("Ce résultat est validé par le serveur de l'exercice.");
-    }
-
-    const result = await submitResult({
-      sessionPlayerId: body.sessionPlayerId,
+    const authorized = authorizeResult({
       testSlug: body.testSlug,
       score: body.score,
       accuracy: body.accuracy,
       correctAnswers: body.correctAnswers,
       errors: body.errors,
-      averageReactionMs: body.averageReactionMs ?? 0,
-      bestReactionMs: body.bestReactionMs ?? 0,
-      durationMs: body.durationMs ?? 0,
+      averageReactionMs: body.averageReactionMs,
+      bestReactionMs: body.bestReactionMs,
+      durationMs: body.durationMs,
       metrics: body.metrics,
+    });
+    if (!authorized.ok) return jsonError(authorized.error);
+
+    const result = await submitResult({
+      sessionPlayerId: body.sessionPlayerId,
+      testSlug: body.testSlug,
+      ...authorized.result,
     });
 
     if (!result.ok) {

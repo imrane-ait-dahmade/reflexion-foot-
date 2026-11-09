@@ -60,6 +60,8 @@ export function VisualMemoryTest({
           metrics={{
             roundsCompleted: test.result.roundsCompleted,
             correctCells: test.result.correctCells,
+            wrongClicks: test.result.errors,
+            responseTimes: test.result.responseTimes,
           }}
         />
       );

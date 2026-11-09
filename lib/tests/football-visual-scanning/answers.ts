@@ -26,6 +26,8 @@ export type ScanningSequence = {
 
 export const SCANNING_ATTRIBUTION = data.attribution;
 export const SCANNING_SEQUENCES = data.sequences as ScanningSequence[];
+/** A question with no answer is recorded at this limit. */
+export const SCANNING_LIMIT_MS = 12_000;
 
 export function distanceMeters(
   a: { x: number; y: number },

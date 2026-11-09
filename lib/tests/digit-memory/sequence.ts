@@ -1,22 +1,22 @@
 import { unitFloat } from "@/lib/tests/challenge-token";
 import { DIGIT_LEVELS, digitLength } from "./config";
 
-/** Same session and level always reproduce the same digits. The list stays on the server. */
-export function digitSequence(sessionId: string, level: number, secret: string) {
+/** Digits for one attempt. A new seed draws a new sequence. The list stays on the server. */
+export function digitSequence(seed: string, level: number, secret: string) {
   const length = digitLength(level);
   if (!length) throw new Error("Niveau inconnu.");
   const digits: number[] = [];
   for (let index = 0; index < length; index += 1) {
-    const unit = unitFloat(secret, `${sessionId}:digit-memory:${level}:${index}`);
+    const unit = unitFloat(secret, `${seed}:digit-memory:${level}:${index}`);
     digits.push(Math.floor(unit * 10));
   }
   return digits;
 }
 
-export function sequencesDifferAcrossLevels(sessionId: string, secret: string) {
+export function sequencesDifferAcrossLevels(seed: string, secret: string) {
   const seen = new Set<string>();
   for (let level = 1; level <= DIGIT_LEVELS.length; level += 1) {
-    seen.add(digitSequence(sessionId, level, secret).join(""));
+    seen.add(digitSequence(seed, level, secret).join(""));
   }
   return seen.size === DIGIT_LEVELS.length;
 }

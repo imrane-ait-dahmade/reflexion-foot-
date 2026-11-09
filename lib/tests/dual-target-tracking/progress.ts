@@ -1,5 +1,5 @@
 import { calculateAccuracy } from "@/lib/tests/scoring";
-import { readChallenge, signChallenge } from "@/lib/tests/challenge-token";
+import { challengeSeed, readChallenge, signChallenge } from "@/lib/tests/challenge-token";
 import { DUAL_HIGHLIGHT_MS, DUAL_LEVELS, dualLevel } from "./config";
 import { gradeTargetSelection, targetPair } from "./motion";
 
@@ -7,6 +7,7 @@ export type DualToken = {
   kind: "dual-target-tracking";
   sessionPlayerId: string;
   sessionId: string;
+  seed: string;
   level: number;
   movementReadyAt: number;
   correctTargets: number;
@@ -24,6 +25,7 @@ export function beginDualAttempt(sessionPlayerId: string, sessionId: string, now
     kind: "dual-target-tracking",
     sessionPlayerId,
     sessionId,
+    seed: challengeSeed(),
     level: 1,
     movementReadyAt: now + DUAL_HIGHLIGHT_MS,
     correctTargets: 0,
@@ -50,7 +52,7 @@ export function challengeView(token: DualToken, secret: string) {
     objects: config.objects,
     durationMs: config.durationMs,
     speed: config.speed,
-    highlightIds: targetPair(token.sessionId, token.level, secret),
+    highlightIds: targetPair(token.seed, token.level, secret),
   };
 }
 
@@ -61,7 +63,7 @@ export function gradeDualRound(
   now: number,
 ) {
   const token = readChallenge<DualToken>(signed, secret);
-  if (!token || token.kind !== "dual-target-tracking") {
+  if (!token || token.kind !== "dual-target-tracking" || !token.seed) {
     return { error: "Jeton invalide." as const };
   }
   const config = dualLevel(token.level);
@@ -72,7 +74,7 @@ export function gradeDualRound(
   if (selected.some((id) => id < 0 || id >= config.objects)) {
     return { error: "Sélection invalide." as const };
   }
-  const targets = targetPair(token.sessionId, token.level, secret);
+  const targets = targetPair(token.seed, token.level, secret);
   const grade = gradeTargetSelection(targets, selected);
   if ("error" in grade) return { error: grade.error };
   const identificationMs = Math.max(0, now - (token.movementReadyAt + config.durationMs));

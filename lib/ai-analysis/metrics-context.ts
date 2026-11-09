@@ -4,8 +4,9 @@ import type { MetricValue, TestSnapshot } from "./types";
 
 const DEFINITIONS: Record<string, { meaning: string; unit: string }> = {
   score: {
-    meaning: "Score déjà calculé par l'application, de 0 à 100. Ne pas le recalculer.",
-    unit: "points",
+    meaning:
+      "Valeur enregistrée dans la colonne score. Son unité dépend de l'exercice : longueur de suite pour la mémoire des chiffres, précision arrondie pour la recherche 1–50 et les deux cibles, note sur 100 pour les cinq premiers exercices. Ne pas la recalculer et ne pas la comparer entre exercices.",
+    unit: "recorded",
   },
   accuracy: {
     meaning: "Pourcentage de réponses correctes déjà calculé.",
@@ -59,6 +60,10 @@ const DEFINITIONS: Record<string, { meaning: string; unit: string }> = {
   identificationTimeMs: { meaning: "Temps déjà mesuré entre la fin du mouvement et la validation.", unit: "ms" },
   movementDurationMs: { meaning: "Durée totale des phases de mouvement.", unit: "ms" },
   difficultyLevelReached: { meaning: "Plus haut niveau où les deux cibles ont été retrouvées.", unit: "level" },
+  leftTrials: { meaning: "Stimuli présentés à gauche.", unit: "count" },
+  leftCorrect: { meaning: "Stimuli de gauche correctement détectés.", unit: "count" },
+  rightTrials: { meaning: "Stimuli présentés à droite.", unit: "count" },
+  rightCorrect: { meaning: "Stimuli de droite correctement détectés.", unit: "count" },
 };
 
 export function isCompleteResult(result: {
@@ -82,9 +87,17 @@ export function isCompleteResult(result: {
 export function numericMetrics(metrics: Record<string, unknown>): Record<string, MetricValue> {
   const clean: Record<string, MetricValue> = {};
   for (const [key, value] of Object.entries(metrics)) {
-    if (!DEFINITIONS[key]) continue;
+    if (!DEFINITIONS[key] && !/^questionTime\d+$/.test(key)) continue;
     if (typeof value === "number" && Number.isFinite(value)) clean[key] = value;
     else if (typeof value === "string" || typeof value === "boolean") clean[key] = value;
+  }
+  const times = metrics.questionTimes;
+  if (Array.isArray(times)) {
+    times.forEach((value, index) => {
+      if (typeof value === "number" && Number.isFinite(value)) {
+        clean[`questionTime${index + 1}`] = value;
+      }
+    });
   }
   return clean;
 }
@@ -133,11 +146,21 @@ export function metricCatalog(snapshots: TestSnapshot[]) {
   for (const snapshot of snapshots) {
     for (const key of Object.keys(snapshot.metrics)) keys.add(key);
   }
-  return [...keys].map((key) => ({
-    key,
-    meaning: DEFINITIONS[key]?.meaning ?? "Indicateur enregistré par l'application.",
-    unit: DEFINITIONS[key]?.unit ?? "value",
-  }));
+  return [...keys].map((key) => {
+    const question = /^questionTime(\d+)$/.exec(key);
+    if (question) {
+      return {
+        key,
+        meaning: `Temps déjà mesuré pour la situation ${question[1]} sur 9. Une absence de réponse vaut 12 secondes. Ce temps n'est pas forcément celui d'une bonne réponse.`,
+        unit: "ms",
+      };
+    }
+    return {
+      key,
+      meaning: DEFINITIONS[key]?.meaning ?? "Indicateur enregistré par l'application.",
+      unit: DEFINITIONS[key]?.unit ?? "value",
+    };
+  });
 }
 
 export function sameScoringRules(current: TestSnapshot, previous: TestSnapshot) {

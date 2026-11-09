@@ -12,13 +12,13 @@ export type Orb = {
 
 const MIN_GAP = ORB_RADIUS * 2.15;
 
-export function targetPair(sessionId: string, level: number, secret: string) {
+export function targetPair(seed: string, level: number, secret: string) {
   const config = dualLevel(level);
   if (!config) throw new Error("Niveau inconnu.");
   const order = Array.from({ length: config.objects }, (_, id) => id);
   for (let index = order.length - 1; index > 0; index -= 1) {
     const swap = Math.floor(
-      unitFloat(secret, `${sessionId}:dual-targets:${level}:${index}`) * (index + 1),
+      unitFloat(secret, `${seed}:dual-targets:${level}:${index}`) * (index + 1),
     );
     [order[index], order[swap]] = [order[swap], order[index]];
   }

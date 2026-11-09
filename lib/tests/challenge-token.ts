@@ -1,4 +1,9 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+
+/** Fresh value for one attempt. The digits and targets are derived from it on the server. */
+export function challengeSeed() {
+  return randomBytes(16).toString("hex");
+}
 
 export function challengeSecret() {
   const secret = process.env.BETTER_AUTH_SECRET;

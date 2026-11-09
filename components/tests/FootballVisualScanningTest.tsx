@@ -9,15 +9,16 @@ import { submitClientResult } from "@/lib/sessions/submit-client";
 import {
   CHALLENGE_LABEL,
   SCANNING_ATTRIBUTION,
+  SCANNING_LIMIT_MS,
   SCANNING_SEQUENCES,
   correctPlayer,
   type ChallengeType,
 } from "@/lib/tests/football-visual-scanning/answers";
 
-const LIMIT_MS = 12000;
-
 type Attempt = {
+  index: number;
   challenge: ChallengeType;
+  playerId: string | null;
   correct: boolean;
   missed: boolean;
   responseMs: number;
@@ -39,10 +40,11 @@ export function FootballVisualScanningTest({
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
   const startedAt = useRef(0);
-  const exerciseStart = useRef(0);
   const locked = useRef(false);
   const saved = useRef(false);
   const [clock, setClock] = useState(0);
+  const [questionStartedAt, setQuestionStartedAt] = useState(0);
+  const [exerciseStartedAt, setExerciseStartedAt] = useState(0);
   const [saveMessage, setSaveMessage] = useState("");
 
   const sequence = SCANNING_SEQUENCES[index];
@@ -57,6 +59,7 @@ export function FootballVisualScanningTest({
     setIndex(next.length);
     const now = performance.now();
     startedAt.current = now;
+    setQuestionStartedAt(now);
     setClock(now);
     locked.current = false;
   };
@@ -67,8 +70,9 @@ export function FootballVisualScanningTest({
     setIndex(0);
     setFeedback(null);
     setPhase("running");
-    exerciseStart.current = now;
     startedAt.current = now;
+    setExerciseStartedAt(now);
+    setQuestionStartedAt(now);
     setClock(now);
     locked.current = false;
   };
@@ -90,10 +94,12 @@ export function FootballVisualScanningTest({
     window.setTimeout(() => {
       setFeedback(null);
       finishAttempt({
+        index,
         challenge: sequence.challenge,
+        playerId,
         correct,
         missed,
-        responseMs: missed ? LIMIT_MS : elapsed,
+        responseMs: missed ? SCANNING_LIMIT_MS : elapsed,
       });
     }, 700);
   };
@@ -130,7 +136,16 @@ export function FootballVisualScanningTest({
       averageReactionMs: average,
       bestReactionMs: Number.isFinite(best) ? best : 0,
       durationMs: times.reduce((sum, value) => sum + value, 0),
-      metrics: { missed: missedCount, incorrect: incorrectCount, ...breakdown },
+      metrics: {
+        missed: missedCount,
+        incorrect: incorrectCount,
+        ...breakdown,
+        attempts: attempts.map((item) => ({
+          index: item.index,
+          playerId: item.playerId,
+          responseMs: Math.round(item.responseMs),
+        })),
+      },
     })
       .then(() => setSaveMessage("Résultat envoyé à l'entraîneur."))
       .catch((error: Error) => setSaveMessage(error.message));
@@ -144,7 +159,7 @@ export function FootballVisualScanningTest({
 
   useEffect(() => {
     if (phase !== "running") return;
-    const id = window.setTimeout(() => answer(null), LIMIT_MS);
+    const id = window.setTimeout(() => answer(null), SCANNING_LIMIT_MS);
     return () => window.clearTimeout(id);
     // Restart the limit whenever a new situation is shown.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -254,8 +269,8 @@ export function FootballVisualScanningTest({
     );
   }
 
-  const remainingMs = Math.max(0, LIMIT_MS - (clock - startedAt.current));
-  const elapsedMs = Math.max(0, clock - exerciseStart.current);
+  const remainingMs = Math.max(0, SCANNING_LIMIT_MS - (clock - questionStartedAt));
+  const elapsedMs = Math.max(0, clock - exerciseStartedAt);
   const formatSeconds = (value: number) => (value / 1000).toFixed(1);
   const correctSoFar = attempts.filter((item) => item.correct).length;
   const scoreSoFar = Math.round(
@@ -303,7 +318,7 @@ export function FootballVisualScanningTest({
       <Pitch
         players={sequence.players}
         ball={sequence.ball}
-        disabled={locked.current || Boolean(feedback)}
+        disabled={Boolean(feedback)}
         onPick={(playerId) => answer(playerId)}
       />
       {feedback ? (

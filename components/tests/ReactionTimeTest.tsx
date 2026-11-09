@@ -47,6 +47,7 @@ export function ReactionTimeTest({
             attempts: test.result.attempts,
             falseStarts: test.result.falseStarts,
             worstReactionTime: test.result.worstReactionTime,
+            reactionTimes: test.result.reactionTimes,
           }}
         />
       );

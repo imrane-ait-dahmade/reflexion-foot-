@@ -195,12 +195,12 @@ describe("coach display", () => {
     });
     expect(lines?.map((line) => line.label)).toEqual([
       "Temps",
-      "Erreurs",
+      "Mauvaises sélections",
       "Précision",
-      "Nombres",
+      "Nombres trouvés",
       "Terminé",
     ]);
-    expect(sequentialHeadline(result.metrics)).toBe("82.5 s");
+    expect(sequentialHeadline(result.metrics)).toBe("50/50");
     expect(studyForSlug("sequential-visual-search")?.useRule).toContain(
       "Ne compare le temps",
     );
@@ -220,6 +220,6 @@ describe("coach display", () => {
       },
     ]);
     expect(catalog.map((item) => item.key)).toContain("completionTimeMs");
-    expect(lines?.find((line) => line.label === "Erreurs")?.value).toBe("2");
+    expect(lines?.find((line) => line.label === "Mauvaises sélections")?.value).toBe("2");
   });
 });

@@ -32,7 +32,7 @@ export async function GET(_request: Request, { params }: Params) {
         displayName: player.displayName,
         joinedAt: player.joinedAt,
         completedTests: player.completedTests,
-        averageScore: Number(player.averageScore),
+        averageScore: player.averageScore == null ? null : Number(player.averageScore),
         totalScore: player.totalScore,
       })),
       results: dashboard.results.map((result) => ({

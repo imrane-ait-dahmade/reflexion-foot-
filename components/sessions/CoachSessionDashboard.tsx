@@ -18,20 +18,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { CoachAnalysisPanel } from "@/components/sessions/CoachAnalysisPanel";
 import { CoachSignOutButton } from "@/components/sessions/CoachSignOutButton";
-import { TESTS } from "@/lib/tests/registry";
-import {
-  digitHeadline,
-  digitResultLines,
-} from "@/lib/tests/digit-memory/progress";
-import {
-  dualHeadline,
-  dualResultLines,
-} from "@/lib/tests/dual-target-tracking/progress";
-import {
-  sequentialHeadline,
-  sequentialResultLines,
-} from "@/lib/tests/sequential-visual-search/result";
-import { formatMs, formatPercent } from "@/lib/format";
+import { presentResult, sessionOverview } from "@/lib/tests/results/present";
 
 type ResultRow = {
   id: string;
@@ -60,8 +47,8 @@ type DashboardData = {
     sessionPlayerId: string;
     displayName: string;
     completedTests: number;
-    averageScore: number;
-    totalScore: number;
+    averageScore: number | null;
+    totalScore: number | null;
     joinedAt: string;
   }[];
   results: ResultRow[];
@@ -92,72 +79,6 @@ function formatEndsAt(endsAt: string | null) {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function metricLines(result: ResultRow) {
-  const sequential = sequentialResultLines(result);
-  if (sequential) return sequential;
-  const digits = digitResultLines(result);
-  if (digits) return digits;
-  const dual = dualResultLines(result);
-  if (dual) return dual;
-  const lines: { label: string; value: string }[] = [
-    { label: "Score", value: `${result.score}/100` },
-    { label: "Précision", value: formatPercent(result.accuracy) },
-    { label: "Bonnes réponses", value: String(result.correctAnswers) },
-    { label: "Erreurs", value: String(result.errors) },
-    {
-      label: "Réaction moy.",
-      value: formatMs(result.averageReactionMs),
-    },
-    { label: "Meilleure réaction", value: formatMs(result.bestReactionMs) },
-    {
-      label: "Durée",
-      value: `${Math.round(result.durationMs / 1000)} s`,
-    },
-  ];
-
-  const metrics = result.metrics ?? {};
-  if (typeof metrics.targetsFound === "number") {
-    lines.push({ label: "Cibles trouvées", value: String(metrics.targetsFound) });
-  }
-  if (typeof metrics.roundsCompleted === "number") {
-    lines.push({ label: "Manches", value: String(metrics.roundsCompleted) });
-  }
-  if (typeof metrics.falseStarts === "number") {
-    lines.push({ label: "Faux départs", value: String(metrics.falseStarts) });
-  }
-  if (typeof metrics.missed === "number") {
-    lines.push({ label: "Manqués", value: String(metrics.missed) });
-  }
-  if (typeof metrics.leftAccuracy === "number") {
-    lines.push({
-      label: "Précision gauche",
-      value: formatPercent(metrics.leftAccuracy),
-    });
-  }
-  if (typeof metrics.rightAccuracy === "number") {
-    lines.push({
-      label: "Précision droite",
-      value: formatPercent(metrics.rightAccuracy),
-    });
-  }
-  if (typeof metrics.incorrect === "number") {
-    lines.push({ label: "Incorrects", value: String(metrics.incorrect) });
-  }
-  for (const [key, label] of [
-    ["closest", "Proche du ballon"],
-    ["defender", "Défenseur"],
-    ["free", "Joueur libre"],
-  ] as const) {
-    const hits = metrics[`${key}Correct`];
-    const total = metrics[`${key}Total`];
-    if (typeof hits === "number" && typeof total === "number") {
-      lines.push({ label, value: `${hits}/${total}` });
-    }
-  }
-
-  return lines;
 }
 
 export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
@@ -246,6 +167,11 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
   if (!data) return null;
 
   const isActive = data.session.status === "active";
+  const overview = sessionOverview(
+    data.players.length,
+    data.exercises.length,
+    data.results.length,
+  );
 
   return (
     <section className="flex flex-col gap-5">
@@ -301,6 +227,14 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
           Aucun joueur pour l&apos;instant. Partage le code.
         </p>
       ) : (
+        <div className="flex flex-col gap-3">
+          <section className="rounded-xl border border-border bg-surface p-4">
+            <p className="font-semibold">
+              {overview.players} joueur{overview.players > 1 ? "s" : ""} ·{" "}
+              {overview.completionLabel} exercices terminés
+            </p>
+            <p className="mt-1 text-sm text-muted">{overview.overall}</p>
+          </section>
         <ul className="flex flex-col gap-3">
           {data.players.map((player) => {
             const open = selectedId === player.sessionPlayerId;
@@ -323,9 +257,9 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                   <div className="flex items-center gap-3">
                     <div className="text-right">
                       <p className="text-lg font-bold tabular-nums text-brand">
-                        {player.averageScore}
+                        {player.completedTests}/{data.exercises.length}
                       </p>
-                      <p className="text-xs text-muted">moyenne</p>
+                      <p className="text-xs text-muted">terminés</p>
                     </div>
                     <ChevronDown
                       className={`size-5 text-muted transition ${open ? "rotate-180" : ""}`}
@@ -343,25 +277,11 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                       className="overflow-hidden"
                     >
                       <div className="mt-2 rounded-xl border border-brand/30 bg-brand-soft/40 p-4">
-                        <div className="mb-3 grid grid-cols-3 gap-2 text-center text-sm">
-                          <div className="rounded-lg border border-border bg-surface px-2 py-2">
-                            <p className="text-xs text-muted">Total</p>
-                            <p className="font-bold tabular-nums">
-                              {player.totalScore}
-                            </p>
-                          </div>
-                          <div className="rounded-lg border border-border bg-surface px-2 py-2">
-                            <p className="text-xs text-muted">Moyenne</p>
-                            <p className="font-bold tabular-nums text-brand">
-                              {player.averageScore}
-                            </p>
-                          </div>
-                          <div className="rounded-lg border border-border bg-surface px-2 py-2">
-                            <p className="text-xs text-muted">Progression</p>
-                            <p className="font-bold tabular-nums">
-                              {player.completedTests}/{data.exercises.length}
-                            </p>
-                          </div>
+                        <div className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-sm">
+                          <p className="text-xs text-muted">Progression</p>
+                          <p className="font-bold tabular-nums">
+                            {player.completedTests}/{data.exercises.length} exercices
+                          </p>
                         </div>
 
                         <CoachAnalysisPanel
@@ -369,14 +289,16 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                           sessionPlayerId={player.sessionPlayerId}
                           playerName={player.displayName}
                           sessionTitle={data.session.title}
-                          results={selectedResults.map((result) => ({
-                            id: result.id,
-                            name:
-                              TESTS.find((test) => test.slug === result.testSlug)
-                                ?.name ?? result.testSlug,
-                            score: result.score,
-                            lines: metricLines(result),
-                          }))}
+                          results={selectedResults.map((result) => {
+                            const view = presentResult(result);
+                            return {
+                              id: result.id,
+                              name: view.name,
+                              headline: view.headline,
+                              note: view.note,
+                              lines: view.lines,
+                            };
+                          })}
                         />
                         {selectedResults.length === 0 ? (
                           <p className="text-sm text-muted">
@@ -387,9 +309,7 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                             {selectedResults.map((result) => {
                               const Icon =
                                 TEST_ICONS[result.testSlug] ?? Timer;
-                              const name =
-                                TESTS.find((test) => test.slug === result.testSlug)
-                                  ?.name ?? result.testSlug;
+                              const view = presentResult(result);
                               return (
                                 <li
                                   key={result.id}
@@ -400,29 +320,38 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                                       className="size-5 text-brand"
                                       aria-hidden
                                     />
-                                    <p className="font-semibold">{name}</p>
+                                    <div>
+                                      <p className="font-semibold">{view.name}</p>
+                                      <p className="text-xs text-muted">{view.primaryLabel}</p>
+                                    </div>
                                     <p className="ml-auto text-lg font-bold tabular-nums text-brand">
-                                      {sequentialHeadline(result.metrics) ??
-                                        digitHeadline(result.metrics) ??
-                                        dualHeadline(result.metrics) ??
-                                        `${result.score}/100`}
+                                      {view.headline}
                                     </p>
                                   </div>
-                                  <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3">
-                                    {metricLines(result).map((line) => (
-                                      <div
-                                        key={line.label}
-                                        className="flex justify-between gap-2 border-b border-border/60 py-1"
-                                      >
-                                        <dt className="text-muted">
-                                          {line.label}
-                                        </dt>
-                                        <dd className="tabular-nums font-medium">
-                                          {line.value}
-                                        </dd>
-                                      </div>
-                                    ))}
-                                  </dl>
+                                  <p className="mb-2 text-sm text-muted">{view.note}</p>
+                                  <p className="mb-2 text-xs uppercase tracking-[0.14em] text-brand">
+                                    {view.completionStatus}
+                                  </p>
+                                  <details>
+                                    <summary className="cursor-pointer text-sm font-medium">
+                                      Détail des indicateurs
+                                    </summary>
+                                    <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3">
+                                      {view.lines.map((line) => (
+                                        <div
+                                          key={line.label}
+                                          className="flex justify-between gap-2 border-b border-border/60 py-1"
+                                        >
+                                          <dt className="text-muted">
+                                            {line.label}
+                                          </dt>
+                                          <dd className="tabular-nums font-medium">
+                                            {line.value}
+                                          </dd>
+                                        </div>
+                                      ))}
+                                    </dl>
+                                  </details>
                                 </li>
                               );
                             })}
@@ -436,6 +365,7 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
             );
           })}
         </ul>
+        </div>
       )}
     </section>
   );

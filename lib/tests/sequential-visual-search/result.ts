@@ -76,14 +76,17 @@ export function sequentialResultLines(result: {
   metrics: Record<string, unknown> | null;
 }) {
   const metrics = result.metrics ?? {};
-  if (typeof metrics.completionTimeMs !== "number") return null;
+  if (metrics.scoringVersion !== "sequential-time-1") return null;
+  if (typeof metrics.numbersFound !== "number" || typeof metrics.totalNumbers !== "number") {
+    return null;
+  }
   const lines = [
     { label: "Temps", value: formatSeconds(result.durationMs) },
-    { label: "Erreurs", value: String(result.errors) },
+    { label: "Mauvaises sélections", value: String(result.errors) },
     { label: "Précision", value: `${result.accuracy.toFixed(1)}%` },
     {
-      label: "Nombres",
-      value: `${metrics.numbersFound ?? 50}/${metrics.totalNumbers ?? 50}`,
+      label: "Nombres trouvés",
+      value: `${metrics.numbersFound}/${metrics.totalNumbers}`,
     },
   ];
   if (result.completedAt) {
@@ -104,7 +107,9 @@ export function sequentialResultLines(result: {
 }
 
 export function sequentialHeadline(metrics: Record<string, unknown> | null) {
-  const time = metrics?.completionTimeMs;
-  if (typeof time !== "number") return null;
-  return formatSeconds(time);
+  if (metrics?.scoringVersion !== "sequential-time-1") return null;
+  if (typeof metrics.numbersFound !== "number" || typeof metrics.totalNumbers !== "number") {
+    return null;
+  }
+  return `${metrics.numbersFound}/${metrics.totalNumbers}`;
 }

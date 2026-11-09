@@ -105,6 +105,11 @@ export function PeripheralVisionTest({
             wrongAnswers: test.result.wrongAnswers,
             leftAccuracy: test.result.leftAccuracy,
             rightAccuracy: test.result.rightAccuracy,
+            leftTrials: test.result.sideStats.left.trials,
+            leftCorrect: test.result.sideStats.left.correct,
+            rightTrials: test.result.sideStats.right.trials,
+            rightCorrect: test.result.sideStats.right.correct,
+            reactionTimes: test.result.reactionTimes,
           }}
         />
       );

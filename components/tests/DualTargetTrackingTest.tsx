@@ -178,10 +178,10 @@ export function DualTargetTrackingTest({
           stepTotal={stepTotal}
         >
           <p className="text-center text-sm text-muted">
-            Retiens les deux cibles entourées, suis-les, puis désigne-les.
+            Deux ballons sont colorés au départ. Ils redeviennent identiques aux autres : retiens-les, suis-les, puis désigne-les.
           </p>
           <p className="text-center text-sm text-muted" dir="rtl">
-            تذكّر الهدفين المحاطين، ثم حددهما بعد التوقف.
+            بالونان ملوّنان في البداية، ثم يصبحان مثل البقية. تذكّرهما وحدّدهما بعد التوقف.
           </p>
           {message ? <p className="text-center text-sm text-danger">{message}</p> : null}
           <Button onClick={start}>{phase === "error" ? "Réessayer" : "Démarrer l'exercice"}</Button>
@@ -192,7 +192,7 @@ export function DualTargetTrackingTest({
         <>
           <p className="text-center text-sm text-muted">
             Niveau {challenge.level}/{challenge.totalLevels}
-            {phase === "highlight" ? " · Mémorise les deux cibles" : null}
+            {phase === "highlight" ? " · Mémorise les deux ballons colorés" : null}
             {phase === "move" ? " · Suis les deux cibles" : null}
             {phase === "pick" ? " · Choisis les deux cibles" : null}
           </p>
@@ -209,10 +209,10 @@ export function DualTargetTrackingTest({
                   onClick={() => toggle(orb.id)}
                   className={`absolute flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-sm font-bold ${
                     marked
-                      ? "border-2 border-brand bg-white text-black"
+                      ? "bg-brand text-white"
                       : chosen
-                        ? "bg-brand text-white"
-                        : "bg-white/80 text-black"
+                        ? "bg-white text-black ring-4 ring-brand"
+                        : "bg-white text-black"
                   }`}
                   style={{ left: `${orb.x * 100}%`, top: `${orb.y * 100}%` }}
                 >
