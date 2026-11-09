@@ -17,7 +17,10 @@ CREATE TYPE test_slug AS ENUM (
   'visual-memory',
   'reaction-time',
   'peripheral-vision',
-  'football-visual-scanning'
+  'football-visual-scanning',
+  'sequential-visual-search',
+  'digit-memory',
+  'dual-target-tracking'
 );
 
 -- ---------------------------------------------------------------------------
@@ -151,6 +154,7 @@ CREATE TABLE test_results (
   -- reaction-time:   { "attempts": 10, "falseStarts": 2, "worstReactionTime": 542 }
   -- peripheral-vision: { "trials": 19, "missed": 4, "leftAccuracy": 42.9, "rightAccuracy": 66.7 }
   -- football-visual-scanning: { "missed": 1, "incorrect": 2, "closestCorrect": 2, "closestTotal": 3 }
+  -- sequential-visual-search: { "completionTimeMs": 82500, "totalNumbers": 50, "numbersFound": 50, "completionStatus": "completed" }
   metrics            JSONB NOT NULL DEFAULT '{}'::jsonb,
 
   started_at         TIMESTAMPTZ,

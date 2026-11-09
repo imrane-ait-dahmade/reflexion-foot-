@@ -36,6 +36,29 @@ const DEFINITIONS: Record<string, { meaning: string; unit: string }> = {
   freeCorrect: { meaning: "Bonnes réponses « joueur le plus libre ».", unit: "count" },
   freeTotal: { meaning: "Nombre de situations « joueur libre ».", unit: "count" },
   scoringVersion: { meaning: "Version interne des règles de score, si elle est présente.", unit: "id" },
+  completionTimeMs: {
+    meaning:
+      "Temps déjà mesuré jusqu'à la fin de l'exercice. Ce n'est pas un score sur 100 et il ne doit pas être comparé sans un groupe de référence réel.",
+    unit: "ms",
+  },
+  totalNumbers: { meaning: "Nombre de valeurs à trouver, toujours 50.", unit: "count" },
+  numbersFound: { meaning: "Nombres trouvés dans l'ordre. 50 seulement si l'exercice est terminé.", unit: "count" },
+  completionStatus: { meaning: "completed uniquement quand l'exercice est terminé selon sa règle.", unit: "status" },
+  levelsCompleted: { meaning: "Nombre de suites de chiffres reproduites exactement.", unit: "count" },
+  maximumDigitsMemorized: { meaning: "Plus longue suite de chiffres reproduite dans l'ordre. Indicateur principal de la mémoire numérique.", unit: "count" },
+  totalDigitsPresented: { meaning: "Chiffres présentés au joueur.", unit: "count" },
+  totalCorrectDigits: { meaning: "Chiffres corrects à la même position. Un chiffre présent ailleurs ne compte pas.", unit: "count" },
+  sequenceAttempts: { meaning: "Suites proposées au joueur.", unit: "count" },
+  incorrectSequences: { meaning: "Suites qui n'ont pas été reproduites exactement.", unit: "count" },
+  totalObjects: { meaning: "Nombre d'objets au dernier niveau du suivi de deux cibles.", unit: "count" },
+  targetCount: { meaning: "Nombre total de cibles à retrouver sur l'ensemble des niveaux.", unit: "count" },
+  correctlyIdentifiedTargets: { meaning: "Cibles d'origine correctement désignées après le mouvement.", unit: "count" },
+  missedTargets: { meaning: "Cibles d'origine non désignées.", unit: "count" },
+  incorrectSelections: { meaning: "Objets désignés qui n'étaient pas des cibles.", unit: "count" },
+  completeSuccess: { meaning: "Vrai seulement si les deux cibles ont été trouvées à chaque niveau.", unit: "flag" },
+  identificationTimeMs: { meaning: "Temps déjà mesuré entre la fin du mouvement et la validation.", unit: "ms" },
+  movementDurationMs: { meaning: "Durée totale des phases de mouvement.", unit: "ms" },
+  difficultyLevelReached: { meaning: "Plus haut niveau où les deux cibles ont été retrouvées.", unit: "level" },
 };
 
 export function isCompleteResult(result: {

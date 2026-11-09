@@ -12,7 +12,10 @@ export type TestSlug =
   | "visual-memory"
   | "reaction-time"
   | "peripheral-vision"
-  | "football-visual-scanning";
+  | "football-visual-scanning"
+  | "sequential-visual-search"
+  | "digit-memory"
+  | "dual-target-tracking";
 
 export type User = {
   id: string;

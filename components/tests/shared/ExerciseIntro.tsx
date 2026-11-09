@@ -2,11 +2,14 @@
 
 import { motion } from "motion/react";
 import {
+  Binary,
   Crosshair,
   Eye,
   Grid3X3,
   type LucideIcon,
   Move,
+  Search,
+  Spline,
   Timer,
   Zap,
 } from "lucide-react";
@@ -40,6 +43,21 @@ const VISUALS: Record<
     Icon: Crosshair,
     accent: "from-brand/25 to-transparent",
     hint: "Lis l'action · touche le joueur",
+  },
+  "sequential-visual-search": {
+    Icon: Search,
+    accent: "from-brand/25 to-transparent",
+    hint: "Cherche · 1 puis 2 · jusqu'à 50",
+  },
+  "digit-memory": {
+    Icon: Binary,
+    accent: "from-brand/25 to-transparent",
+    hint: "Regarde · retiens · réécris",
+  },
+  "dual-target-tracking": {
+    Icon: Spline,
+    accent: "from-sky-500/20 to-transparent",
+    hint: "Deux cibles · suis · désigne",
   },
 };
 

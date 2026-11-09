@@ -402,8 +402,8 @@ export async function getSessionDashboard(code: string, coachId?: string) {
       displayName: sessionPlayers.displayName,
       joinedAt: sessionPlayers.joinedAt,
       completedTests: sql<number>`count(${testResults.id})::int`,
-      averageScore: sql<string>`coalesce(round(avg(${testResults.score})::numeric, 1), 0)`,
-      totalScore: sql<number>`coalesce(sum(${testResults.score}), 0)::int`,
+      averageScore: sql<string>`coalesce(round(avg(case when ${testResults.testSlug} not in ('sequential-visual-search', 'digit-memory', 'dual-target-tracking') then ${testResults.score} end)::numeric, 1), 0)`,
+      totalScore: sql<number>`coalesce(sum(case when ${testResults.testSlug} not in ('sequential-visual-search', 'digit-memory', 'dual-target-tracking') then ${testResults.score} end), 0)::int`,
     })
     .from(sessionPlayers)
     .leftJoin(

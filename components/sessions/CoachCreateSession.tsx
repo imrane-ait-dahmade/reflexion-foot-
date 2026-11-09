@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import {
+  Binary,
   Check,
   Crosshair,
   Eye,
   Grid3X3,
   type LucideIcon,
+  Search,
+  Spline,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -38,6 +41,9 @@ const TEST_ICONS: Record<string, LucideIcon> = {
   "reaction-time": Zap,
   "peripheral-vision": Eye,
   "football-visual-scanning": Crosshair,
+  "sequential-visual-search": Search,
+  "digit-memory": Binary,
+  "dual-target-tracking": Spline,
 };
 
 function formatEndsAt(endsAt: string | null) {

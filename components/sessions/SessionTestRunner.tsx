@@ -6,6 +6,9 @@ import { useEffect, useState, useSyncExternalStore, useTransition } from "react"
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { FootballVisualScanningTest } from "@/components/tests/FootballVisualScanningTest";
+import { SequentialVisualSearchTest } from "@/components/tests/SequentialVisualSearchTest";
+import { DigitMemoryTest } from "@/components/tests/DigitMemoryTest";
+import { DualTargetTrackingTest } from "@/components/tests/DualTargetTrackingTest";
 import { PeripheralVisionTest } from "@/components/tests/PeripheralVisionTest";
 import { ReactionTimeTest } from "@/components/tests/ReactionTimeTest";
 import { VisualMemoryTest } from "@/components/tests/VisualMemoryTest";
@@ -166,5 +169,21 @@ export function SessionTestRunner({ code, testSlug }: SessionTestRunnerProps) {
       return <PeripheralVisionTest {...common} />;
     case "football-visual-scanning":
       return <FootballVisualScanningTest {...common} />;
+    case "sequential-visual-search":
+      return (
+        <SequentialVisualSearchTest
+          {...common}
+          sessionId={stored.sessionId}
+        />
+      );
+    case "digit-memory":
+      return <DigitMemoryTest {...common} />;
+    case "dual-target-tracking":
+      return (
+        <DualTargetTrackingTest
+          {...common}
+          sessionId={stored.sessionId}
+        />
+      );
   }
 }

@@ -25,6 +25,9 @@ export const testSlugEnum = pgEnum("test_slug", [
   "reaction-time",
   "peripheral-vision",
   "football-visual-scanning",
+  "sequential-visual-search",
+  "digit-memory",
+  "dual-target-tracking",
 ]);
 
 export const users = pgTable("users", {

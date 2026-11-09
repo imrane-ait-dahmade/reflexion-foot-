@@ -4,10 +4,13 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
+  Binary,
   ChevronDown,
   Crosshair,
   Eye,
   Grid3X3,
+  Search,
+  Spline,
   Timer,
   Users,
   Zap,
@@ -16,6 +19,18 @@ import { Button } from "@/components/ui/Button";
 import { CoachAnalysisPanel } from "@/components/sessions/CoachAnalysisPanel";
 import { CoachSignOutButton } from "@/components/sessions/CoachSignOutButton";
 import { TESTS } from "@/lib/tests/registry";
+import {
+  digitHeadline,
+  digitResultLines,
+} from "@/lib/tests/digit-memory/progress";
+import {
+  dualHeadline,
+  dualResultLines,
+} from "@/lib/tests/dual-target-tracking/progress";
+import {
+  sequentialHeadline,
+  sequentialResultLines,
+} from "@/lib/tests/sequential-visual-search/result";
 import { formatMs, formatPercent } from "@/lib/format";
 
 type ResultRow = {
@@ -62,6 +77,9 @@ const TEST_ICONS: Record<string, typeof Zap> = {
   "reaction-time": Zap,
   "peripheral-vision": Eye,
   "football-visual-scanning": Crosshair,
+  "sequential-visual-search": Search,
+  "digit-memory": Binary,
+  "dual-target-tracking": Spline,
 };
 
 function formatEndsAt(endsAt: string | null) {
@@ -77,6 +95,12 @@ function formatEndsAt(endsAt: string | null) {
 }
 
 function metricLines(result: ResultRow) {
+  const sequential = sequentialResultLines(result);
+  if (sequential) return sequential;
+  const digits = digitResultLines(result);
+  if (digits) return digits;
+  const dual = dualResultLines(result);
+  if (dual) return dual;
   const lines: { label: string; value: string }[] = [
     { label: "Score", value: `${result.score}/100` },
     { label: "Précision", value: formatPercent(result.accuracy) },
@@ -378,7 +402,10 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                                     />
                                     <p className="font-semibold">{name}</p>
                                     <p className="ml-auto text-lg font-bold tabular-nums text-brand">
-                                      {result.score}/100
+                                      {sequentialHeadline(result.metrics) ??
+                                        digitHeadline(result.metrics) ??
+                                        dualHeadline(result.metrics) ??
+                                        `${result.score}/100`}
                                     </p>
                                   </div>
                                   <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3">

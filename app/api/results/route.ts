@@ -1,6 +1,7 @@
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { isTestSlug } from "@/lib/sessions/exercises";
 import { submitResult } from "@/lib/sessions/service";
+import { sequentialSubmissionError } from "@/lib/tests/sequential-visual-search/result";
 
 export async function POST(request: Request) {
   try {
@@ -28,6 +29,22 @@ export async function POST(request: Request) {
       typeof body.errors !== "number"
     ) {
       return jsonError("Champs de score incomplets.");
+    }
+
+    if (body.testSlug === "sequential-visual-search") {
+      const invalid = sequentialSubmissionError({
+        score: body.score,
+        accuracy: body.accuracy,
+        correctAnswers: body.correctAnswers,
+        errors: body.errors,
+        durationMs: body.durationMs ?? 0,
+        metrics: body.metrics,
+      });
+      if (invalid) return jsonError(invalid);
+    }
+
+    if (body.testSlug === "digit-memory" || body.testSlug === "dual-target-tracking") {
+      return jsonError("Ce résultat est validé par le serveur de l'exercice.");
     }
 
     const result = await submitResult({

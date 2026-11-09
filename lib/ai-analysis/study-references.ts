@@ -33,6 +33,30 @@ export const STUDY_REFERENCES: Record<string, StudyReference> = {
     publishedValue: null,
     useRule: `${SHARED_LIMIT} Il n'existe pas de pourcentage humain publié pour cet exercice exact.`,
   },
+  "sequential-visual-search": {
+    construct:
+      "Recherche visuelle séquentielle : balayage visuel, attention sélective, attention soutenue et vitesse de traitement de l'information visuelle.",
+    source:
+      "La table de Schulte est un exercice classique de recherche visuelle dans l'ordre. Cette version 1–50 n'a pas de norme de temps publiée dans l'application.",
+    publishedValue: null,
+    useRule: `${SHARED_LIMIT} Décris le temps completionTimeMs, le nombre d'erreurs et la précision déjà calculée. Ne compare le temps à aucun autre joueur. Ne conclus rien sur un trouble de l'attention, l'intelligence ou la performance en match. Le champ score reprend la précision, pas un classement de vitesse.`,
+  },
+  "dual-target-tracking": {
+    construct:
+      "Suivi simultané de deux cibles mobiles parmi des objets identiques : attention divisée et mémoire visuelle du mouvement.",
+    source:
+      "Le suivi de cibles multiples est étudié en laboratoire. Cette version à deux cibles n'a pas de norme publiée dans l'application.",
+    publishedValue: null,
+    useRule: `${SHARED_LIMIT} Décris les cibles retrouvées, les mauvais choix, la précision déjà calculée et le niveau atteint. Ne conclus rien sur un trouble de l'attention ni sur la performance en match.`,
+  },
+  "digit-memory": {
+    construct:
+      "Mémoire à court terme d'une suite de chiffres, dans l'ordre exact.",
+    source:
+      "L'empan de chiffres est un repère classique. Cette progression de 3 à 10 chiffres n'est pas un test clinique.",
+    publishedValue: null,
+    useRule: `${SHARED_LIMIT} Le chiffre principal est maximumDigitsMemorized. Une position fausse n'est pas un chiffre correct. Ne parle pas d'intelligence, de trouble de la mémoire ou de performance en match.`,
+  },
   "football-visual-scanning": {
     construct: "Lecture perceptivo-cognitive d'une situation de jeu.",
     source:

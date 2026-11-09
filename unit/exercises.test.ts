@@ -10,10 +10,13 @@ const EXPECTED: TestSlug[] = [
   "reaction-time",
   "peripheral-vision",
   "football-visual-scanning",
+  "sequential-visual-search",
+  "digit-memory",
+  "dual-target-tracking",
 ];
 
 describe("exercise catalogue", () => {
-  it("exposes the five exercises and keeps free play closed", () => {
+  it("exposes the eight exercises and keeps free play closed", () => {
     expect(TESTS.map((test) => test.slug)).toEqual(EXPECTED);
     expect(TESTS.every((test) => test.href === "/join")).toBe(true);
   });
@@ -41,6 +44,29 @@ describe("exercise catalogue", () => {
     expect(sql).toContain(
       "ADD VALUE IF NOT EXISTS 'football-visual-scanning'",
     );
+    const searchMigration = readFileSync(
+      "lib/db/migrations/004_add_sequential_visual_search.sql",
+      "utf8",
+    );
+    const searchSql = searchMigration
+      .split(/\r?\n/)
+      .filter((line) => !line.trim().startsWith("--"))
+      .join("\n");
+    expect(searchSql).toContain(
+      "ADD VALUE IF NOT EXISTS 'sequential-visual-search'",
+    );
+    expect(searchSql.toLowerCase()).not.toMatch(/\bdrop\b|\bdelete\b|\btruncate\b/);
+    const nextMigration = readFileSync(
+      "lib/db/migrations/005_add_digit_memory_and_dual_target.sql",
+      "utf8",
+    );
+    const nextSql = nextMigration
+      .split(/\r?\n/)
+      .filter((line) => !line.trim().startsWith("--"))
+      .join("\n");
+    expect(nextSql).toContain("ADD VALUE IF NOT EXISTS 'digit-memory'");
+    expect(nextSql).toContain("ADD VALUE IF NOT EXISTS 'dual-target-tracking'");
+    expect(nextSql.toLowerCase()).not.toMatch(/\bdrop\b|\bdelete\b|\btruncate\b/);
     expect(sql.toLowerCase()).not.toMatch(/\bdrop\b|\bdelete\b|\btruncate\b/);
   });
 });
