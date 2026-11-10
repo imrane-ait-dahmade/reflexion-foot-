@@ -122,6 +122,9 @@ export async function orchestratePlayerResult(
     bundle.assigned,
     bundle.results.filter(isCompleteResult).map((item) => item.testSlug),
   );
+  if (only === "session" && !finished) {
+    return { skipped: "incomplete" as const, promptVersion: PROMPT_VERSION, outcomes };
+  }
   if (finished && (!only || only === "session")) {
     outcomes.push({
       reportType: "session",

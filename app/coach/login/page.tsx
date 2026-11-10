@@ -32,7 +32,7 @@ export default async function CoachLoginPage({ searchParams }: PageProps) {
       title="Connexion entraîneur"
       description="Connecte-toi pour créer des sessions et voir les résultats des joueurs."
     >
-      <CoachAuthForm mode="login" nextPath={next || "/coach"} />
+      <CoachAuthForm mode="login" nextPath={destination} />
     </TestShell>
   );
 }

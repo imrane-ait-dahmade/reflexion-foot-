@@ -183,7 +183,7 @@ export function DigitMemoryTest({
           <p className="text-center text-sm text-muted">
             Niveau {level} · {entry.length}/{length}
           </p>
-          <p className="min-h-14 text-center text-4xl font-bold tracking-[0.3em] text-brand">
+          <p className="min-h-14 max-w-full break-words px-2 text-center text-3xl font-bold tracking-[0.16em] text-brand sm:text-4xl sm:tracking-[0.3em]">
             {entry.join(" ")}
           </p>
           <div className="mx-auto grid w-full max-w-xs grid-cols-3 gap-2">

@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { CoachAnalysisPanel } from "@/components/sessions/CoachAnalysisPanel";
 import { CoachSignOutButton } from "@/components/sessions/CoachSignOutButton";
+import { formatSessionStatus } from "@/lib/format";
 import { presentResult, sessionOverview } from "@/lib/tests/results/present";
 
 type ResultRow = {
@@ -191,7 +192,7 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
         <p className="mt-2 text-sm">
           Statut :{" "}
           <span className={isActive ? "text-brand" : "text-muted"}>
-            {data.session.status}
+            {formatSessionStatus(data.session.status)}
           </span>
           {formatEndsAt(data.session.endsAt)
             ? ` · jusqu'à ${formatEndsAt(data.session.endsAt)}`
@@ -289,6 +290,7 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                           sessionPlayerId={player.sessionPlayerId}
                           playerName={player.displayName}
                           sessionTitle={data.session.title}
+                          exerciseCount={data.exercises.length}
                           results={selectedResults.map((result) => {
                             const view = presentResult(result);
                             return {

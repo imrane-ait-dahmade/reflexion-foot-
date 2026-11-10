@@ -414,6 +414,40 @@ describe("AI analysis orchestration", () => {
     expect(cohortPosition("reaction-time", 80, [40, 50, 60]).basis).toBe("too_small");
   });
 
+  it("creates one session report per finished player and refuses a second kind", async () => {
+    const finished = memory({
+      a: bundle("a", ["reaction-time", "visual-memory"], [
+        result("r1", "reaction-time"),
+        result("r2", "visual-memory"),
+      ]),
+    });
+    const generate = vi.fn(async (context: { reportType: ReportType }) => ({
+      parsed: sample(context.reportType),
+      model: "test-model",
+      inputTokens: 1,
+      outputTokens: 1,
+    }));
+    await orchestratePlayerResult("a", deps(finished.store, generate), {
+      reportType: "session",
+      retry: true,
+    });
+    expect(finished.reports).toHaveLength(1);
+    expect(finished.reports[0]?.reportType).toBe("session");
+    expect(finished.reports[0]?.testResultId).toBeNull();
+
+    const partial = memory({
+      b: bundle("b", ["reaction-time", "visual-memory"], [
+        result("r3", "reaction-time"),
+      ]),
+    });
+    const outcome = await orchestratePlayerResult("b", deps(partial.store, generate), {
+      reportType: "session",
+      retry: true,
+    });
+    expect(outcome.skipped).toBe("incomplete");
+    expect(partial.reports).toHaveLength(0);
+  });
+
   it("does nothing when analysis is disabled", async () => {
     const { reports, store } = memory({
       a: bundle("a", ["reaction-time"], [result("r1", "reaction-time")]),

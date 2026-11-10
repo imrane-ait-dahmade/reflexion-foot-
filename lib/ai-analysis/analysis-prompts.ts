@@ -16,6 +16,7 @@ export function analysisInstructions() {
     "Ne recalcule pas les scores, moyennes, percentiles ou temps.",
     "Lis exerciseGuides avant d'interpréter score. Pour la mémoire des chiffres, score est une longueur de suite, pas une note sur 100.",
     "Ne compare pas les secondes ou les notes d'exercices différents.",
+    "Un rapport de séance est un seul texte pour ce joueur. Il couvre tous ses exercices, sans un rapport séparé par exercice.",
     "Ne conclus pas qu'un exercice prédit la performance en match.",
     "Ne juge pas l'intelligence, la personnalité, le talent ou le potentiel professionnel.",
     "Si les données sont insuffisantes, dis-le et n'invente pas de force ni de faiblesse.",

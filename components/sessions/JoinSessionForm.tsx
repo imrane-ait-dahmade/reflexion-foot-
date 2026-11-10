@@ -115,7 +115,10 @@ export function JoinSessionForm() {
         />
       </label>
       {error && (
-        <p className="rounded-xl border border-danger/40 px-3 py-2 text-sm text-danger">
+        <p
+          role="alert"
+          className="rounded-xl border border-danger/40 px-3 py-2 text-sm text-danger"
+        >
           {error}
         </p>
       )}

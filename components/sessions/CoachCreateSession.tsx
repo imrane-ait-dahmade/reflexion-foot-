@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { CoachSignOutButton } from "@/components/sessions/CoachSignOutButton";
+import { formatSessionStatus } from "@/lib/format";
 import type { TestSlug } from "@/lib/db/types";
 import { TESTS } from "@/lib/tests/registry";
 
@@ -294,7 +295,7 @@ export function CoachCreateSession() {
                         : "text-muted"
                     }`}
                   >
-                    {session.status}
+                    {formatSessionStatus(session.status)}
                   </span>
                 </Link>
               </li>

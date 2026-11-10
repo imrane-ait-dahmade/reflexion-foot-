@@ -11,6 +11,32 @@ type CoachAuthFormProps = {
   nextPath?: string;
 };
 
+function frenchAuthError(message: string, mode: "login" | "register") {
+  const lower = message.toLowerCase();
+  if (
+    lower.includes("invalid email or password") ||
+    lower.includes("invalid credentials")
+  ) {
+    return "Email ou mot de passe incorrect.";
+  }
+  if (lower.includes("already") || lower.includes("exists")) {
+    return "Un compte existe déjà avec cet email.";
+  }
+  if (
+    lower.includes("password") &&
+    (lower.includes("8") || lower.includes("short") || lower.includes("least"))
+  ) {
+    return "Le mot de passe doit contenir au moins 8 caractères.";
+  }
+  if (lower.includes("too many") || lower.includes("rate limit")) {
+    return "Trop de tentatives. Réessaie dans un moment.";
+  }
+  if (/[àâéèêëïîôùûüç]/i.test(message)) return message;
+  return mode === "login"
+    ? "Connexion impossible. Réessaie."
+    : "Inscription impossible. Réessaie.";
+}
+
 export function CoachAuthForm({ mode, nextPath = "/coach" }: CoachAuthFormProps) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -46,7 +72,9 @@ export function CoachAuthForm({ mode, nextPath = "/coach" }: CoachAuthFormProps)
       router.push(nextPath);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur");
+      setError(
+        frenchAuthError(err instanceof Error ? err.message : "", mode),
+      );
     } finally {
       setLoading(false);
     }
@@ -82,9 +110,20 @@ export function CoachAuthForm({ mode, nextPath = "/coach" }: CoachAuthFormProps)
           onChange={(event) => setPassword(event.target.value)}
           className="min-h-12 rounded-lg border border-border bg-transparent px-3"
           autoComplete={mode === "login" ? "current-password" : "new-password"}
+          aria-describedby="password-hint"
         />
       </label>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      <p id="password-hint" className="-mt-2 text-xs text-muted">
+        8 caractères minimum.
+      </p>
+      {error && (
+        <p
+          role="alert"
+          className="rounded-xl border border-danger/40 px-3 py-2 text-sm text-danger"
+        >
+          {error}
+        </p>
+      )}
       <Button
         onClick={onSubmit}
         disabled={

@@ -31,11 +31,13 @@ const SECTION_LABELS = {
     plan: "Plan pour l'entraîneur",
     limits: "Limites des données",
     retry: "Relancer",
-    generate: "Générer l'analyse",
+    generate: "Générer le rapport",
+    reportTitle: "Rapport du joueur",
     exportPdf: "Exporter PDF",
     results: "Résultats des exercices",
-    empty: "Aucune analyse pour le moment. Elle démarre seulement quand vous cliquez.",
-    basis: "Base : résultats de tous les joueurs sur cet exercice, et repères d'études. Pas l'historique du même joueur.",
+    empty: "Un seul rapport par joueur. Il se crée quand le joueur a terminé tous ses exercices et que vous cliquez.",
+    waiting: "Le joueur n'a pas encore terminé tous ses exercices. Le rapport unique attend la fin.",
+    basis: "Un seul rapport pour ce joueur, à partir de tous ses exercices de cette séance.",
     off: "L'analyse IA est désactivée.",
     loading: "Chargement…",
     pending: "Analyse en cours. Merci de patienter.",
@@ -50,11 +52,13 @@ const SECTION_LABELS = {
     plan: "خطة المدرب",
     limits: "حدود المعطيات",
     retry: "إعادة المحاولة",
-    generate: "إنشاء التحليل",
+    generate: "إنشاء التقرير",
+    reportTitle: "تقرير اللاعب",
     exportPdf: "تصدير PDF",
     results: "نتائج التمارين",
-    empty: "لا يوجد تحليل حالياً. يبدأ فقط عند الضغط على الزر.",
-    basis: "الأساس: نتائج كل اللاعبين في هذا التمرين، مع مراجع الدراسات. ليس تاريخ اللاعب نفسه.",
+    empty: "تقرير واحد لكل لاعب. يُنشأ عندما يُنهي كل التمارين وتضغط على الزر.",
+    waiting: "لم يُنهِ اللاعب كل التمارين بعد. التقرير الوحيد ينتظر النهاية.",
+    basis: "تقرير واحد لهذا اللاعب، من كل تمارين هذه الحصة.",
     off: "تحليل الذكاء الاصطناعي متوقف.",
     loading: "جارٍ التحميل…",
     pending: "التحليل قيد الإنجاز. يرجى الانتظار.",
@@ -91,19 +95,21 @@ export function CoachAnalysisPanel({
   sessionPlayerId,
   playerName,
   sessionTitle,
+  exerciseCount,
   results,
 }: {
   code: string;
   sessionPlayerId: string;
   playerName: string;
   sessionTitle: string;
+  exerciseCount: number;
   results: PrintableResult[];
 }) {
   const [language, setLanguage] = useState<"fr" | "ar">("fr");
   const [data, setData] = useState<ReportsResponse | null>(null);
   const [error, setError] = useState("");
-  const [openId, setOpenId] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [, startTransition] = useTransition();
 
   const load = useCallback(async () => {
@@ -126,19 +132,16 @@ export function CoachAnalysisPanel({
     });
   }, [load]);
 
-  const generate = async (testResultId: string) => {
+  const generate = async () => {
     setError("");
-    setBusyId(testResultId);
+    setBusy(true);
     try {
       const response = await fetch(
         `/api/sessions/${code}/players/${sessionPlayerId}/reports`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            reportType: "test",
-            testResultId,
-          }),
+          body: JSON.stringify({ reportType: "session" }),
         },
       );
       const json = await response.json();
@@ -147,30 +150,30 @@ export function CoachAnalysisPanel({
         return;
       }
       const next = await load();
-      const created = next.reports.find(
-        (report) => report.reportType === "test" && report.testResultId === testResultId,
-      );
-      if (created?.status === "completed") setOpenId(created.id);
+      const created = next.reports.find((report) => report.reportType === "session");
+      if (created?.status === "completed") setOpen(true);
       if (created?.status === "failed") {
-        setError(language === "ar" ? "تعذر إنشاء التحليل." : "L'analyse n'a pas pu être créée.");
+        setError(language === "ar" ? "تعذر إنشاء التقرير." : "Le rapport n'a pas pu être créé.");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");
     } finally {
-      setBusyId(null);
+      setBusy(false);
     }
   };
 
   const copy = SECTION_LABELS[language];
   const direction = textDirection(language);
+  const report = data?.reports.find((item) => item.reportType === "session") ?? null;
+  const finished = exerciseCount > 0 && results.length >= exerciseCount;
 
   const exportPdf = () => {
-    const reportBlocks = (data?.reports ?? [])
+    const reportBlocks = (report ? [report] : [])
       .map((report) => {
         if (!isReport(report.reportData)) return "";
         const content = report.reportData[language];
         return `
-          <h2>${escapeHtml(report.reportType)}</h2>
+          <h2>${escapeHtml(copy.reportTitle)}</h2>
           <p>${escapeHtml(content.executive_summary)}</p>
           ${section(copy.assessed, [content.what_was_assessed])}
           ${section(copy.observations, content.performance_observations.map((item) => `${item.title} — ${item.explanation}`))}
@@ -233,73 +236,49 @@ export function CoachAnalysisPanel({
       {!data ? <p className="text-sm text-muted">{copy.loading}</p> : null}
       {data && !data.enabled ? <p className="text-sm text-muted">{copy.off}</p> : null}
       {data?.enabled ? <p className="mb-3 text-sm text-muted">{copy.basis}</p> : null}
-      {data?.enabled ? (
-        <ul className="mb-3 flex flex-col gap-2">
-          {results.map((result) => {
-            const existing = data.reports.find(
-              (report) => report.reportType === "test" && report.testResultId === result.id,
-            );
-            const ready = existing?.status === "completed";
-            return (
-              <li key={result.id} className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm">{result.name}</p>
-                {ready ? null : (
-                  <button
-                    type="button"
-                    className="rounded-full bg-brand px-3 py-1 text-sm font-semibold text-black disabled:opacity-60"
-                    disabled={busyId !== null}
-                    onClick={() => generate(result.id)}
-                  >
-                    {busyId === result.id ? copy.pending : existing?.status === "failed" ? copy.retry : copy.generate}
-                  </button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+      {data?.enabled && !finished ? (
+        <p className="mb-3 text-sm text-muted">{copy.waiting}</p>
+      ) : null}
+      {data?.enabled && finished && report?.status !== "completed" ? (
+        <button
+          type="button"
+          className="mb-3 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-black disabled:opacity-60"
+          disabled={busy}
+          onClick={generate}
+        >
+          {busy ? copy.pending : report?.status === "failed" ? copy.retry : copy.generate}
+        </button>
       ) : null}
       <AnimatePresence>
-        {busyId ? <AnalysisWait key="analysis-wait" label={copy.pending} /> : null}
+        {busy ? <AnalysisWait key="analysis-wait" label={copy.pending} /> : null}
       </AnimatePresence>
-      {data && data.reports.every((report) => report.reportType !== "test") && !busyId ? (
+      {data?.enabled && finished && !report && !busy ? (
         <p className="text-sm text-muted">{copy.empty}</p>
       ) : null}
-      <ul className="flex flex-col gap-3">
-        {data?.reports.filter((report) => report.reportType === "test").map((report) => {
-          const content = isReport(report.reportData) ? report.reportData[language] : null;
-          const reason =
-            report.reportData && "reason" in report.reportData
-              ? report.reportData.reason
-              : null;
-          return (
-            <li key={report.id} className="rounded-lg border border-border p-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold">
-                  {report.reportType} · {report.status}
-                </p>
-                <p className="text-xs text-muted">
-                  {data?.playerName} · {data?.sessionDate ? new Date(data.sessionDate).toLocaleDateString(language === "ar" ? "ar" : "fr-FR") : ""}
-                </p>
-              </div>
-              {content ? (
-                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-                  <p className="mt-2 text-sm">{content.executive_summary}</p>
-                  <button type="button" className="mt-2 text-sm text-brand" onClick={() => setOpenId(openId === report.id ? null : report.id)}>
-                    {openId === report.id ? "—" : copy.summary}
-                  </button>
-                  {openId === report.id ? <ReportBody content={content} labels={copy} /> : null}
-                </motion.div>
-              ) : (
-                <p className="mt-2 text-sm text-muted">{reason ?? report.errorCode ?? copy.pending}</p>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-      {data && data.usage.reports > 0 ? (
-        <p className="mt-3 text-xs text-muted">
-          {data.usage.reports} rapports · {data.usage.failed} échecs · {data.usage.inputTokens}/{data.usage.outputTokens} jetons · {data.usage.models.join(", ")}
-        </p>
+      {report ? (
+        <article className="rounded-lg border border-border p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="font-semibold">{copy.reportTitle}</p>
+            <p className="text-xs text-muted">
+              {data?.playerName} · {data?.sessionDate ? new Date(data.sessionDate).toLocaleDateString(language === "ar" ? "ar" : "fr-FR") : ""}
+            </p>
+          </div>
+          {isReport(report.reportData) ? (
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
+              <p className="mt-2 text-sm">{report.reportData[language].executive_summary}</p>
+              <button type="button" className="mt-2 text-sm text-brand" onClick={() => setOpen((current) => !current)}>
+                {open ? "—" : copy.summary}
+              </button>
+              {open ? <ReportBody content={report.reportData[language]} labels={copy} /> : null}
+            </motion.div>
+          ) : (
+            <p className="mt-2 text-sm text-muted">
+              {(report.reportData && "reason" in report.reportData
+                ? report.reportData.reason
+                : null) ?? report.errorCode ?? copy.pending}
+            </p>
+          )}
+        </article>
       ) : null}
     </section>
   );

@@ -5,7 +5,6 @@ import { listPlayerReports } from "@/lib/ai-analysis/analysis-repository";
 import { analysisEnabled } from "@/lib/ai-analysis/config";
 import { allowManualRetry } from "@/lib/ai-analysis/permissions";
 import { runAnalysisForPlayer } from "@/lib/ai-analysis/run-analysis";
-import { REPORT_TYPES, type ReportType } from "@/lib/ai-analysis/types";
 import { requireCoach } from "@/lib/auth-server";
 import { getSessionByCode } from "@/lib/sessions/service";
 
@@ -66,22 +65,22 @@ export async function POST(request: Request, { params }: Params) {
       reportType?: string;
       testResultId?: string;
     };
-    if (!body.reportType || !REPORT_TYPES.includes(body.reportType as ReportType)) {
-      return jsonError("Type de rapport invalide.");
+    if (body.reportType !== "session") {
+      return jsonError("Un joueur a un seul rapport, pour l'ensemble de ses exercices.");
     }
-    const reportType = body.reportType as ReportType;
-    if (
-      !allowManualRetry(
-        `${access.coachAuth.coach.id}:${sessionPlayerId}:${reportType}:${body.testResultId ?? ""}`,
-      )
-    ) {
+    if (!allowManualRetry(`${access.coachAuth.coach.id}:${sessionPlayerId}:session`)) {
       return jsonError("Réessaie dans quelques secondes.", 429);
     }
     const outcome = await runAnalysisForPlayer(sessionPlayerId, {
-      reportType,
-      testResultId: body.testResultId,
+      reportType: "session",
       retry: true,
     });
+    if (outcome.skipped === "incomplete") {
+      return jsonError(
+        "Le rapport se génère quand le joueur a terminé tous ses exercices.",
+        409,
+      );
+    }
     return jsonOk({ outcome });
   } catch (error) {
     console.error("ai-analysis", error instanceof Error ? error.message : "failed");
