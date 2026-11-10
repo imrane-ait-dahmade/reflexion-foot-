@@ -42,6 +42,13 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+/* iOS zooms the page when a field is under 16px, and the zoom stays. */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
 ::selection {
   background: var(--brand);
   color: white;
