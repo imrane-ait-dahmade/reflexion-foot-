@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Binary,
@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { CoachAnalysisPanel } from "@/components/sessions/CoachAnalysisPanel";
 import { CoachSignOutButton } from "@/components/sessions/CoachSignOutButton";
+import { CopyCodeButton } from "@/components/sessions/CopyCodeButton";
 import { formatSessionStatus } from "@/lib/format";
 import { presentResult, sessionOverview } from "@/lib/tests/results/present";
 
@@ -87,39 +88,38 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
   const [error, setError] = useState("");
   const [closing, setClosing] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [playerQuery, setPlayerQuery] = useState("");
+  const [playerFilter, setPlayerFilter] = useState<"all" | "doing" | "done">("all");
   const [isPending, startTransition] = useTransition();
+  const selectedRef = useRef<string | null>(null);
+  selectedRef.current = selectedId;
 
-  const load = useCallback(() => {
+  const load = useCallback((quiet = false) => {
     startTransition(async () => {
-      setError("");
+      if (!quiet) setError("");
+      const playerId = selectedRef.current;
+      const query = playerId ? `?player=${encodeURIComponent(playerId)}` : "";
       try {
-        const response = await fetch(`/api/sessions/${code}/dashboard`);
+        const response = await fetch(`/api/sessions/${code}/dashboard${query}`);
         const json = await response.json();
         if (!response.ok) throw new Error(json.error ?? "Erreur");
+        if (selectedRef.current !== playerId) return;
         setData(json);
       } catch (err) {
+        if (quiet) return;
         setError(err instanceof Error ? err.message : "Erreur");
       }
     });
   }, [code]);
 
   useEffect(() => {
-    const tick = () => {
-      startTransition(async () => {
-        try {
-          const response = await fetch(`/api/sessions/${code}/dashboard`);
-          const json = await response.json();
-          if (!response.ok) return;
-          setData(json);
-        } catch {
-          // Keep last snapshot.
-        }
-      });
+    const timer = window.setTimeout(() => load(true), 0);
+    const id = window.setInterval(() => load(true), 5000);
+    return () => {
+      window.clearTimeout(timer);
+      window.clearInterval(id);
     };
-    tick();
-    const id = window.setInterval(tick, 5000);
-    return () => window.clearInterval(id);
-  }, [code]);
+  }, [load, selectedId]);
 
   const selectedPlayer = useMemo(
     () => data?.players.find((player) => player.sessionPlayerId === selectedId),
@@ -168,29 +168,47 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
   if (!data) return null;
 
   const isActive = data.session.status === "active";
+  const completedResults = data.players.reduce(
+    (sum, player) => sum + player.completedTests,
+    0,
+  );
   const overview = sessionOverview(
     data.players.length,
     data.exercises.length,
-    data.results.length,
+    completedResults,
   );
+  const needle = playerQuery.trim().toLowerCase();
+  const exerciseTotal = data.exercises.length;
+  const doingCount = data.players.filter(
+    (player) => player.completedTests < exerciseTotal,
+  ).length;
+  const doneCount = data.players.length - doingCount;
+  const visiblePlayers = data.players.filter((player) => {
+    if (needle && !player.displayName.toLowerCase().includes(needle)) return false;
+    if (playerFilter === "done") return player.completedTests >= exerciseTotal && exerciseTotal > 0;
+    if (playerFilter === "doing") return player.completedTests < exerciseTotal;
+    return true;
+  });
 
   return (
     <section className="flex flex-col gap-5">
       <div className="rounded-xl border border-border bg-surface p-4">
-        <p className="text-sm text-muted">Code</p>
-        <p className="text-3xl font-bold tracking-[0.15em] text-brand">
-          {data.session.code}
-        </p>
-        <p className="mt-1 text-muted">{data.session.title}</p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-sm text-muted">Code à partager</p>
+            <p className="text-3xl font-bold tracking-[0.15em] text-brand sm:text-4xl">
+              {data.session.code}
+            </p>
+          </div>
+          <CopyCodeButton code={data.session.code} />
+        </div>
+        <p className="mt-2 text-muted">{data.session.title}</p>
         <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
           <Users className="size-4 text-brand" aria-hidden />
           {data.players.length} joueur{data.players.length > 1 ? "s" : ""}
           <span>·</span>
-          {data.exercises.length} exercice
-          {data.exercises.length > 1 ? "s" : ""} (ordre aléatoire)
-        </p>
-        <p className="mt-2 text-sm">
-          Statut :{" "}
+          {exerciseTotal} exercice{exerciseTotal > 1 ? "s" : ""}
+          <span>·</span>
           <span className={isActive ? "text-brand" : "text-muted"}>
             {formatSessionStatus(data.session.status)}
           </span>
@@ -198,27 +216,6 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
             ? ` · jusqu'à ${formatEndsAt(data.session.endsAt)}`
             : ""}
         </p>
-      </div>
-
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold">Joueurs</h2>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button variant="secondary" onClick={load} disabled={isPending}>
-            Rafraîchir
-          </Button>
-          {isActive && (
-            <Button variant="secondary" onClick={onClose} disabled={closing}>
-              {closing ? "Fermeture…" : "Fermer la session"}
-            </Button>
-          )}
-          <Link
-            href="/coach"
-            className="inline-flex min-h-12 items-center justify-center rounded-full border border-border bg-surface px-6 font-semibold"
-          >
-            Mes sessions
-          </Link>
-          <CoachSignOutButton />
-        </div>
       </div>
 
       {error && <p className="text-sm text-danger">{error}</p>}
@@ -231,14 +228,49 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
         <div className="flex flex-col gap-3">
           <section className="rounded-xl border border-border bg-surface p-4">
             <p className="font-semibold">
-              {overview.players} joueur{overview.players > 1 ? "s" : ""} ·{" "}
               {overview.completionLabel} exercices terminés
             </p>
             <p className="mt-1 text-sm text-muted">{overview.overall}</p>
           </section>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              value={playerQuery}
+              onChange={(event) => setPlayerQuery(event.target.value)}
+              placeholder="Chercher un joueur"
+              className="min-h-12 flex-1 rounded-lg border border-border bg-transparent px-3"
+            />
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["all", `Tous ${data.players.length}`],
+                  ["doing", `En cours ${doingCount}`],
+                  ["done", `Terminés ${doneCount}`],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setPlayerFilter(id)}
+                  className={`rounded-full border px-3 py-2 text-sm ${
+                    playerFilter === id
+                      ? "border-brand bg-brand-soft text-brand"
+                      : "border-border text-muted"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         <ul className="flex flex-col gap-3">
-          {data.players.map((player) => {
+          {visiblePlayers.length === 0 ? (
+            <li className="text-sm text-muted">Aucun joueur dans cette liste.</li>
+          ) : null}
+          {visiblePlayers.map((player) => {
             const open = selectedId === player.sessionPlayerId;
+            const progress = exerciseTotal === 0
+              ? 0
+              : Math.round((player.completedTests / exerciseTotal) * 100);
             return (
               <li key={player.sessionPlayerId}>
                 <button
@@ -246,27 +278,26 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                   onClick={() =>
                     setSelectedId(open ? null : player.sessionPlayerId)
                   }
-                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-surface p-4 text-left transition hover:border-brand hover:bg-surface-hover"
+                  className="flex w-full flex-col gap-2 rounded-xl border border-border bg-surface p-4 text-left transition hover:border-brand hover:bg-surface-hover"
                 >
-                  <div>
-                    <p className="font-semibold">{player.displayName}</p>
-                    <p className="text-sm text-muted">
-                      {player.completedTests} / {data.exercises.length}{" "}
-                      exercices
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <p className="text-lg font-bold tabular-nums text-brand">
-                        {player.completedTests}/{data.exercises.length}
-                      </p>
-                      <p className="text-xs text-muted">terminés</p>
-                    </div>
+                  <span className="flex w-full items-center justify-between gap-3">
+                    <span>
+                      <span className="block font-semibold">{player.displayName}</span>
+                      <span className="text-sm text-muted">
+                        {player.completedTests}/{exerciseTotal} exercices
+                      </span>
+                    </span>
                     <ChevronDown
-                      className={`size-5 text-muted transition ${open ? "rotate-180" : ""}`}
+                      className={`size-5 shrink-0 text-muted transition ${open ? "rotate-180" : ""}`}
                       aria-hidden
                     />
-                  </div>
+                  </span>
+                  <span className="block h-1.5 overflow-hidden rounded-full bg-border">
+                    <span
+                      className="block h-full bg-brand"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </span>
                 </button>
 
                 <AnimatePresence initial={false}>
@@ -278,13 +309,6 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                       className="overflow-hidden"
                     >
                       <div className="mt-2 rounded-xl border border-brand/30 bg-brand-soft/40 p-4">
-                        <div className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-sm">
-                          <p className="text-xs text-muted">Progression</p>
-                          <p className="font-bold tabular-nums">
-                            {player.completedTests}/{data.exercises.length} exercices
-                          </p>
-                        </div>
-
                         <CoachAnalysisPanel
                           code={code}
                           sessionPlayerId={player.sessionPlayerId}
@@ -307,7 +331,7 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                             Aucun résultat encore.
                           </p>
                         ) : (
-                          <ul className="flex flex-col gap-3">
+                          <ul className="grid gap-3 sm:grid-cols-2">
                             {selectedResults.map((result) => {
                               const Icon =
                                 TEST_ICONS[result.testSlug] ?? Timer;
@@ -317,28 +341,28 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                                   key={result.id}
                                   className="rounded-xl border border-border bg-surface p-3"
                                 >
-                                  <div className="mb-2 flex items-center gap-2">
+                                  <div className="flex items-center gap-2">
                                     <Icon
-                                      className="size-5 text-brand"
+                                      className="size-5 shrink-0 text-brand"
                                       aria-hidden
                                     />
-                                    <div>
+                                    <div className="min-w-0">
                                       <p className="font-semibold">{view.name}</p>
                                       <p className="text-xs text-muted">{view.primaryLabel}</p>
                                     </div>
-                                    <p className="ml-auto text-lg font-bold tabular-nums text-brand">
-                                      {view.headline}
+                                    <p className="ml-auto text-right">
+                                      <span className="block text-lg font-bold tabular-nums text-brand">
+                                        {view.headline}
+                                      </span>
+                                      <span className="text-xs text-muted">{view.completionStatus}</span>
                                     </p>
                                   </div>
-                                  <p className="mb-2 text-sm text-muted">{view.note}</p>
-                                  <p className="mb-2 text-xs uppercase tracking-[0.14em] text-brand">
-                                    {view.completionStatus}
-                                  </p>
-                                  <details>
+                                  <details className="mt-2">
                                     <summary className="cursor-pointer text-sm font-medium">
                                       Détail des indicateurs
                                     </summary>
-                                    <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3">
+                                    <p className="mt-2 text-sm text-muted">{view.note}</p>
+                                    <dl className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
                                       {view.lines.map((line) => (
                                         <div
                                           key={line.label}
@@ -369,6 +393,24 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
         </ul>
         </div>
       )}
+
+      <div className="flex flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:flex-wrap">
+        <Button variant="secondary" onClick={() => load()} disabled={isPending}>
+          Rafraîchir
+        </Button>
+        {isActive && (
+          <Button variant="secondary" onClick={onClose} disabled={closing}>
+            {closing ? "Fermeture…" : "Fermer la session"}
+          </Button>
+        )}
+        <Link
+          href="/coach"
+          className="inline-flex min-h-12 items-center justify-center rounded-full border border-border bg-surface px-6 font-semibold"
+        >
+          Mes sessions
+        </Link>
+        <CoachSignOutButton />
+      </div>
     </section>
   );
 }

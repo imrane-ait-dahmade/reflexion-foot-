@@ -16,6 +16,7 @@ export default async function CoachSessionPage({ params }: PageProps) {
   const { code } = await params;
   return (
     <TestShell
+      wide
       title="Résultats de session"
       description="Les résultats des joueurs apparaissent ici en direct."
     >

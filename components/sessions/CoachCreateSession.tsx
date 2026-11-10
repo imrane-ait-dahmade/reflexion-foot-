@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { CoachSignOutButton } from "@/components/sessions/CoachSignOutButton";
+import { CopyCodeButton } from "@/components/sessions/CopyCodeButton";
 import { formatSessionStatus } from "@/lib/format";
 import type { TestSlug } from "@/lib/db/types";
 import { TESTS } from "@/lib/tests/registry";
@@ -159,9 +160,10 @@ export function CoachCreateSession() {
           })}
         </ul>
         <div className="flex flex-col gap-2 sm:flex-row">
+          <CopyCodeButton code={created.code} />
           <Link
             href={`/coach/sessions/${created.code}`}
-            className="inline-flex min-h-12 flex-1 items-center justify-center rounded-lg bg-brand px-6 font-semibold text-white"
+            className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full bg-brand px-6 font-semibold text-white"
           >
             Voir les résultats
           </Link>
@@ -195,13 +197,32 @@ export function CoachCreateSession() {
         </label>
 
         <div className="flex flex-col gap-2">
-          <div className="flex items-baseline justify-between gap-2">
-            <p className="text-sm font-medium">Exercices</p>
-            <p className="text-xs text-muted">
-              {selected.length} sélectionné{selected.length > 1 ? "s" : ""} ·
-              clique pour ajouter / retirer
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-medium">
+              Exercices · {selected.length} sélectionné{selected.length > 1 ? "s" : ""}
             </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="rounded-full border border-border px-3 py-1 text-sm"
+                onClick={() =>
+                  setSelected(TESTS.map((test) => test.slug as TestSlug))
+                }
+              >
+                Tout sélectionner
+              </button>
+              <button
+                type="button"
+                className="rounded-full border border-border px-3 py-1 text-sm"
+                onClick={() => setSelected([])}
+              >
+                Aucun
+              </button>
+            </div>
           </div>
+          <p className="text-xs text-muted">
+            Les joueurs reçoivent ces exercices dans un ordre mélangé.
+          </p>
           <ul className="grid gap-2 sm:grid-cols-2">
             {TESTS.map((test) => {
               const slug = test.slug as TestSlug;
@@ -279,10 +300,13 @@ export function CoachCreateSession() {
                   href={`/coach/sessions/${session.code}`}
                   className="flex items-center justify-between gap-3 rounded-xl border border-border p-4 hover:bg-surface-hover"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-semibold">{session.title}</p>
+                    <p className="text-lg font-bold tracking-[0.12em] text-brand">
+                      {session.code}
+                    </p>
                     <p className="text-sm text-muted">
-                      Code {session.code} · {session.exerciseCount} exercice(s)
+                      {session.exerciseCount} exercice{session.exerciseCount > 1 ? "s" : ""}
                       {session.endsAt
                         ? ` · jusqu'à ${formatEndsAt(session.endsAt)}`
                         : ""}

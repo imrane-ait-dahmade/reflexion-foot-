@@ -167,65 +167,63 @@ export type SubmitResultInput = {
 export async function submitResult(input: SubmitResultInput) {
   const db = getDb();
 
-  const [player] = await db
-    .select()
+  const [row] = await db
+    .select({
+      playerId: sessionPlayers.id,
+      session: trainingSessions,
+      exerciseId: sessionExercises.id,
+      existingId: testResults.id,
+      existingScore: testResults.score,
+    })
     .from(sessionPlayers)
+    .innerJoin(
+      trainingSessions,
+      eq(trainingSessions.id, sessionPlayers.sessionId),
+    )
+    .leftJoin(
+      sessionExercises,
+      and(
+        eq(sessionExercises.sessionId, sessionPlayers.sessionId),
+        eq(sessionExercises.testSlug, input.testSlug),
+      ),
+    )
+    .leftJoin(
+      testResults,
+      and(
+        eq(testResults.sessionPlayerId, sessionPlayers.id),
+        eq(testResults.testSlug, input.testSlug),
+      ),
+    )
     .where(eq(sessionPlayers.id, input.sessionPlayerId))
     .limit(1);
-  if (!player) {
+  if (!row) {
     return { ok: false as const, error: "Joueur introuvable." };
   }
 
-  const [session] = await db
-    .select()
-    .from(trainingSessions)
-    .where(eq(trainingSessions.id, player.sessionId))
-    .limit(1);
-  if (!session) {
-    return { ok: false as const, error: "La session n'est plus active." };
-  }
-  const currentSession = await ensureSessionNotExpired(session);
+  const currentSession = await ensureSessionNotExpired(row.session);
   if (!canAcceptResult(currentSession)) {
     return {
       ok: false as const,
       error: "Cette session est fermée ou a expiré.",
     };
   }
-
-  const [exercise] = await db
-    .select()
-    .from(sessionExercises)
-    .where(
-      and(
-        eq(sessionExercises.sessionId, player.sessionId),
-        eq(sessionExercises.testSlug, input.testSlug),
-      ),
-    )
-    .limit(1);
-  if (!exercise) {
+  if (!row.exerciseId) {
     return { ok: false as const, error: "Ce test ne fait pas partie de la session." };
   }
-
-  const [existing] = await db
-    .select()
-    .from(testResults)
-    .where(
-      and(
-        eq(testResults.sessionPlayerId, player.id),
-        eq(testResults.testSlug, input.testSlug),
-      ),
-    )
-    .limit(1);
-  if (existing) {
-    return { ok: true as const, result: existing, duplicate: true as const };
+  if (row.existingId) {
+    return {
+      ok: true as const,
+      result: { id: row.existingId, score: row.existingScore ?? 0 },
+      duplicate: true as const,
+    };
   }
 
   try {
     const [result] = await db
       .insert(testResults)
       .values({
-        sessionId: player.sessionId,
-        sessionPlayerId: player.id,
+        sessionId: currentSession.id,
+        sessionPlayerId: row.playerId,
         testSlug: input.testSlug,
         score: input.score,
         accuracy: String(input.accuracy),
@@ -245,13 +243,17 @@ export async function submitResult(input: SubmitResultInput) {
       .from(testResults)
       .where(
         and(
-          eq(testResults.sessionPlayerId, player.id),
+          eq(testResults.sessionPlayerId, row.playerId),
           eq(testResults.testSlug, input.testSlug),
         ),
       )
       .limit(1);
     if (raceExisting) {
-      return { ok: true as const, result: raceExisting, duplicate: true as const };
+      return {
+        ok: true as const,
+        result: { id: raceExisting.id, score: raceExisting.score },
+        duplicate: true as const,
+      };
     }
     return {
       ok: false as const,
@@ -390,7 +392,11 @@ export async function getPlayerProgress(sessionPlayerId: string) {
   };
 }
 
-export async function getSessionDashboard(code: string, coachId?: string) {
+export async function getSessionDashboard(
+  code: string,
+  coachId?: string,
+  playerId?: string,
+) {
   const found = await getSessionByCode(code);
   if (!found) return null;
   if (coachId && found.session.coachId !== coachId) return null;
@@ -418,10 +424,17 @@ export async function getSessionDashboard(code: string, coachId?: string) {
     )
     .orderBy(asc(sessionPlayers.joinedAt));
 
-  const results = await db
-    .select()
-    .from(testResults)
-    .where(eq(testResults.sessionId, found.session.id));
+  const results = playerId
+    ? await db
+        .select()
+        .from(testResults)
+        .where(
+          and(
+            eq(testResults.sessionId, found.session.id),
+            eq(testResults.sessionPlayerId, playerId),
+          ),
+        )
+    : [];
 
   return {
     session: found.session,

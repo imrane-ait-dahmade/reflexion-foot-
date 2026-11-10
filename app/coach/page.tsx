@@ -18,6 +18,7 @@ export default async function CoachPage() {
 
   return (
     <TestShell
+      wide
       title={`Bonjour, ${coachAuth.coach.displayName}`}
       description="Crée une session, partage le code aux joueurs, puis suis leurs résultats."
     >

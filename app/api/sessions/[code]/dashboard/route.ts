@@ -10,7 +10,18 @@ export async function GET(_request: Request, { params }: Params) {
     if (!coachAuth) return jsonError("Connexion entraîneur requise.", 401);
 
     const { code } = await params;
-    const dashboard = await getSessionDashboard(code, coachAuth.coach.id);
+    const player = new URL(_request.url).searchParams.get("player");
+    if (
+      player &&
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(player)
+    ) {
+      return jsonError("Joueur introuvable.", 404);
+    }
+    const dashboard = await getSessionDashboard(
+      code,
+      coachAuth.coach.id,
+      player ?? undefined,
+    );
     if (!dashboard) {
       return jsonError("Session introuvable.", 404);
     }
