@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { motion } from "motion/react";
 import {
   Binary,
@@ -13,8 +14,19 @@ import {
   Timer,
   Zap,
 } from "lucide-react";
-import { ExerciseDemo } from "@/components/tests/shared/ExerciseDemo";
 import type { TestSlug } from "@/lib/db/types";
+
+const ExerciseDemo = dynamic(
+  () =>
+    import("@/components/tests/shared/ExerciseDemo").then(
+      (module) => module.ExerciseDemo,
+    ),
+  {
+    loading: () => (
+      <div className="mx-auto aspect-[16/10] w-full max-w-sm rounded-2xl border border-brand/30 bg-black" />
+    ),
+  },
+);
 
 const VISUALS: Record<
   TestSlug,
