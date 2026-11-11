@@ -190,18 +190,46 @@ export function buildReportPdfHtml(input: ReportPdfInput) {
 }
 
 export function openReportPdf(html: string) {
-  const popup = window.open("", "_blank", "noopener,noreferrer");
-  if (!popup) return false;
-  popup.document.write(html);
-  popup.document.close();
-  popup.focus();
-  // Give images (logo) a beat to load before print.
-  window.setTimeout(() => {
-    try {
-      popup.print();
-    } catch {
-      // User can still print manually.
-    }
-  }, 250);
+  // Blob URL avoids about:blank + noopener blocking document.write.
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const popup = window.open(url, "_blank");
+
+  if (!popup) {
+    // Popup blocked: fall back to a same-tab download.
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "rapport-realscouting-academy.html";
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    return false;
+  }
+
+  let printed = false;
+  const printWhenReady = () => {
+    if (printed) return;
+    printed = true;
+    window.setTimeout(() => {
+      try {
+        popup.focus();
+        popup.print();
+      } catch {
+        // Content stays visible; user can print manually.
+      } finally {
+        window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      }
+    }, 450);
+  };
+
+  try {
+    popup.addEventListener("load", printWhenReady);
+  } catch {
+    // Ignore if the handle does not support listeners.
+  }
+  // Fallback if load already happened or never fires.
+  window.setTimeout(printWhenReady, 700);
   return true;
 }
