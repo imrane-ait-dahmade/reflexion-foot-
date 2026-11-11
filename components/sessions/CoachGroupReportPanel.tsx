@@ -153,7 +153,10 @@ export function CoachGroupReportPanel({
   };
 
   const report = data?.report ?? null;
-  const completed = report?.status === "completed" && isReport(report.reportData);
+  const reportContent =
+    report?.status === "completed" && isReport(report.reportData)
+      ? report.reportData
+      : null;
 
   return (
     <motion.section
@@ -230,7 +233,7 @@ export function CoachGroupReportPanel({
         {busy ? <AnalysisWait key="group-wait" label={copy.pending} /> : null}
       </AnimatePresence>
 
-      {completed ? (
+      {reportContent ? (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -238,7 +241,7 @@ export function CoachGroupReportPanel({
         >
           <p className="font-semibold">{copy.reportTitle}</p>
           <p className="mt-1 line-clamp-2 text-sm text-muted">
-            {report.reportData[language].executive_summary}
+            {reportContent[language].executive_summary}
           </p>
           <button
             type="button"
@@ -250,7 +253,7 @@ export function CoachGroupReportPanel({
         </motion.div>
       ) : null}
 
-      {completed ? (
+      {reportContent ? (
         <ReportModal
           open={modalOpen}
           onClose={() => setModalOpen(false)}
@@ -258,7 +261,7 @@ export function CoachGroupReportPanel({
           subtitle={sessionTitle}
           direction={direction}
         >
-          <ReportBody content={report.reportData[language]} labels={copy} />
+          <ReportBody content={reportContent[language]} labels={copy} />
         </ReportModal>
       ) : null}
     </motion.section>

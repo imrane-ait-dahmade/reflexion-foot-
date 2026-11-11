@@ -191,7 +191,10 @@ export function CoachAnalysisPanel({
   const direction = textDirection(language);
   const report = data?.reports.find((item) => item.reportType === "session") ?? null;
   const finished = exerciseCount > 0 && results.length >= exerciseCount;
-  const completed = report?.status === "completed" && isReport(report.reportData);
+  const reportContent =
+    report?.status === "completed" && isReport(report.reportData)
+      ? report.reportData
+      : null;
 
   const exportPdf = () => {
     const reportBlocks = (report ? [report] : [])
@@ -299,7 +302,7 @@ export function CoachAnalysisPanel({
         <p className="text-sm text-muted">{copy.empty}</p>
       ) : null}
 
-      {completed ? (
+      {reportContent ? (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -307,7 +310,7 @@ export function CoachAnalysisPanel({
         >
           <p className="font-semibold">{copy.reportTitle}</p>
           <p className="mt-1 line-clamp-2 text-sm text-muted">
-            {report.reportData[language].executive_summary}
+            {reportContent[language].executive_summary}
           </p>
           <button
             type="button"
@@ -340,7 +343,7 @@ export function CoachAnalysisPanel({
         <p className="text-sm text-muted">{copy.pending}</p>
       ) : null}
 
-      {completed ? (
+      {reportContent ? (
         <ReportModal
           open={modalOpen}
           onClose={() => setModalOpen(false)}
@@ -348,7 +351,7 @@ export function CoachAnalysisPanel({
           subtitle={`${playerName} · ${sessionTitle}`}
           direction={direction}
         >
-          <ReportBody content={report.reportData[language]} labels={copy} />
+          <ReportBody content={reportContent[language]} labels={copy} />
         </ReportModal>
       ) : null}
     </section>
