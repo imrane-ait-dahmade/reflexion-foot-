@@ -60,6 +60,7 @@ export const trainingSessions = pgTable(
     exerciseCount: integer("exercise_count").notNull().default(2),
     startsAt: timestamp("starts_at", { withTimezone: true }),
     endsAt: timestamp("ends_at", { withTimezone: true }),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

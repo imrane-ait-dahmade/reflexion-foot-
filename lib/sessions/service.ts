@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import {
   sessionExercises,
@@ -275,7 +275,12 @@ export async function listCoachSessions(coachId: string) {
       exerciseCount: trainingSessions.exerciseCount,
     })
     .from(trainingSessions)
-    .where(eq(trainingSessions.coachId, coachId))
+    .where(
+      and(
+        eq(trainingSessions.coachId, coachId),
+        isNull(trainingSessions.archivedAt),
+      ),
+    )
     .orderBy(sql`${trainingSessions.createdAt} desc`);
 
   // Refresh expired statuses so the coach list stays accurate.
@@ -319,6 +324,34 @@ export async function closeSession(code: string, coachId: string) {
     .where(eq(trainingSessions.id, found.session.id))
     .returning();
 
+  return { ok: true as const, session };
+}
+
+export async function archiveSession(code: string, coachId: string) {
+  const found = await getSessionByCode(code);
+  if (!found || found.session.coachId !== coachId || found.session.archivedAt) {
+    return { ok: false as const, error: "Session introuvable." };
+  }
+
+  const db = getDb();
+  const [session] = await db
+    .update(trainingSessions)
+    .set({
+      status: "closed",
+      archivedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(trainingSessions.id, found.session.id),
+        isNull(trainingSessions.archivedAt),
+      ),
+    )
+    .returning();
+
+  if (!session) {
+    return { ok: false as const, error: "Session introuvable." };
+  }
   return { ok: true as const, session };
 }
 
@@ -398,7 +431,7 @@ export async function getSessionDashboard(
   playerId?: string,
 ) {
   const found = await getSessionByCode(code);
-  if (!found) return null;
+  if (!found || found.session.archivedAt) return null;
   if (coachId && found.session.coachId !== coachId) return null;
 
   const db = getDb();

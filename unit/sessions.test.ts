@@ -45,6 +45,18 @@ describe("session access", () => {
       ),
     ).toBe(false);
     expect(canAcceptResult({ status: "draft", endsAt: null }, now)).toBe(false);
+    expect(
+      isJoinable(
+        { status: "active", endsAt: null, archivedAt: new Date(now) },
+        now,
+      ),
+    ).toBe(false);
+    expect(
+      canAcceptResult(
+        { status: "active", endsAt: null, archivedAt: new Date(now) },
+        now,
+      ),
+    ).toBe(false);
   });
 
   it("keeps a session open for four hours", () => {

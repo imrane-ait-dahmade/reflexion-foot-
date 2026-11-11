@@ -63,6 +63,9 @@ CREATE TABLE training_sessions (
     CHECK (exercise_count >= 1 AND exercise_count <= 10),
   starts_at   TIMESTAMPTZ,
   ends_at     TIMESTAMPTZ,
+  -- Set when the coach removes the session from their list.
+  -- The row, the players and the results stay so the AI can still use them.
+  archived_at TIMESTAMPTZ,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
 

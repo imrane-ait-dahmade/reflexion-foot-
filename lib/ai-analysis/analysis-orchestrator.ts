@@ -38,6 +38,9 @@ function failureCode(error: unknown) {
   const message = error instanceof Error ? error.message : "provider_error";
   if (message.includes(".optional()")) return "schema_optional_field";
   if (message === "missing_api_key") return "missing_api_key";
+  if (message === "incomplete_response" || message === "empty_response") {
+    return message;
+  }
   const compact = message.replace(/\s+/g, " ").trim().slice(0, 80);
   return compact || "provider_error";
 }

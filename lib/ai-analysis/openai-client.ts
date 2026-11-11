@@ -18,15 +18,24 @@ export async function generateWithOpenAI(
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("missing_api_key");
   const client = new OpenAI({ apiKey });
+  // A session report is bilingual and covers every exercise; 3500 truncates it.
+  const maxOutputTokens = context.reportType === "session" ? 8000 : 4500;
   const response = await client.responses.parse({
     model: analysisModel(),
-    max_output_tokens: 3500,
+    max_output_tokens: maxOutputTokens,
     input: [
       { role: "system", content: analysisInstructions() },
       { role: "user", content: JSON.stringify(analysisPayload(context)) },
     ],
     text: { format: zodTextFormat(reportContentSchema, "coach_report") },
   });
+  if (!response.output_parsed) {
+    throw new Error(
+      response.status === "incomplete" || response.incomplete_details
+        ? "incomplete_response"
+        : "empty_response",
+    );
+  }
   return {
     parsed: response.output_parsed,
     model: response.model ?? analysisModel(),

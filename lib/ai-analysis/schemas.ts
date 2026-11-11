@@ -24,14 +24,14 @@ const recommendation = z
 
 const localized = z
   .object({
-    executive_summary: z.string().min(1).max(1400),
-    what_was_assessed: z.string().min(1).max(900),
-    performance_observations: z.array(observation).max(8),
-    strengths: z.array(observation).max(6),
-    development_areas: z.array(observation).max(6),
-    training_recommendations: z.array(recommendation).max(6),
-    coach_action_plan: z.array(z.string().min(1).max(320)).max(6),
-    limitations: z.array(z.string().min(1).max(500)).max(6),
+    executive_summary: z.string().min(1).max(2000),
+    what_was_assessed: z.string().min(1).max(1200),
+    performance_observations: z.array(observation).max(12),
+    strengths: z.array(observation).max(8),
+    development_areas: z.array(observation).max(8),
+    training_recommendations: z.array(recommendation).max(8),
+    coach_action_plan: z.array(z.string().min(1).max(400)).max(8),
+    limitations: z.array(z.string().min(1).max(500)).max(8),
   })
   .strict();
 
@@ -46,6 +46,9 @@ export const reportContentSchema = z
   .strict();
 
 export function parseReportContent(value: unknown, allowedMetricKeys: string[]) {
+  if (value == null) {
+    return { ok: false as const, error: "empty_response" };
+  }
   const parsed = reportContentSchema.safeParse(value);
   if (!parsed.success) {
     return { ok: false as const, error: "invalid_schema" };

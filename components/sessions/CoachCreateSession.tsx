@@ -70,6 +70,7 @@ export function CoachCreateSession() {
   const [error, setError] = useState("");
   const [created, setCreated] = useState<CreatedSession | null>(null);
   const [sessions, setSessions] = useState<SessionListItem[]>([]);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const loadSessions = useCallback(() => {
@@ -94,6 +95,30 @@ export function CoachCreateSession() {
         ? current.filter((item) => item !== slug)
         : [...current, slug],
     );
+  };
+
+  const onRemove = async (session: SessionListItem) => {
+    if (
+      !window.confirm(
+        `Retirer « ${session.title} » ? Elle disparaît de ta liste. Les résultats restent enregistrés pour l'analyse.`,
+      )
+    ) {
+      return;
+    }
+    setRemovingId(session.id);
+    setError("");
+    try {
+      const response = await fetch(`/api/sessions/${session.code}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Erreur");
+      setSessions((current) => current.filter((item) => item.id !== session.id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setRemovingId(null);
+    }
   };
 
   const onCreate = async () => {
@@ -295,10 +320,10 @@ export function CoachCreateSession() {
         ) : (
           <ul className="flex flex-col gap-2">
             {sessions.map((session) => (
-              <li key={session.id}>
+              <li key={session.id} className="flex items-stretch gap-2">
                 <Link
                   href={`/coach/sessions/${session.code}`}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-border p-4 hover:bg-surface-hover"
+                  className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-xl border border-border p-4 hover:bg-surface-hover"
                 >
                   <div className="min-w-0">
                     <p className="font-semibold">{session.title}</p>
@@ -322,6 +347,14 @@ export function CoachCreateSession() {
                     {formatSessionStatus(session.status)}
                   </span>
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => onRemove(session)}
+                  disabled={removingId === session.id}
+                  className="shrink-0 rounded-xl border border-danger/40 px-3 text-sm text-danger disabled:opacity-50"
+                >
+                  {removingId === session.id ? "…" : "Supprimer"}
+                </button>
               </li>
             ))}
           </ul>

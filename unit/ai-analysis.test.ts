@@ -379,6 +379,18 @@ describe("AI analysis orchestration", () => {
     resetRetryWindow();
   });
 
+  it("never shows raw AI error codes to the coach", async () => {
+    const { friendlyReportError, friendlyApiError } = await import(
+      "@/lib/ai-analysis/report-errors"
+    );
+    expect(friendlyReportError("invalid_schema", "fr")).not.toContain("invalid");
+    expect(friendlyReportError("invalid_schema", "fr")).toMatch(/Relance/);
+    expect(friendlyReportError("incomplete_response", "ar")).toContain("أعد");
+    expect(friendlyApiError("Réessaie dans quelques secondes.", "fr")).toMatch(
+      /secondes|Relance|Attends/i,
+    );
+  });
+
   it("compares a player with all stored results, not with his own previous score", () => {
     const player = bundle(
       "a",

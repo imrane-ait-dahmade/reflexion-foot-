@@ -6,10 +6,12 @@ export type SessionAccess = {
   status: SessionStatus;
   endsAt: Date | null;
   updatedAt?: Date | null;
+  archivedAt?: Date | null;
 };
 
 /** A player can join only while the session is active and not past its end. */
 export function isJoinable(session: SessionAccess, now = Date.now()) {
+  if (session.archivedAt) return false;
   return (
     session.status === "active" &&
     (!session.endsAt || session.endsAt.getTime() > now)
@@ -21,6 +23,7 @@ export function isJoinable(session: SessionAccess, now = Date.now()) {
  * session ends or the coach closes it. Draft sessions never accept results.
  */
 export function canAcceptResult(session: SessionAccess, now = Date.now()) {
+  if (session.archivedAt) return false;
   if (session.status === "active") {
     if (!session.endsAt) return true;
     return session.endsAt.getTime() + SESSION_SUBMIT_GRACE_MS > now;

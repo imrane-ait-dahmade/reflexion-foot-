@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -84,9 +85,11 @@ function formatEndsAt(endsAt: string | null) {
 }
 
 export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
+  const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
   const [closing, setClosing] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [playerQuery, setPlayerQuery] = useState("");
   const [playerFilter, setPlayerFilter] = useState<"all" | "doing" | "done">("all");
@@ -156,6 +159,27 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
       setError(err instanceof Error ? err.message : "Erreur");
     } finally {
       setClosing(false);
+    }
+  };
+
+  const onRemove = async () => {
+    if (
+      !window.confirm(
+        "Retirer cette séance ? Elle disparaît de ta liste. Les résultats restent enregistrés pour l'analyse.",
+      )
+    ) {
+      return;
+    }
+    setRemoving(true);
+    try {
+      const response = await fetch(`/api/sessions/${code}`, { method: "DELETE" });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Erreur");
+      router.push("/coach");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur");
+      setRemoving(false);
     }
   };
 
@@ -399,10 +423,13 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
           Rafraîchir
         </Button>
         {isActive && (
-          <Button variant="secondary" onClick={onClose} disabled={closing}>
+          <Button variant="secondary" onClick={onClose} disabled={closing || removing}>
             {closing ? "Fermeture…" : "Fermer la session"}
           </Button>
         )}
+        <Button variant="secondary" onClick={onRemove} disabled={removing || closing}>
+          {removing ? "Suppression…" : "Supprimer"}
+        </Button>
         <Link
           href="/coach"
           className="inline-flex min-h-12 items-center justify-center rounded-full border border-border bg-surface px-6 font-semibold"

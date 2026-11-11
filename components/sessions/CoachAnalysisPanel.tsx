@@ -3,6 +3,10 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { textDirection } from "@/lib/ai-analysis/permissions";
+import {
+  friendlyApiError,
+  friendlyReportError,
+} from "@/lib/ai-analysis/report-errors";
 import type { LocalizedReport, ReportContent, StoredReport } from "@/lib/ai-analysis/types";
 
 type ReportsResponse = {
@@ -117,20 +121,24 @@ export function CoachAnalysisPanel({
       `/api/sessions/${code}/players/${sessionPlayerId}/reports`,
     );
     const json = await response.json();
-    if (!response.ok) throw new Error(json.error ?? "Erreur");
+    if (!response.ok) {
+      throw new Error(friendlyApiError(json.error ?? "", language));
+    }
     setData(json);
     return json as ReportsResponse;
-  }, [code, sessionPlayerId]);
+  }, [code, language, sessionPlayerId]);
 
   useEffect(() => {
     startTransition(async () => {
       try {
         await load();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Erreur");
+        setError(
+          friendlyApiError(err instanceof Error ? err.message : "", language),
+        );
       }
     });
-  }, [load]);
+  }, [language, load]);
 
   const generate = async () => {
     setError("");
@@ -146,17 +154,26 @@ export function CoachAnalysisPanel({
       );
       const json = await response.json();
       if (!response.ok) {
-        setError(json.error ?? "Erreur");
+        setError(friendlyApiError(json.error ?? "", language));
         return;
       }
       const next = await load();
       const created = next.reports.find((report) => report.reportType === "session");
       if (created?.status === "completed") setOpen(true);
       if (created?.status === "failed") {
-        setError(language === "ar" ? "تعذر إنشاء التقرير." : "Le rapport n'a pas pu être créé.");
+        setError(friendlyReportError(created.errorCode, language));
+      }
+      if (created?.status === "not_eligible") {
+        const reason =
+          created.reportData && "reason" in created.reportData
+            ? created.reportData.reason
+            : null;
+        setError(friendlyReportError("not_eligible", language, reason));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur");
+      setError(
+        friendlyApiError(err instanceof Error ? err.message : "", language),
+      );
     } finally {
       setBusy(false);
     }
@@ -232,7 +249,14 @@ export function CoachAnalysisPanel({
           </button>
         </div>
       </div>
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error ? (
+        <p
+          role="alert"
+          className="mb-3 rounded-xl border border-danger/40 px-3 py-2 text-sm text-danger"
+        >
+          {error}
+        </p>
+      ) : null}
       {!data ? <p className="text-sm text-muted">{copy.loading}</p> : null}
       {data && !data.enabled ? <p className="text-sm text-muted">{copy.off}</p> : null}
       {data?.enabled ? <p className="mb-3 text-sm text-muted">{copy.basis}</p> : null}
@@ -246,7 +270,11 @@ export function CoachAnalysisPanel({
           disabled={busy}
           onClick={generate}
         >
-          {busy ? copy.pending : report?.status === "failed" ? copy.retry : copy.generate}
+          {busy
+            ? copy.pending
+            : report?.status === "failed" || report?.status === "not_eligible"
+              ? copy.retry
+              : copy.generate}
         </button>
       ) : null}
       <AnimatePresence>
@@ -255,7 +283,7 @@ export function CoachAnalysisPanel({
       {data?.enabled && finished && !report && !busy ? (
         <p className="text-sm text-muted">{copy.empty}</p>
       ) : null}
-      {report ? (
+      {report && report.status === "completed" && isReport(report.reportData) ? (
         <article className="rounded-lg border border-border p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="font-semibold">{copy.reportTitle}</p>
@@ -263,22 +291,36 @@ export function CoachAnalysisPanel({
               {data?.playerName} · {data?.sessionDate ? new Date(data.sessionDate).toLocaleDateString(language === "ar" ? "ar" : "fr-FR") : ""}
             </p>
           </div>
-          {isReport(report.reportData) ? (
-            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-              <p className="mt-2 text-sm">{report.reportData[language].executive_summary}</p>
-              <button type="button" className="mt-2 text-sm text-brand" onClick={() => setOpen((current) => !current)}>
-                {open ? "—" : copy.summary}
-              </button>
-              {open ? <ReportBody content={report.reportData[language]} labels={copy} /> : null}
-            </motion.div>
-          ) : (
-            <p className="mt-2 text-sm text-muted">
-              {(report.reportData && "reason" in report.reportData
-                ? report.reportData.reason
-                : null) ?? report.errorCode ?? copy.pending}
-            </p>
-          )}
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
+            <p className="mt-2 text-sm">{report.reportData[language].executive_summary}</p>
+            <button type="button" className="mt-2 text-sm text-brand" onClick={() => setOpen((current) => !current)}>
+              {open ? "—" : copy.summary}
+            </button>
+            {open ? <ReportBody content={report.reportData[language]} labels={copy} /> : null}
+          </motion.div>
         </article>
+      ) : null}
+      {report &&
+      (report.status === "failed" || report.status === "not_eligible") &&
+      !busy &&
+      !error ? (
+        <p
+          role="alert"
+          className="rounded-xl border border-danger/40 px-3 py-2 text-sm text-danger"
+        >
+          {friendlyReportError(
+            report.status === "not_eligible" ? "not_eligible" : report.errorCode,
+            language,
+            report.reportData && "reason" in report.reportData
+              ? report.reportData.reason
+              : null,
+          )}
+        </p>
+      ) : null}
+      {report &&
+      (report.status === "pending" || report.status === "processing") &&
+      !busy ? (
+        <p className="text-sm text-muted">{copy.pending}</p>
       ) : null}
     </section>
   );
