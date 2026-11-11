@@ -11,7 +11,11 @@ const DEMO_POSTER = "/demo-cognitif-connexion.jpg";
 /**
  * Home demo opens in a popup. The mp4 loads only after the visitor starts play.
  */
-export function HomeDemoVideo() {
+export function HomeDemoVideo({
+  className = "",
+}: {
+  className?: string;
+} = {}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const reduceMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
@@ -57,24 +61,24 @@ export function HomeDemoVideo() {
       <motion.button
         type="button"
         onClick={() => setOpen(true)}
-        className="group relative mx-auto block w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-surface text-left"
+        className={`group relative mx-auto block w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-surface text-left ${className}`}
         whileHover={reduceMotion ? undefined : { scale: 1.01 }}
         whileTap={reduceMotion ? undefined : { scale: 0.99 }}
         transition={{ type: "spring", stiffness: 320, damping: 24 }}
         aria-haspopup="dialog"
       >
-        <span className="relative block aspect-video bg-black">
+        <span className="relative block aspect-video bg-black md:aspect-auto md:h-[min(34vh,17.5rem)] lg:h-[min(38vh,20rem)]">
           <Image
             src={DEMO_POSTER}
             alt=""
             fill
-            sizes="(max-width: 672px) 100vw, 576px"
+            sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover opacity-80 transition group-hover:opacity-90"
             priority
           />
-          <span className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/50 text-white">
-            <span className="flex size-16 items-center justify-center rounded-full bg-brand text-white shadow-lg shadow-brand/30 transition group-hover:scale-105">
-              <Play className="size-7 fill-current" aria-hidden />
+          <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 text-white sm:gap-3">
+            <span className="flex size-14 items-center justify-center rounded-full bg-brand text-white shadow-lg shadow-brand/30 transition group-hover:scale-105 sm:size-16">
+              <Play className="size-6 fill-current sm:size-7" aria-hidden />
             </span>
             <span className="text-sm font-semibold tracking-wide">
               Voir la démo

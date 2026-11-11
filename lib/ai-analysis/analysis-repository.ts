@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import {
   aiReports,
@@ -7,10 +7,12 @@ import {
   testResults,
   trainingSessions,
 } from "@/lib/db/drizzle-schema";
-import type { PlayerBundle } from "./analysis-context";
+import type { PlayerBundle, SessionGroupBundle } from "./analysis-context";
 import type { AnalysisStore } from "./analysis-orchestrator";
 import type { ReportContent, ReportKey, StoredReport } from "./types";
 import { PROMPT_VERSION } from "./types";
+
+export type { SessionGroupBundle };
 
 function toStored(row: typeof aiReports.$inferSelect): StoredReport {
   return {
@@ -32,9 +34,11 @@ function toStored(row: typeof aiReports.$inferSelect): StoredReport {
 
 function matchKey(key: ReportKey) {
   const base = [
-    eq(aiReports.sessionPlayerId, key.sessionPlayerId),
     eq(aiReports.sessionId, key.sessionId),
     eq(aiReports.reportType, key.reportType),
+    key.sessionPlayerId == null
+      ? isNull(aiReports.sessionPlayerId)
+      : eq(aiReports.sessionPlayerId, key.sessionPlayerId),
   ];
   if (key.testResultId) {
     base.push(eq(aiReports.testResultId, key.testResultId));
@@ -276,5 +280,91 @@ export async function listPlayerReports(sessionPlayerId: string, coachId: string
       outputTokens: usageRows.reduce((sum, row) => sum + row.outputTokens, 0),
       models: [...new Set(usageRows.map((row) => row.model).filter(Boolean))],
     },
+  };
+}
+
+export async function loadSessionGroupBundle(
+  sessionId: string,
+): Promise<SessionGroupBundle | null> {
+  const db = getDb();
+  const [session] = await db
+    .select({
+      id: trainingSessions.id,
+      title: trainingSessions.title,
+    })
+    .from(trainingSessions)
+    .where(eq(trainingSessions.id, sessionId))
+    .limit(1);
+  if (!session) return null;
+
+  const assigned = await db
+    .select({ testSlug: sessionExercises.testSlug })
+    .from(sessionExercises)
+    .where(eq(sessionExercises.sessionId, sessionId));
+
+  const players = await db
+    .select({
+      sessionPlayerId: sessionPlayers.id,
+      displayName: sessionPlayers.displayName,
+    })
+    .from(sessionPlayers)
+    .where(eq(sessionPlayers.sessionId, sessionId));
+
+  const playerIds = players.map((player) => player.sessionPlayerId);
+  const results = playerIds.length
+    ? await db
+        .select()
+        .from(testResults)
+        .where(inArray(testResults.sessionPlayerId, playerIds))
+    : [];
+
+  const byPlayer = new Map<string, ReturnType<typeof mapResult>[]>();
+  for (const row of results) {
+    const list = byPlayer.get(row.sessionPlayerId) ?? [];
+    list.push(mapResult(row));
+    byPlayer.set(row.sessionPlayerId, list);
+  }
+
+  return {
+    sessionId: session.id,
+    title: session.title,
+    assigned: assigned.map((item) => item.testSlug),
+    players: players.map((player) => ({
+      sessionPlayerId: player.sessionPlayerId,
+      displayName: player.displayName,
+      results: byPlayer.get(player.sessionPlayerId) ?? [],
+    })),
+  };
+}
+
+export async function listGroupReport(sessionId: string, coachId: string) {
+  const db = getDb();
+  const [session] = await db
+    .select({
+      id: trainingSessions.id,
+      title: trainingSessions.title,
+      startsAt: trainingSessions.startsAt,
+      coachId: trainingSessions.coachId,
+    })
+    .from(trainingSessions)
+    .where(eq(trainingSessions.id, sessionId))
+    .limit(1);
+  if (!session || session.coachId !== coachId) return null;
+
+  const [report] = await db
+    .select()
+    .from(aiReports)
+    .where(
+      and(
+        eq(aiReports.sessionId, sessionId),
+        eq(aiReports.reportType, "group"),
+        isNull(aiReports.sessionPlayerId),
+      ),
+    )
+    .limit(1);
+
+  return {
+    session,
+    report: report ? toStored(report) : null,
   };
 }

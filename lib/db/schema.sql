@@ -233,7 +233,7 @@ GROUP BY sp.session_id, sp.id, sp.display_name, sp.joined_at;
 -- Apply lib/db/migrations/003_ai_reports.sql on an existing database.
 -- ---------------------------------------------------------------------------
 
-CREATE TYPE ai_report_type AS ENUM ('test', 'session', 'progress');
+CREATE TYPE ai_report_type AS ENUM ('test', 'session', 'progress', 'group');
 
 CREATE TYPE ai_report_status AS ENUM (
   'pending',
@@ -246,7 +246,7 @@ CREATE TYPE ai_report_status AS ENUM (
 CREATE TABLE ai_reports (
   id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id         UUID NOT NULL REFERENCES training_sessions (id) ON DELETE CASCADE,
-  session_player_id  UUID NOT NULL REFERENCES session_players (id) ON DELETE CASCADE,
+  session_player_id  UUID REFERENCES session_players (id) ON DELETE CASCADE,
   test_result_id     UUID REFERENCES test_results (id) ON DELETE CASCADE,
   report_type        ai_report_type NOT NULL,
   status             ai_report_status NOT NULL DEFAULT 'pending',
@@ -268,6 +268,10 @@ CREATE UNIQUE INDEX ai_reports_test_uidx
 CREATE UNIQUE INDEX ai_reports_player_session_uidx
   ON ai_reports (session_player_id, session_id, report_type)
   WHERE report_type IN ('session', 'progress');
+
+CREATE UNIQUE INDEX ai_reports_group_uidx
+  ON ai_reports (session_id)
+  WHERE report_type = 'group';
 
 CREATE INDEX ai_reports_coach_lookup_idx
   ON ai_reports (session_id, session_player_id, created_at DESC);

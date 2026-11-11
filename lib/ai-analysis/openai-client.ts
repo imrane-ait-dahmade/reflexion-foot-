@@ -18,8 +18,11 @@ export async function generateWithOpenAI(
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("missing_api_key");
   const client = new OpenAI({ apiKey });
-  // A session report is bilingual and covers every exercise; 3500 truncates it.
-  const maxOutputTokens = context.reportType === "session" ? 8000 : 4500;
+  // Session/group reports are bilingual and broader; 3500 truncates them.
+  const maxOutputTokens =
+    context.reportType === "session" || context.reportType === "group"
+      ? 8000
+      : 4500;
   const response = await client.responses.parse({
     model: analysisModel(),
     max_output_tokens: maxOutputTokens,

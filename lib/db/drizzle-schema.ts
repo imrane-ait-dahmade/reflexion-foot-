@@ -177,6 +177,7 @@ export const aiReportTypeEnum = pgEnum("ai_report_type", [
   "test",
   "session",
   "progress",
+  "group",
 ]);
 
 export const aiReportStatusEnum = pgEnum("ai_report_status", [
@@ -194,9 +195,10 @@ export const aiReports = pgTable(
     sessionId: uuid("session_id")
       .notNull()
       .references(() => trainingSessions.id, { onDelete: "cascade" }),
-    sessionPlayerId: uuid("session_player_id")
-      .notNull()
-      .references(() => sessionPlayers.id, { onDelete: "cascade" }),
+    sessionPlayerId: uuid("session_player_id").references(
+      () => sessionPlayers.id,
+      { onDelete: "cascade" },
+    ),
     testResultId: uuid("test_result_id").references(() => testResults.id, {
       onDelete: "cascade",
     }),
@@ -223,5 +225,8 @@ export const aiReports = pgTable(
     uniqueIndex("ai_reports_player_session_uidx")
       .on(table.sessionPlayerId, table.sessionId, table.reportType)
       .where(sql`${table.reportType} IN ('session', 'progress')`),
+    uniqueIndex("ai_reports_group_uidx")
+      .on(table.sessionId)
+      .where(sql`${table.reportType} = 'group'`),
   ],
 );

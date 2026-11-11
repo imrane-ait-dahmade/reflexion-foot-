@@ -1,7 +1,13 @@
-import { buildContext, playerFinished, type PlayerBundle } from "./analysis-context";
+import {
+  buildContext,
+  buildGroupContext,
+  playerFinished,
+  type PlayerBundle,
+} from "./analysis-context";
 import { isCompleteResult } from "./metrics-context";
 import { parseReportContent } from "./schemas";
 import type {
+  AnalysisContext,
   ReportContent,
   ReportKey,
   ReportStatus,
@@ -9,6 +15,7 @@ import type {
   StoredReport,
 } from "./types";
 import { PROMPT_VERSION } from "./types";
+import type { SessionGroupBundle } from "./analysis-context";
 
 export type AnalysisStore = {
   loadPlayer(sessionPlayerId: string): Promise<PlayerBundle | null>;
@@ -25,7 +32,7 @@ export type AnalysisStore = {
 
 export type OrchestratorDeps = {
   store: AnalysisStore;
-  generate: (context: import("./types").AnalysisContext) => Promise<{
+  generate: (context: AnalysisContext) => Promise<{
     parsed: unknown;
     model: string;
     inputTokens: number;
@@ -142,4 +149,67 @@ export async function orchestratePlayerResult(
   }
 
   return { skipped: null, promptVersion: PROMPT_VERSION, outcomes };
+}
+
+async function produceFromContext(
+  deps: OrchestratorDeps,
+  reportKey: ReportKey,
+  context: AnalysisContext | { eligible: false; reason: string },
+  force: boolean,
+) {
+  const existing = await deps.store.findReport(reportKey);
+  if (existing && (!force || existing.status === "completed" || existing.status === "not_eligible")) {
+    return existing.status;
+  }
+  if ("eligible" in context) {
+    await deps.store.markIneligible(reportKey, context.reason);
+    return "not_eligible" as ReportStatus;
+  }
+  const row = await deps.store.claim(reportKey);
+  try {
+    const generated = await deps.generate(context);
+    const parsed = parseReportContent(generated.parsed, context.allowedMetricKeys);
+    if (!parsed.ok || parsed.data.report_type !== reportKey.reportType) {
+      await deps.store.fail(row.id, parsed.ok ? "report_type_mismatch" : parsed.error);
+      return "failed" as ReportStatus;
+    }
+    await deps.store.complete(row.id, parsed.data, {
+      model: generated.model,
+      inputTokens: generated.inputTokens,
+      outputTokens: generated.outputTokens,
+    });
+    return "completed" as ReportStatus;
+  } catch (error) {
+    await deps.store.fail(row.id, failureCode(error));
+    return "failed" as ReportStatus;
+  }
+}
+
+export async function orchestrateGroupResult(
+  bundle: SessionGroupBundle,
+  deps: OrchestratorDeps,
+  options?: { retry?: boolean },
+) {
+  if (!deps.enabled) return { skipped: "disabled" as const };
+  const reportKey: ReportKey = {
+    sessionId: bundle.sessionId,
+    sessionPlayerId: null,
+    reportType: "group",
+    testResultId: null,
+  };
+  const context = buildGroupContext(bundle);
+  if ("eligible" in context) {
+    return { skipped: "incomplete" as const, promptVersion: PROMPT_VERSION, outcomes: [] };
+  }
+  const status = await produceFromContext(
+    deps,
+    reportKey,
+    context,
+    Boolean(options?.retry),
+  );
+  return {
+    skipped: null,
+    promptVersion: PROMPT_VERSION,
+    outcomes: [{ reportType: "group" as const, status }],
+  };
 }

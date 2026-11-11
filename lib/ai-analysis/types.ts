@@ -1,4 +1,4 @@
-export const REPORT_TYPES = ["test", "session", "progress"] as const;
+export const REPORT_TYPES = ["test", "session", "progress", "group"] as const;
 export type ReportType = (typeof REPORT_TYPES)[number];
 
 export const REPORT_STATUSES = [
@@ -58,10 +58,21 @@ export type AnalysisReference = {
   study: StudyReference | null;
 };
 
+export type GroupPlayerSnapshot = {
+  displayName: string;
+  finished: boolean;
+  tests: {
+    testSlug: string;
+    score: number;
+    accuracy: number;
+    averageReactionMs: number;
+  }[];
+};
+
 export type AnalysisContext = {
   reportType: ReportType;
   sessionId: string;
-  sessionPlayerId: string;
+  sessionPlayerId: string | null;
   displayName: string;
   assignedTests: string[];
   currentTests: TestSnapshot[];
@@ -72,6 +83,7 @@ export type AnalysisContext = {
     completedAt: string;
     tests: TestSnapshot[];
   }[];
+  groupPlayers?: GroupPlayerSnapshot[];
   metricDefinitions: { key: string; meaning: string; unit: string }[];
   dataQuality: {
     completedCount: number;
@@ -121,7 +133,7 @@ export type ReportContent = {
 export type StoredReport = {
   id: string;
   sessionId: string;
-  sessionPlayerId: string;
+  sessionPlayerId: string | null;
   testResultId: string | null;
   reportType: ReportType;
   status: ReportStatus;
@@ -136,7 +148,7 @@ export type StoredReport = {
 
 export type ReportKey = {
   sessionId: string;
-  sessionPlayerId: string;
+  sessionPlayerId: string | null;
   reportType: ReportType;
   testResultId: string | null;
 };

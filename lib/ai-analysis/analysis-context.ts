@@ -5,7 +5,12 @@ import {
   snapshotFromResult,
 } from "./metrics-context";
 import { studyForSlug } from "./study-references";
-import type { AnalysisContext, AnalysisReference, ReportType } from "./types";
+import type {
+  AnalysisContext,
+  AnalysisReference,
+  GroupPlayerSnapshot,
+  ReportType,
+} from "./types";
 
 export type PlayerBundle = {
   sessionId: string;
@@ -17,6 +22,17 @@ export type PlayerBundle = {
   history: {
     sessionId: string;
     completedAt: string;
+    results: Parameters<typeof snapshotFromResult>[0][];
+  }[];
+};
+
+export type SessionGroupBundle = {
+  sessionId: string;
+  title: string;
+  assigned: string[];
+  players: {
+    sessionPlayerId: string;
+    displayName: string;
     results: Parameters<typeof snapshotFromResult>[0][];
   }[];
 };
@@ -96,6 +112,75 @@ export function buildContext(
       notes: [
         "Les valeurs sont celles déjà enregistrées. Ne pas les recalculer.",
         "La comparaison utilise les résultats de tous les joueurs sur le même exercice, pas l'historique du même joueur.",
+        "Ces exercices de navigateur ne sont pas une évaluation clinique ni un test de match validé.",
+      ],
+    },
+    allowedMetricKeys: catalog.map((item) => item.key),
+  };
+}
+
+export function buildGroupContext(
+  bundle: SessionGroupBundle,
+): AnalysisContext | { eligible: false; reason: string } {
+  const assigned = bundle.assigned;
+  if (assigned.length === 0) {
+    return { eligible: false, reason: "Aucun exercice dans cette séance." };
+  }
+
+  const groupPlayers: GroupPlayerSnapshot[] = bundle.players.map((player) => {
+    const snapshots = player.results
+      .map(snapshotFromResult)
+      .filter((item) => assigned.includes(item.testSlug));
+    return {
+      displayName: player.displayName,
+      finished: playerFinished(
+        assigned,
+        snapshots.map((item) => item.testSlug),
+      ),
+      tests: snapshots.map((item) => ({
+        testSlug: item.testSlug,
+        score: item.score,
+        accuracy: item.accuracy,
+        averageReactionMs: item.averageReactionMs,
+      })),
+    };
+  });
+
+  const finishedCount = groupPlayers.filter((player) => player.finished).length;
+  if (finishedCount < 1) {
+    return {
+      eligible: false,
+      reason:
+        "Le rapport de groupe attend qu'au moins un joueur ait terminé tous ses exercices.",
+    };
+  }
+
+  const allSnapshots = bundle.players.flatMap((player) =>
+    player.results
+      .map(snapshotFromResult)
+      .filter((item) => assigned.includes(item.testSlug)),
+  );
+  const catalog = metricCatalog(allSnapshots);
+
+  return {
+    reportType: "group",
+    sessionId: bundle.sessionId,
+    sessionPlayerId: null,
+    displayName: bundle.title,
+    assignedTests: assigned,
+    currentTests: allSnapshots,
+    reference: { samePlayerHistoryUsed: false, cohort: null, study: null },
+    comparisons: [],
+    groupPlayers,
+    metricDefinitions: catalog,
+    dataQuality: {
+      completedCount: finishedCount,
+      assignedCount: assigned.length,
+      comparableSessions: 1,
+      notes: [
+        "Rapport collectif de la séance, pas une fiche individuelle.",
+        "Les valeurs sont celles déjà enregistrées. Ne pas les recalculer.",
+        `${finishedCount} joueur(s) terminé(s) sur ${bundle.players.length}.`,
         "Ces exercices de navigateur ne sont pas une évaluation clinique ni un test de match validé.",
       ],
     },

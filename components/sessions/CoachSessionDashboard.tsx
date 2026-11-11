@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { CoachAnalysisPanel } from "@/components/sessions/CoachAnalysisPanel";
+import { CoachGroupReportPanel } from "@/components/sessions/CoachGroupReportPanel";
 import { CoachSignOutButton } from "@/components/sessions/CoachSignOutButton";
 import { CopyCodeButton } from "@/components/sessions/CopyCodeButton";
 import { formatSessionStatus } from "@/lib/format";
@@ -256,6 +257,12 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
             </p>
             <p className="mt-1 text-sm text-muted">{overview.overall}</p>
           </section>
+          <CoachGroupReportPanel
+            code={code}
+            sessionTitle={data.session.title}
+            finishedCount={doneCount}
+            playerCount={data.players.length}
+          />
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <input
               value={playerQuery}

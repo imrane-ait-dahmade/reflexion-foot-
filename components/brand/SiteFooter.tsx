@@ -19,7 +19,7 @@ function GitHubIcon({ className }: { className?: string }) {
 export function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-border">
-      <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-4 px-4 py-6 sm:flex-row sm:justify-between">
+      <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-4 px-4 py-6 sm:flex-row sm:justify-between md:max-w-6xl">
         <p className="text-center text-xs text-muted sm:text-left">
           © 2026 RealScouting Academy
         </p>

@@ -1,8 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildContext, playerFinished } from "@/lib/ai-analysis/analysis-context";
+import {
+  buildContext,
+  buildGroupContext,
+  playerFinished,
+} from "@/lib/ai-analysis/analysis-context";
 import { analysisPayload } from "@/lib/ai-analysis/analysis-prompts";
 import { cohortPosition } from "@/lib/ai-analysis/cohort";
 import {
+  orchestrateGroupResult,
   orchestratePlayerResult,
   type AnalysisStore,
 } from "@/lib/ai-analysis/analysis-orchestrator";
@@ -468,5 +473,68 @@ describe("AI analysis orchestration", () => {
     const outcome = await orchestratePlayerResult("a", deps(store, generate, false));
     expect(outcome.skipped).toBe("disabled");
     expect(reports).toHaveLength(0);
+  });
+
+  it("builds one group context from finished players", () => {
+    const context = buildGroupContext({
+      sessionId: "session-1",
+      title: "Séance A",
+      assigned: ["reaction-time", "visual-memory"],
+      players: [
+        {
+          sessionPlayerId: "a",
+          displayName: "Amine",
+          results: [
+            result("r1", "reaction-time", 80),
+            result("r2", "visual-memory", 70),
+          ],
+        },
+        {
+          sessionPlayerId: "b",
+          displayName: "Bilal",
+          results: [result("r3", "reaction-time", 60)],
+        },
+      ],
+    });
+    expect("eligible" in context).toBe(false);
+    if ("eligible" in context) return;
+    expect(context.reportType).toBe("group");
+    expect(context.sessionPlayerId).toBeNull();
+    expect(context.groupPlayers).toHaveLength(2);
+    expect(context.dataQuality.completedCount).toBe(1);
+    const payload = analysisPayload(context);
+    expect(payload.reportType).toBe("group");
+    expect(payload.groupPlayers).toHaveLength(2);
+  });
+
+  it("creates a single group report for the session", async () => {
+    const { reports, store } = memory({});
+    const generate = vi.fn(async () => ({
+      parsed: sample("group"),
+      model: "test-model",
+      inputTokens: 2,
+      outputTokens: 2,
+    }));
+    const outcome = await orchestrateGroupResult(
+      {
+        sessionId: "session-1",
+        title: "Séance A",
+        assigned: ["reaction-time"],
+        players: [
+          {
+            sessionPlayerId: "a",
+            displayName: "Amine",
+            results: [result("r1", "reaction-time", 75)],
+          },
+        ],
+      },
+      deps(store, generate),
+      { retry: true },
+    );
+    expect(outcome.skipped).toBeNull();
+    expect(reports).toHaveLength(1);
+    expect(reports[0]?.reportType).toBe("group");
+    expect(reports[0]?.sessionPlayerId).toBeNull();
+    expect(reports[0]?.status).toBe("completed");
   });
 });

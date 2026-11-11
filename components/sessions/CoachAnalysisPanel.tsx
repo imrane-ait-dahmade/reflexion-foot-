@@ -1,13 +1,19 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useState, useTransition } from "react";
+import { Sparkles } from "lucide-react";
 import { textDirection } from "@/lib/ai-analysis/permissions";
 import {
   friendlyApiError,
   friendlyReportError,
 } from "@/lib/ai-analysis/report-errors";
-import type { LocalizedReport, ReportContent, StoredReport } from "@/lib/ai-analysis/types";
+import type { ReportContent, StoredReport } from "@/lib/ai-analysis/types";
+import {
+  AnalysisWait,
+  ReportBody,
+  ReportModal,
+} from "@/components/sessions/ReportModal";
 
 type ReportsResponse = {
   enabled: boolean;
@@ -35,13 +41,14 @@ const SECTION_LABELS = {
     plan: "Plan pour l'entraîneur",
     limits: "Limites des données",
     retry: "Relancer",
-    generate: "Générer le rapport",
+    generate: "Générer le rapport joueur",
     reportTitle: "Rapport du joueur",
+    openReport: "Ouvrir le rapport",
     exportPdf: "Exporter PDF",
     results: "Résultats des exercices",
-    empty: "Un seul rapport par joueur. Il se crée quand le joueur a terminé tous ses exercices et que vous cliquez.",
-    waiting: "Le joueur n'a pas encore terminé tous ses exercices. Le rapport unique attend la fin.",
-    basis: "Un seul rapport pour ce joueur, à partir de tous ses exercices de cette séance.",
+    empty: "Un rapport pour ce joueur, quand il a terminé tous ses exercices.",
+    waiting: "Le joueur n'a pas encore terminé tous ses exercices.",
+    basis: "Rapport individuel : tous les exercices de ce joueur.",
     off: "L'analyse IA est désactivée.",
     loading: "Chargement…",
     pending: "Analyse en cours. Merci de patienter.",
@@ -56,13 +63,14 @@ const SECTION_LABELS = {
     plan: "خطة المدرب",
     limits: "حدود المعطيات",
     retry: "إعادة المحاولة",
-    generate: "إنشاء التقرير",
+    generate: "إنشاء تقرير اللاعب",
     reportTitle: "تقرير اللاعب",
+    openReport: "فتح التقرير",
     exportPdf: "تصدير PDF",
     results: "نتائج التمارين",
-    empty: "تقرير واحد لكل لاعب. يُنشأ عندما يُنهي كل التمارين وتضغط على الزر.",
-    waiting: "لم يُنهِ اللاعب كل التمارين بعد. التقرير الوحيد ينتظر النهاية.",
-    basis: "تقرير واحد لهذا اللاعب، من كل تمارين هذه الحصة.",
+    empty: "تقرير واحد لهذا اللاعب بعد إنهاء كل التمارين.",
+    waiting: "لم يُنهِ اللاعب كل التمارين بعد.",
+    basis: "تقرير فردي: كل تمارين هذا اللاعب.",
     off: "تحليل الذكاء الاصطناعي متوقف.",
     loading: "جارٍ التحميل…",
     pending: "التحليل قيد الإنجاز. يرجى الانتظار.",
@@ -112,7 +120,7 @@ export function CoachAnalysisPanel({
   const [language, setLanguage] = useState<"fr" | "ar">("fr");
   const [data, setData] = useState<ReportsResponse | null>(null);
   const [error, setError] = useState("");
-  const [open, setOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [, startTransition] = useTransition();
 
@@ -159,7 +167,7 @@ export function CoachAnalysisPanel({
       }
       const next = await load();
       const created = next.reports.find((report) => report.reportType === "session");
-      if (created?.status === "completed") setOpen(true);
+      if (created?.status === "completed") setModalOpen(true);
       if (created?.status === "failed") {
         setError(friendlyReportError(created.errorCode, language));
       }
@@ -183,20 +191,21 @@ export function CoachAnalysisPanel({
   const direction = textDirection(language);
   const report = data?.reports.find((item) => item.reportType === "session") ?? null;
   const finished = exerciseCount > 0 && results.length >= exerciseCount;
+  const completed = report?.status === "completed" && isReport(report.reportData);
 
   const exportPdf = () => {
     const reportBlocks = (report ? [report] : [])
-      .map((report) => {
-        if (!isReport(report.reportData)) return "";
-        const content = report.reportData[language];
+      .map((item) => {
+        if (!isReport(item.reportData)) return "";
+        const content = item.reportData[language];
         return `
           <h2>${escapeHtml(copy.reportTitle)}</h2>
           <p>${escapeHtml(content.executive_summary)}</p>
           ${section(copy.assessed, [content.what_was_assessed])}
-          ${section(copy.observations, content.performance_observations.map((item) => `${item.title} — ${item.explanation}`))}
-          ${section(copy.strengths, content.strengths.map((item) => `${item.title} — ${item.explanation}`))}
-          ${section(copy.development, content.development_areas.map((item) => `${item.title} — ${item.explanation}`))}
-          ${section(copy.training, content.training_recommendations.map((item) => `${item.title} — ${item.practical_exercise}`))}
+          ${section(copy.observations, content.performance_observations.map((entry) => `${entry.title} — ${entry.explanation}`))}
+          ${section(copy.strengths, content.strengths.map((entry) => `${entry.title} — ${entry.explanation}`))}
+          ${section(copy.development, content.development_areas.map((entry) => `${entry.title} — ${entry.explanation}`))}
+          ${section(copy.training, content.training_recommendations.map((entry) => `${entry.title} — ${entry.practical_exercise}`))}
           ${section(copy.plan, content.coach_action_plan)}
           ${section(copy.limits, content.limitations)}
         `;
@@ -236,7 +245,10 @@ export function CoachAnalysisPanel({
   return (
     <section className="mt-4 rounded-xl border border-border bg-surface p-3" dir={direction}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-semibold">Analyse entraîneur</h3>
+        <h3 className="inline-flex items-center gap-2 font-semibold">
+          <Sparkles className="size-4 text-brand" aria-hidden />
+          Rapport joueur
+        </h3>
         <div className="flex gap-2">
           <button type="button" className="rounded-full border border-border px-3 py-1 text-sm" onClick={() => setLanguage("fr")}>
             Français
@@ -249,65 +261,69 @@ export function CoachAnalysisPanel({
           </button>
         </div>
       </div>
+
       {error ? (
-        <p
-          role="alert"
-          className="mb-3 rounded-xl border border-danger/40 px-3 py-2 text-sm text-danger"
-        >
+        <p role="alert" className="mb-3 rounded-xl border border-danger/40 px-3 py-2 text-sm text-danger">
           {error}
         </p>
       ) : null}
+
       {!data ? <p className="text-sm text-muted">{copy.loading}</p> : null}
       {data && !data.enabled ? <p className="text-sm text-muted">{copy.off}</p> : null}
       {data?.enabled ? <p className="mb-3 text-sm text-muted">{copy.basis}</p> : null}
       {data?.enabled && !finished ? (
         <p className="mb-3 text-sm text-muted">{copy.waiting}</p>
       ) : null}
+
       {data?.enabled && finished && report?.status !== "completed" ? (
-        <button
+        <motion.button
           type="button"
-          className="mb-3 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-black disabled:opacity-60"
+          className="mb-3 inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-4 py-2 text-sm font-semibold text-black disabled:opacity-60"
           disabled={busy}
           onClick={generate}
+          whileTap={{ scale: 0.98 }}
         >
           {busy
             ? copy.pending
             : report?.status === "failed" || report?.status === "not_eligible"
               ? copy.retry
               : copy.generate}
-        </button>
+        </motion.button>
       ) : null}
+
       <AnimatePresence>
         {busy ? <AnalysisWait key="analysis-wait" label={copy.pending} /> : null}
       </AnimatePresence>
+
       {data?.enabled && finished && !report && !busy ? (
         <p className="text-sm text-muted">{copy.empty}</p>
       ) : null}
-      {report && report.status === "completed" && isReport(report.reportData) ? (
-        <article className="rounded-lg border border-border p-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="font-semibold">{copy.reportTitle}</p>
-            <p className="text-xs text-muted">
-              {data?.playerName} · {data?.sessionDate ? new Date(data.sessionDate).toLocaleDateString(language === "ar" ? "ar" : "fr-FR") : ""}
-            </p>
-          </div>
-          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-            <p className="mt-2 text-sm">{report.reportData[language].executive_summary}</p>
-            <button type="button" className="mt-2 text-sm text-brand" onClick={() => setOpen((current) => !current)}>
-              {open ? "—" : copy.summary}
-            </button>
-            {open ? <ReportBody content={report.reportData[language]} labels={copy} /> : null}
-          </motion.div>
-        </article>
+
+      {completed ? (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl border border-brand/30 bg-brand-soft/40 p-3"
+        >
+          <p className="font-semibold">{copy.reportTitle}</p>
+          <p className="mt-1 line-clamp-2 text-sm text-muted">
+            {report.reportData[language].executive_summary}
+          </p>
+          <button
+            type="button"
+            className="mt-3 inline-flex min-h-10 items-center rounded-full border border-brand px-4 text-sm font-semibold text-brand"
+            onClick={() => setModalOpen(true)}
+          >
+            {copy.openReport}
+          </button>
+        </motion.div>
       ) : null}
+
       {report &&
       (report.status === "failed" || report.status === "not_eligible") &&
       !busy &&
       !error ? (
-        <p
-          role="alert"
-          className="rounded-xl border border-danger/40 px-3 py-2 text-sm text-danger"
-        >
+        <p role="alert" className="rounded-xl border border-danger/40 px-3 py-2 text-sm text-danger">
           {friendlyReportError(
             report.status === "not_eligible" ? "not_eligible" : report.errorCode,
             language,
@@ -317,85 +333,24 @@ export function CoachAnalysisPanel({
           )}
         </p>
       ) : null}
+
       {report &&
       (report.status === "pending" || report.status === "processing") &&
       !busy ? (
         <p className="text-sm text-muted">{copy.pending}</p>
       ) : null}
+
+      {completed ? (
+        <ReportModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          title={copy.reportTitle}
+          subtitle={`${playerName} · ${sessionTitle}`}
+          direction={direction}
+        >
+          <ReportBody content={report.reportData[language]} labels={copy} />
+        </ReportModal>
+      ) : null}
     </section>
-  );
-}
-
-function AnalysisWait({ label }: { label: string }) {
-  const reduce = useReducedMotion();
-  return (
-    <motion.div
-      role="status"
-      aria-live="polite"
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
-      className="mb-3 flex items-center gap-3 rounded-lg border border-brand/40 bg-brand-soft px-3 py-3"
-    >
-      <span className="relative flex size-8 shrink-0 items-center justify-center" aria-hidden>
-        {[0, 1, 2].map((index) => (
-          <motion.span
-            key={index}
-            className="absolute size-8 rounded-full border border-brand"
-            animate={reduce ? { opacity: 0.45 } : { scale: [0.45, 1], opacity: [0.75, 0] }}
-            transition={{ duration: 1.4, repeat: Infinity, delay: index * 0.32, ease: "easeOut" }}
-          />
-        ))}
-        <motion.span
-          className="size-2.5 rounded-full bg-brand"
-          animate={reduce ? undefined : { scale: [1, 1.3, 1] }}
-          transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </span>
-      <p className="text-sm">{label}</p>
-    </motion.div>
-  );
-}
-
-function ReportBody({
-  content,
-  labels,
-}: {
-  content: LocalizedReport;
-  labels: { [key in keyof (typeof SECTION_LABELS)["fr"]]: string };
-}) {
-  return (
-    <div className="mt-3 flex flex-col gap-3 text-sm">
-      <Block title={labels.assessed} text={content.what_was_assessed} />
-      <ListBlock title={labels.observations} items={content.performance_observations.map((item) => item.title + " — " + item.explanation)} />
-      <ListBlock title={labels.strengths} items={content.strengths.map((item) => item.title + " — " + item.explanation)} />
-      <ListBlock title={labels.development} items={content.development_areas.map((item) => item.title + " — " + item.explanation)} />
-      <ListBlock title={labels.training} items={content.training_recommendations.map((item) => item.title + " — " + item.practical_exercise)} />
-      <ListBlock title={labels.plan} items={content.coach_action_plan} />
-      <ListBlock title={labels.limits} items={content.limitations} />
-    </div>
-  );
-}
-
-function Block({ title, text }: { title: string; text: string }) {
-  return (
-    <div>
-      <p className="font-semibold">{title}</p>
-      <p className="text-muted">{text}</p>
-    </div>
-  );
-}
-
-function ListBlock({ title, items }: { title: string; items: string[] }) {
-  if (items.length === 0) return null;
-  return (
-    <div>
-      <p className="font-semibold">{title}</p>
-      <ul className="list-disc ps-5 text-muted">
-        {items.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
-    </div>
   );
 }

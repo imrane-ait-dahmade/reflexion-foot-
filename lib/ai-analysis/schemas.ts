@@ -37,7 +37,7 @@ const localized = z
 
 export const reportContentSchema = z
   .object({
-    report_type: z.enum(["test", "session", "progress"]),
+    report_type: z.enum(["test", "session", "progress", "group"]),
     confidence: z.enum(["low", "medium", "high"]),
     confidence_reason: z.string().min(1).max(400),
     fr: localized,
