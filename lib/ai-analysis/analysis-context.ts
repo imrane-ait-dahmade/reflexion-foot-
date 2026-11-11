@@ -8,6 +8,7 @@ import { studyForSlug } from "./study-references";
 import type {
   AnalysisContext,
   AnalysisReference,
+  ExerciseBenchmark,
   GroupPlayerSnapshot,
   ReportType,
 } from "./types";
@@ -30,12 +31,35 @@ export type SessionGroupBundle = {
   sessionId: string;
   title: string;
   assigned: string[];
+  cohortScores?: Record<string, number[]>;
   players: {
     sessionPlayerId: string;
     displayName: string;
     results: Parameters<typeof snapshotFromResult>[0][];
   }[];
 };
+
+function benchmarksForTests(
+  tests: { testSlug: string; score: number }[],
+  cohortScores?: Record<string, number[]>,
+): ExerciseBenchmark[] {
+  const seen = new Set<string>();
+  const list: ExerciseBenchmark[] = [];
+  for (const test of tests) {
+    if (seen.has(test.testSlug)) continue;
+    seen.add(test.testSlug);
+    list.push({
+      testSlug: test.testSlug,
+      cohort: cohortPosition(
+        test.testSlug,
+        test.score,
+        cohortScores?.[test.testSlug] ?? [],
+      ),
+      study: studyForSlug(test.testSlug),
+    });
+  }
+  return list;
+}
 
 export function playerFinished(assigned: string[], completedSlugs: string[]) {
   const done = new Set(completedSlugs);
@@ -82,18 +106,20 @@ export function buildContext(
 
   const shown = reportType === "test" && focus ? [focus] : currentTests;
   const catalog = metricCatalog([...shown, ...comparisons.flatMap((item) => item.tests)]);
-  const reference: AnalysisReference =
-    reportType === "test" && focus
-      ? {
-          samePlayerHistoryUsed: false,
-          cohort: cohortPosition(
-            focus.testSlug,
-            focus.score,
-            bundle.cohortScores?.[focus.testSlug] ?? [],
-          ),
-          study: studyForSlug(focus.testSlug),
-        }
-      : { samePlayerHistoryUsed: false, cohort: null, study: null };
+  const exerciseBenchmarks = benchmarksForTests(shown, bundle.cohortScores);
+  const primary = focus
+    ? exerciseBenchmarks.find((item) => item.testSlug === focus.testSlug) ??
+      exerciseBenchmarks[0]
+    : exerciseBenchmarks[0];
+  const reference: AnalysisReference = {
+    samePlayerHistoryUsed: false,
+    cohort: primary?.cohort ?? null,
+    study: primary?.study ?? null,
+    exerciseBenchmarks:
+      reportType === "session" || reportType === "progress"
+        ? exerciseBenchmarks
+        : undefined,
+  };
   return {
     reportType,
     sessionId: bundle.sessionId,
@@ -111,7 +137,8 @@ export function buildContext(
       comparableSessions: reportType === "progress" ? comparisons.length + 1 : 1,
       notes: [
         "Les valeurs sont celles déjà enregistrées. Ne pas les recalculer.",
-        "La comparaison utilise les résultats de tous les joueurs sur le même exercice, pas l'historique du même joueur.",
+        "La comparaison principale est reference.exerciseBenchmarks[].cohort (joueurs de l'application).",
+        "Les études (study) sont des repères externes prudents, pas des normes de l'exercice exact.",
         "Ces exercices de navigateur ne sont pas une évaluation clinique ni un test de match validé.",
       ],
     },
@@ -155,12 +182,26 @@ export function buildGroupContext(
     };
   }
 
+  const finishedPlayers = groupPlayers.filter((player) => player.finished);
   const allSnapshots = bundle.players.flatMap((player) =>
     player.results
       .map(snapshotFromResult)
       .filter((item) => assigned.includes(item.testSlug)),
   );
   const catalog = metricCatalog(allSnapshots);
+
+  // Group benchmark = mean score of finished players on each exercise, vs app cohort.
+  const groupMeans = assigned.map((slug) => {
+    const scores = finishedPlayers
+      .map((player) => player.tests.find((test) => test.testSlug === slug)?.score)
+      .filter((score): score is number => typeof score === "number");
+    const mean =
+      scores.length === 0
+        ? 0
+        : scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    return { testSlug: slug, score: Math.round(mean * 10) / 10 };
+  });
+  const exerciseBenchmarks = benchmarksForTests(groupMeans, bundle.cohortScores);
 
   return {
     reportType: "group",
@@ -169,7 +210,12 @@ export function buildGroupContext(
     displayName: bundle.title,
     assignedTests: assigned,
     currentTests: allSnapshots,
-    reference: { samePlayerHistoryUsed: false, cohort: null, study: null },
+    reference: {
+      samePlayerHistoryUsed: false,
+      cohort: exerciseBenchmarks[0]?.cohort ?? null,
+      study: exerciseBenchmarks[0]?.study ?? null,
+      exerciseBenchmarks,
+    },
     comparisons: [],
     groupPlayers,
     metricDefinitions: catalog,
@@ -181,6 +227,7 @@ export function buildGroupContext(
         "Rapport collectif de la séance, pas une fiche individuelle.",
         "Les valeurs sont celles déjà enregistrées. Ne pas les recalculer.",
         `${finishedCount} joueur(s) terminé(s) sur ${bundle.players.length}.`,
+        "Compare d'abord à exerciseBenchmarks[].cohort (base app). Les études externes sont secondaires et prudentes.",
         "Ces exercices de navigateur ne sont pas une évaluation clinique ni un test de match validé.",
       ],
     },

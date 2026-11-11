@@ -10,7 +10,7 @@ export const REPORT_STATUSES = [
 ] as const;
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
 
-export const PROMPT_VERSION = "2026-11-11.2";
+export const PROMPT_VERSION = "2026-11-11.3";
 
 export type MetricValue = number | string | boolean | null;
 
@@ -52,10 +52,19 @@ export type StudyReference = {
   useRule: string;
 };
 
+export type ExerciseBenchmark = {
+  testSlug: string;
+  cohort: CohortReference;
+  study: StudyReference | null;
+};
+
 export type AnalysisReference = {
   samePlayerHistoryUsed: false;
+  /** Primary benchmark (single-test reports). */
   cohort: CohortReference | null;
   study: StudyReference | null;
+  /** Per-exercise trusted refs for session/group reports. */
+  exerciseBenchmarks?: ExerciseBenchmark[];
 };
 
 export type GroupPlayerSnapshot = {

@@ -325,10 +325,23 @@ export async function loadSessionGroupBundle(
     byPlayer.set(row.sessionPlayerId, list);
   }
 
+  const slugs = assigned.map((item) => item.testSlug);
+  const cohortRows = slugs.length
+    ? await db
+        .select({ testSlug: testResults.testSlug, score: testResults.score })
+        .from(testResults)
+        .where(inArray(testResults.testSlug, slugs))
+    : [];
+  const cohortScores: Record<string, number[]> = {};
+  for (const row of cohortRows) {
+    (cohortScores[row.testSlug] ??= []).push(row.score);
+  }
+
   return {
     sessionId: session.id,
     title: session.title,
-    assigned: assigned.map((item) => item.testSlug),
+    assigned: slugs,
+    cohortScores,
     players: players.map((player) => ({
       sessionPlayerId: player.sessionPlayerId,
       displayName: player.displayName,
