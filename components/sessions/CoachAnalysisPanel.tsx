@@ -8,7 +8,10 @@ import {
   friendlyApiError,
   friendlyReportError,
 } from "@/lib/ai-analysis/report-errors";
+import type { ChartBar } from "@/lib/ai-analysis/report-charts";
+import { buildReportPdfHtml, openReportPdf } from "@/lib/ai-analysis/report-pdf";
 import type { ReportContent, StoredReport } from "@/lib/ai-analysis/types";
+import { ReportBarChart } from "@/components/sessions/ReportCharts";
 import {
   AnalysisWait,
   ReportBody,
@@ -44,8 +47,10 @@ const SECTION_LABELS = {
     generate: "Générer le rapport joueur",
     reportTitle: "Rapport du joueur",
     openReport: "Ouvrir le rapport",
-    exportPdf: "Exporter PDF",
+    exportPdf: "Télécharger PDF",
     results: "Résultats des exercices",
+    chartTitle: "Précision par exercice",
+    generatedBy: "Généré par RealScouting Academy",
     empty: "Un rapport pour ce joueur, quand il a terminé tous ses exercices.",
     waiting: "Le joueur n'a pas encore terminé tous ses exercices.",
     basis: "Rapport individuel : tous les exercices de ce joueur.",
@@ -66,8 +71,10 @@ const SECTION_LABELS = {
     generate: "إنشاء تقرير اللاعب",
     reportTitle: "تقرير اللاعب",
     openReport: "فتح التقرير",
-    exportPdf: "تصدير PDF",
+    exportPdf: "تحميل PDF",
     results: "نتائج التمارين",
+    chartTitle: "الدقة حسب التمرين",
+    generatedBy: "من إعداد RealScouting Academy",
     empty: "تقرير واحد لهذا اللاعب بعد إنهاء كل التمارين.",
     waiting: "لم يُنهِ اللاعب كل التمارين بعد.",
     basis: "تقرير فردي: كل تمارين هذا اللاعب.",
@@ -85,11 +92,6 @@ function escapeHtml(value: string) {
     .replaceAll('"', "&quot;");
 }
 
-function section(title: string, items: string[]) {
-  if (items.length === 0) return "";
-  return `<h2>${escapeHtml(title)}</h2><ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
-}
-
 function isReport(data: StoredReport["reportData"]): data is ReportContent {
   return Boolean(data && "fr" in data && "ar" in data);
 }
@@ -99,6 +101,8 @@ export type PrintableResult = {
   name: string;
   headline: string;
   note: string;
+  score: number;
+  accuracy: number;
   lines: { label: string; value: string }[];
 };
 
@@ -196,24 +200,15 @@ export function CoachAnalysisPanel({
       ? report.reportData
       : null;
 
+  // Accuracy is comparable across exercises; raw score scales differ (e.g. digit memory).
+  const chartBars: ChartBar[] = results.map((result) => ({
+    label: result.name,
+    value: result.accuracy,
+    detail: `s${Math.round(result.score)}`,
+  }));
+
   const exportPdf = () => {
-    const reportBlocks = (report ? [report] : [])
-      .map((item) => {
-        if (!isReport(item.reportData)) return "";
-        const content = item.reportData[language];
-        return `
-          <h2>${escapeHtml(copy.reportTitle)}</h2>
-          <p>${escapeHtml(content.executive_summary)}</p>
-          ${section(copy.assessed, [content.what_was_assessed])}
-          ${section(copy.observations, content.performance_observations.map((entry) => `${entry.title} — ${entry.explanation}`))}
-          ${section(copy.strengths, content.strengths.map((entry) => `${entry.title} — ${entry.explanation}`))}
-          ${section(copy.development, content.development_areas.map((entry) => `${entry.title} — ${entry.explanation}`))}
-          ${section(copy.training, content.training_recommendations.map((entry) => `${entry.title} — ${entry.practical_exercise}`))}
-          ${section(copy.plan, content.coach_action_plan)}
-          ${section(copy.limits, content.limitations)}
-        `;
-      })
-      .join("");
+    if (!reportContent) return;
     const resultBlocks = results
       .map(
         (result) => `
@@ -223,26 +218,31 @@ export function CoachAnalysisPanel({
         `,
       )
       .join("");
-    const popup = window.open("", "_blank", "noopener,noreferrer");
-    if (!popup) return;
-    popup.document.write(`<!doctype html><html lang="${language}" dir="${direction}"><head><meta charset="utf-8"><title>${escapeHtml(playerName)}</title>
-      <style>
-        body { font-family: Arial, sans-serif; color: #111; margin: 32px; line-height: 1.45; }
-        h1 { font-size: 22px; margin-bottom: 4px; }
-        h2 { font-size: 16px; margin-top: 28px; border-top: 1px solid #ccc; padding-top: 12px; }
-        h3 { font-size: 14px; margin-bottom: 4px; }
-        p, li { font-size: 13px; }
-        .meta { color: #444; margin-bottom: 24px; }
-      </style></head><body>
-      <h1>RealScouting Academy</h1>
-      <p class="meta">${escapeHtml(playerName)} · ${escapeHtml(sessionTitle)}</p>
-      <h2>${escapeHtml(copy.results)}</h2>
-      ${resultBlocks || `<p>${escapeHtml(copy.empty)}</p>`}
-      ${reportBlocks}
-      </body></html>`);
-    popup.document.close();
-    popup.focus();
-    popup.print();
+    openReportPdf(
+      buildReportPdfHtml({
+        language,
+        direction,
+        title: `${copy.reportTitle} · ${playerName}`,
+        subtitle: `${playerName} · ${sessionTitle}`,
+        logoUrl: `${window.location.origin}/logo-rs.png`,
+        content: reportContent[language],
+        labels: {
+          reportTitle: copy.reportTitle,
+          assessed: copy.assessed,
+          observations: copy.observations,
+          strengths: copy.strengths,
+          development: copy.development,
+          training: copy.training,
+          plan: copy.plan,
+          limits: copy.limits,
+          results: copy.results,
+          chartTitle: copy.chartTitle,
+          generatedBy: copy.generatedBy,
+        },
+        chartBars,
+        resultHtml: resultBlocks || undefined,
+      }),
+    );
   };
 
   return (
@@ -259,7 +259,12 @@ export function CoachAnalysisPanel({
           <button type="button" className="rounded-full border border-border px-3 py-1 text-sm" onClick={() => setLanguage("ar")}>
             العربية
           </button>
-          <button type="button" className="rounded-full border border-brand px-3 py-1 text-sm text-brand" onClick={exportPdf}>
+          <button
+            type="button"
+            className="rounded-full border border-brand px-3 py-1 text-sm text-brand disabled:opacity-50"
+            onClick={exportPdf}
+            disabled={!reportContent}
+          >
             {copy.exportPdf}
           </button>
         </div>
@@ -351,7 +356,22 @@ export function CoachAnalysisPanel({
           subtitle={`${playerName} · ${sessionTitle}`}
           direction={direction}
         >
-          <ReportBody content={reportContent[language]} labels={copy} />
+          <div className="mb-4 flex justify-end">
+            <button
+              type="button"
+              className="rounded-full border border-brand px-4 py-2 text-sm font-semibold text-brand"
+              onClick={exportPdf}
+            >
+              {copy.exportPdf}
+            </button>
+          </div>
+          <ReportBody
+            content={reportContent[language]}
+            labels={copy}
+            chart={
+              <ReportBarChart title={copy.chartTitle} bars={chartBars} />
+            }
+          />
         </ReportModal>
       ) : null}
     </section>

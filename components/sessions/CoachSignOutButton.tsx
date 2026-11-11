@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth-client";
@@ -10,7 +9,6 @@ type CoachSignOutButtonProps = {
 };
 
 export function CoachSignOutButton({ className }: CoachSignOutButtonProps) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -22,8 +20,7 @@ export function CoachSignOutButton({ className }: CoachSignOutButtonProps) {
       if (result.error) {
         throw new Error(result.error.message ?? "Déconnexion impossible.");
       }
-      router.replace("/coach/login");
-      router.refresh();
+      window.location.assign("/coach/login");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");
       setLoading(false);

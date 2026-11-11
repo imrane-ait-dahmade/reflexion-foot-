@@ -20,13 +20,17 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/coach", request.url));
   }
 
+  const isPublicCoachAuth =
+    pathname === "/coach/login" || pathname === "/coach/register";
   const isCoachArea =
     pathname === "/coach" || pathname.startsWith("/coach/sessions");
-  const isPublicCoachAuth =
-    pathname.startsWith("/coach/login") ||
-    pathname.startsWith("/coach/register");
 
-  if (isCoachArea && !isPublicCoachAuth && !hasCoachCookie) {
+  // Already signed in: skip auth forms without waiting for the page RSC.
+  if (isPublicCoachAuth && hasCoachCookie) {
+    return NextResponse.redirect(new URL("/coach", request.url));
+  }
+
+  if (isCoachArea && !hasCoachCookie) {
     const loginUrl = new URL("/coach/login", request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
@@ -39,6 +43,8 @@ export const config = {
   matcher: [
     "/",
     "/coach",
+    "/coach/login",
+    "/coach/register",
     "/coach/sessions/:path*",
     "/tests",
     "/tests/:path*",

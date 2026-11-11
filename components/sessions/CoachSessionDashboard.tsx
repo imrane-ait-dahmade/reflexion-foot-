@@ -262,6 +262,15 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
             sessionTitle={data.session.title}
             finishedCount={doneCount}
             playerCount={data.players.length}
+            playerScores={data.players
+              .filter(
+                (player) =>
+                  exerciseTotal > 0 && player.completedTests >= exerciseTotal,
+              )
+              .map((player) => ({
+                name: player.displayName,
+                averageScore: player.averageScore ?? 0,
+              }))}
           />
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <input
@@ -353,6 +362,8 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                               name: view.name,
                               headline: view.headline,
                               note: view.note,
+                              score: result.score,
+                              accuracy: result.accuracy,
                               lines: view.lines,
                             };
                           })}

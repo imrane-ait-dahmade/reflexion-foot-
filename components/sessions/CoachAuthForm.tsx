@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth-client";
@@ -10,6 +9,19 @@ type CoachAuthFormProps = {
   mode: "login" | "register";
   nextPath?: string;
 };
+
+/** Soft client navigations right after Set-Cookie can flash not-found under cacheComponents. */
+function safeCoachDestination(path: string) {
+  if (
+    path.startsWith("/") &&
+    !path.startsWith("//") &&
+    !path.startsWith("/coach/login") &&
+    !path.startsWith("/coach/register")
+  ) {
+    return path;
+  }
+  return "/coach";
+}
 
 function frenchAuthError(message: string, mode: "login" | "register") {
   const lower = message.toLowerCase();
@@ -38,12 +50,12 @@ function frenchAuthError(message: string, mode: "login" | "register") {
 }
 
 export function CoachAuthForm({ mode, nextPath = "/coach" }: CoachAuthFormProps) {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const destination = safeCoachDestination(nextPath);
 
   const onSubmit = async () => {
     setLoading(true);
@@ -54,7 +66,7 @@ export function CoachAuthForm({ mode, nextPath = "/coach" }: CoachAuthFormProps)
           email: email.trim(),
           password,
           name: name.trim(),
-          callbackURL: nextPath,
+          callbackURL: destination,
         });
         if (result.error) {
           throw new Error(result.error.message ?? "Inscription impossible.");
@@ -63,19 +75,18 @@ export function CoachAuthForm({ mode, nextPath = "/coach" }: CoachAuthFormProps)
         const result = await authClient.signIn.email({
           email: email.trim(),
           password,
-          callbackURL: nextPath,
+          callbackURL: destination,
         });
         if (result.error) {
           throw new Error(result.error.message ?? "Connexion impossible.");
         }
       }
-      router.push(nextPath);
-      router.refresh();
+      // Full reload so the new session cookie is on the first /coach request.
+      window.location.assign(destination);
     } catch (err) {
       setError(
         frenchAuthError(err instanceof Error ? err.message : "", mode),
       );
-    } finally {
       setLoading(false);
     }
   };

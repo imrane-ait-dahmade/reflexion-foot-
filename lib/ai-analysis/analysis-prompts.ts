@@ -18,7 +18,8 @@ export function analysisInstructions() {
     "Ne compare pas les secondes ou les notes d'exercices différents.",
     "Un rapport de séance (session) est un seul texte pour ce joueur. Il couvre tous ses exercices, sans un rapport séparé par exercice.",
     "Un rapport de groupe (group) est un seul texte pour toute la séance. Synthèse collective pour l'entraîneur, pas une fiche par joueur. Cite seulement quelques profils saillants.",
-    "Reste concis : 3 à 5 observations, 2 à 3 forces, 2 à 3 axes, 2 à 3 recommandations. Ne dépasse pas ces nombres.",
+    "Reste très concis pour aller vite : 3 observations max, 2 forces, 2 axes, 2 recommandations. Phrases courtes.",
+    "executive_summary : 2 à 3 phrases maximum par langue.",
     "Ne conclus pas qu'un exercice prédit la performance en match.",
     "Ne juge pas l'intelligence, la personnalité, le talent ou le potentiel professionnel.",
     "Si les données sont insuffisantes, dis-le et n'invente pas de force ni de faiblesse.",
@@ -27,21 +28,47 @@ export function analysisInstructions() {
     "Les clés de métriques restent en anglais technique, identiques dans les deux langues.",
     "Chaque observation cite des evidence_metric_keys présentes dans allowedMetricKeys.",
     "Les recommandations sont des exercices de terrain concrets, liés à l'indicateur observé.",
+    "Ne propose pas de graphiques : l'application les construit elle-même à partir des scores.",
     "confidence est low quand il n'y a qu'une tentative.",
   ].join("\n");
 }
 
 export function analysisPayload(context: AnalysisContext) {
   const isGroup = context.reportType === "group";
+  const finishedPlayers = (context.groupPlayers ?? [])
+    .filter((player) => player.finished)
+    .slice(0, 40)
+    .map((player) => ({
+      displayName: player.displayName,
+      tests: player.tests.map((test) => ({
+        testSlug: test.testSlug,
+        score: test.score,
+        accuracy: test.accuracy,
+      })),
+    }));
+  const compactTests = context.currentTests.map((test) => ({
+    testSlug: test.testSlug,
+    score: test.score,
+    accuracy: test.accuracy,
+    averageReactionMs: test.averageReactionMs,
+    bestReactionMs: test.bestReactionMs,
+    correctAnswers: test.correctAnswers,
+    errors: test.errors,
+    durationMs: test.durationMs,
+    metrics: test.metrics,
+  }));
   return {
     promptVersion: PROMPT_VERSION,
     reportType: context.reportType,
     playerLabel: isGroup ? "groupe de la séance" : "joueur de la séance",
-    tests: isGroup ? [] : context.currentTests,
-    groupPlayers: isGroup ? context.groupPlayers ?? [] : undefined,
+    tests: isGroup ? [] : compactTests,
+    groupPlayers: isGroup ? finishedPlayers : undefined,
     focusTest: context.focusTestSlug ?? null,
     reference: context.reference,
-    definitions: context.metricDefinitions,
+    definitions: context.metricDefinitions.map((item) => ({
+      key: item.key,
+      unit: item.unit,
+    })),
     exerciseGuides: exerciseGuides(
       isGroup
         ? context.assignedTests

@@ -85,6 +85,7 @@ export function ReportModal({
 export function ReportBody({
   content,
   labels,
+  chart,
 }: {
   content: LocalizedReport;
   labels: {
@@ -96,10 +97,12 @@ export function ReportBody({
     plan: string;
     limits: string;
   };
+  chart?: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-4 text-sm">
       <p className="text-base leading-relaxed">{content.executive_summary}</p>
+      {chart}
       <Block title={labels.assessed} text={content.what_was_assessed} />
       <ListBlock
         title={labels.observations}

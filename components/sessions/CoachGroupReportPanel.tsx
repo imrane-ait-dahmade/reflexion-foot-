@@ -1,14 +1,17 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { Users } from "lucide-react";
 import { textDirection } from "@/lib/ai-analysis/permissions";
 import {
   friendlyApiError,
   friendlyReportError,
 } from "@/lib/ai-analysis/report-errors";
+import type { ChartBar } from "@/lib/ai-analysis/report-charts";
+import { buildReportPdfHtml, openReportPdf } from "@/lib/ai-analysis/report-pdf";
 import type { ReportContent, StoredReport } from "@/lib/ai-analysis/types";
+import { ReportBarChart } from "@/components/sessions/ReportCharts";
 import {
   AnalysisWait,
   ReportBody,
@@ -31,6 +34,7 @@ const LABELS = {
     generate: "Générer le rapport groupe",
     retry: "Relancer",
     openReport: "Ouvrir le rapport",
+    exportPdf: "Télécharger PDF",
     pending: "Analyse du groupe en cours…",
     off: "L'analyse IA est désactivée.",
     loading: "Chargement…",
@@ -42,6 +46,8 @@ const LABELS = {
     training: "Recommandations",
     plan: "Plan pour l'entraîneur",
     limits: "Limites des données",
+    chartTitle: "Moyenne des joueurs terminés",
+    generatedBy: "Généré par RealScouting Academy",
     readyHint: (done: number, total: number) =>
       `${done}/${total} joueur(s) terminé(s) — prêt pour le rapport groupe.`,
   },
@@ -52,6 +58,7 @@ const LABELS = {
     generate: "إنشاء تقرير المجموعة",
     retry: "إعادة المحاولة",
     openReport: "فتح التقرير",
+    exportPdf: "تحميل PDF",
     pending: "تحليل المجموعة قيد الإنجاز…",
     off: "تحليل الذكاء الاصطناعي متوقف.",
     loading: "جارٍ التحميل…",
@@ -63,6 +70,8 @@ const LABELS = {
     training: "التوصيات",
     plan: "خطة المدرب",
     limits: "حدود المعطيات",
+    chartTitle: "متوسط اللاعبين الذين أنهوا",
+    generatedBy: "من إعداد RealScouting Academy",
     readyHint: (done: number, total: number) =>
       `${done}/${total} لاعب أنهى — جاهز لتقرير المجموعة.`,
   },
@@ -77,11 +86,13 @@ export function CoachGroupReportPanel({
   sessionTitle,
   finishedCount,
   playerCount,
+  playerScores,
 }: {
   code: string;
   sessionTitle: string;
   finishedCount: number;
   playerCount: number;
+  playerScores: { name: string; averageScore: number }[];
 }) {
   const [language, setLanguage] = useState<"fr" | "ar">("fr");
   const [data, setData] = useState<GroupResponse | null>(null);
@@ -93,6 +104,18 @@ export function CoachGroupReportPanel({
   const copy = LABELS[language];
   const direction = textDirection(language);
   const canGenerate = finishedCount >= 1;
+
+  const chartBars: ChartBar[] = useMemo(
+    () =>
+      [...playerScores]
+        .sort((a, b) => b.averageScore - a.averageScore)
+        .slice(0, 12)
+        .map((player) => ({
+          label: player.name,
+          value: player.averageScore,
+        })),
+    [playerScores],
+  );
 
   const load = useCallback(async () => {
     const response = await fetch(`/api/sessions/${code}/reports`);
@@ -158,6 +181,33 @@ export function CoachGroupReportPanel({
       ? report.reportData
       : null;
 
+  const exportPdf = () => {
+    if (!reportContent) return;
+    openReportPdf(
+      buildReportPdfHtml({
+        language,
+        direction,
+        title: `${copy.reportTitle} · ${sessionTitle}`,
+        subtitle: sessionTitle,
+        logoUrl: `${window.location.origin}/logo-rs.png`,
+        content: reportContent[language],
+        labels: {
+          reportTitle: copy.reportTitle,
+          assessed: copy.assessed,
+          observations: copy.observations,
+          strengths: copy.strengths,
+          development: copy.development,
+          training: copy.training,
+          plan: copy.plan,
+          limits: copy.limits,
+          chartTitle: copy.chartTitle,
+          generatedBy: copy.generatedBy,
+        },
+        chartBars,
+      }),
+    );
+  };
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 10 }}
@@ -170,7 +220,7 @@ export function CoachGroupReportPanel({
           <Users className="size-4 text-brand" aria-hidden />
           {copy.title}
         </h3>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             className="rounded-full border border-border px-3 py-1 text-sm"
@@ -184,6 +234,14 @@ export function CoachGroupReportPanel({
             onClick={() => setLanguage("ar")}
           >
             العربية
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-brand px-3 py-1 text-sm text-brand disabled:opacity-50"
+            onClick={exportPdf}
+            disabled={!reportContent}
+          >
+            {copy.exportPdf}
           </button>
         </div>
       </div>
@@ -243,13 +301,22 @@ export function CoachGroupReportPanel({
           <p className="mt-1 line-clamp-2 text-sm text-muted">
             {reportContent[language].executive_summary}
           </p>
-          <button
-            type="button"
-            className="mt-3 inline-flex min-h-10 items-center rounded-full border border-brand px-4 text-sm font-semibold text-brand"
-            onClick={() => setModalOpen(true)}
-          >
-            {copy.openReport}
-          </button>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="inline-flex min-h-10 items-center rounded-full border border-brand px-4 text-sm font-semibold text-brand"
+              onClick={() => setModalOpen(true)}
+            >
+              {copy.openReport}
+            </button>
+            <button
+              type="button"
+              className="inline-flex min-h-10 items-center rounded-full border border-border px-4 text-sm font-semibold"
+              onClick={exportPdf}
+            >
+              {copy.exportPdf}
+            </button>
+          </div>
         </motion.div>
       ) : null}
 
@@ -261,7 +328,20 @@ export function CoachGroupReportPanel({
           subtitle={sessionTitle}
           direction={direction}
         >
-          <ReportBody content={reportContent[language]} labels={copy} />
+          <div className="mb-4 flex justify-end">
+            <button
+              type="button"
+              className="rounded-full border border-brand px-4 py-2 text-sm font-semibold text-brand"
+              onClick={exportPdf}
+            >
+              {copy.exportPdf}
+            </button>
+          </div>
+          <ReportBody
+            content={reportContent[language]}
+            labels={copy}
+            chart={<ReportBarChart title={copy.chartTitle} bars={chartBars} />}
+          />
         </ReportModal>
       ) : null}
     </motion.section>

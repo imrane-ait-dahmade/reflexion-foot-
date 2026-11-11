@@ -504,7 +504,8 @@ describe("AI analysis orchestration", () => {
     expect(context.dataQuality.completedCount).toBe(1);
     const payload = analysisPayload(context);
     expect(payload.reportType).toBe("group");
-    expect(payload.groupPlayers).toHaveLength(2);
+    // Payload keeps finished players only for faster generation.
+    expect(payload.groupPlayers).toHaveLength(1);
   });
 
   it("creates a single group report for the session", async () => {
