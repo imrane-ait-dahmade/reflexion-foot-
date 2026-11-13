@@ -1,0 +1,7 @@
+# Runtime (pinned to versions currently installed in backend/.venv)
+fastapi==0.162.6
+uvicorn[standard]==0.54.0
+
+# Tests
+pytest==8.4.2
+httpx==0.28.1
