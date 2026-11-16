@@ -3,41 +3,29 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { savePlayerSession } from "@/lib/sessions/player-session";
-import type { TestSlug } from "@/lib/db/types";
-
-function friendlyJoinError(message: string) {
-  const lower = message.toLowerCase();
-  if (lower.includes("introuvable") || lower.includes("invalid") || lower.includes("code")) {
-    return "Code incorrect ou session introuvable. Vérifie auprès de ton entraîneur.";
-  }
-  if (lower.includes("fermée") || lower.includes("expir")) {
-    return "Cette session est fermée ou a expiré. Demande un nouveau code.";
-  }
-  if (lower.includes("failed to fetch") || lower.includes("network")) {
-    return "Pas de connexion. Vérifie ton réseau puis réessaie.";
-  }
-  return message || "Impossible de rejoindre la session.";
-}
+import {
+  joinPlayerSessionV2,
+  playerApiErrorMessage,
+} from "@/lib/sessions/player-v2";
 
 export function JoinSessionForm() {
   const router = useRouter();
-  const [code, setCode] = useState("");
-  const [displayName, setDisplayName] = useState("");
+  const [sessionCode, setSessionCode] = useState("");
+  const [personalCode, setPersonalCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const canSubmit =
-    !loading && code.trim().length >= 4 && displayName.trim().length >= 2;
+    !loading && sessionCode.trim().length >= 4 && personalCode.trim().length >= 4;
 
   const onJoin = async () => {
     if (!canSubmit) {
-      if (code.trim().length < 4) {
-        setError("Le code doit contenir au moins 4 caractères.");
+      if (sessionCode.trim().length < 4) {
+        setError("Le code de session doit contenir au moins 4 caractères.");
         return;
       }
-      if (displayName.trim().length < 2) {
-        setError("Indique ton prénom (au moins 2 lettres).");
+      if (personalCode.trim().length < 4) {
+        setError("Entre ton code joueur (donné par ton entraîneur).");
         return;
       }
       return;
@@ -46,34 +34,14 @@ export function JoinSessionForm() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/sessions/join", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code: code.trim().toUpperCase(),
-          displayName: displayName.trim(),
-        }),
+      const state = await joinPlayerSessionV2({
+        sessionCode,
+        personalCode,
       });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error ?? "Erreur");
-      }
-
-      savePlayerSession({
-        code: data.session.code,
-        sessionId: data.session.id,
-        sessionPlayerId: data.sessionPlayerId,
-        displayName: data.displayName,
-        exercises: data.exercises.map(
-          (exercise: { testSlug: TestSlug }) => exercise.testSlug,
-        ),
-      });
-
-      // Hub auto-redirects to the first unfinished exercise in order.
-      router.replace(`/play/${data.session.code}`);
+      router.replace(`/play/${state.code}`);
     } catch (err) {
       setError(
-        friendlyJoinError(err instanceof Error ? err.message : "Erreur"),
+        playerApiErrorMessage(err, "Impossible de rejoindre la session."),
       );
     } finally {
       setLoading(false);
@@ -91,12 +59,14 @@ export function JoinSessionForm() {
       <label className="flex flex-col gap-1 text-sm">
         Code de session
         <input
-          value={code}
+          value={sessionCode}
           onChange={(event) =>
-            setCode(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
+            setSessionCode(
+              event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""),
+            )
           }
           placeholder="ABC123"
-          maxLength={8}
+          maxLength={12}
           autoComplete="off"
           autoCapitalize="characters"
           inputMode="text"
@@ -104,30 +74,30 @@ export function JoinSessionForm() {
         />
       </label>
       <label className="flex flex-col gap-1 text-sm">
-        Ton prénom / nom
+        Ton code joueur
         <input
-          value={displayName}
-          onChange={(event) => setDisplayName(event.target.value)}
-          placeholder="Ex: Amine"
-          maxLength={40}
-          autoComplete="nickname"
+          value={personalCode}
+          onChange={(event) => setPersonalCode(event.target.value)}
+          placeholder="Code personnel"
+          maxLength={64}
+          autoComplete="off"
           className="min-h-12 rounded-lg border border-border bg-transparent px-3"
         />
       </label>
-      {error && (
+      {error ? (
         <p
           role="alert"
           className="rounded-xl border border-danger/40 px-3 py-2 text-sm text-danger"
         >
           {error}
         </p>
-      )}
+      ) : null}
       <Button type="submit" disabled={!canSubmit}>
         {loading ? "Connexion…" : "Continuer"}
       </Button>
       <p className="text-center text-xs text-muted">
-        Pas de compte requis. Utilise le même appareil jusqu&apos;à la fin des
-        exercices.
+        Demande à ton entraîneur le code de séance et ton code joueur. Pas de
+        compte email.
       </p>
     </form>
   );

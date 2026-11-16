@@ -10,7 +10,7 @@ export default function JoinPage() {
   return (
     <PlayerLayout
       title="Rejoindre une session"
-      description="Entre le code donné par ton entraîneur, puis ton nom. Pas de compte requis."
+      description="Entre le code de séance et ton code joueur (donnés par ton entraîneur)."
     >
       <JoinSessionForm />
     </PlayerLayout>

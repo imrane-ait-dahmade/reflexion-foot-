@@ -17,29 +17,15 @@ import {
   loadPlayerSession,
   subscribePlayerSession,
 } from "@/lib/sessions/player-session";
+import {
+  fetchPlayerProgressV2,
+  playerApiErrorMessage,
+  type PlayerProgressView,
+} from "@/lib/sessions/player-v2";
 
 type PlayerPlayHubProps = {
   code: string;
 };
-
-type ProgressData = {
-  session: { title: string; status: string; endsAt: string | null };
-  completedCount: number;
-  totalCount: number;
-  nextExercise: string | null;
-  allDone: boolean;
-};
-
-function friendlyProgressError(message: string) {
-  const lower = message.toLowerCase();
-  if (lower.includes("fermée") || lower.includes("expir")) {
-    return "Session fermée ou expirée.";
-  }
-  if (lower.includes("failed to fetch") || lower.includes("network")) {
-    return "Pas de connexion. Réessaie dans un instant.";
-  }
-  return message || "Impossible de charger la session.";
-}
 
 function PlayerPlayHubInner({ code }: PlayerPlayHubProps) {
   const router = useRouter();
@@ -54,7 +40,7 @@ function PlayerPlayHubInner({ code }: PlayerPlayHubProps) {
     stored && stored.code.toUpperCase() === code.toUpperCase()
       ? stored
       : null;
-  const [progress, setProgress] = useState<ProgressData | null>(null);
+  const [progress, setProgress] = useState<PlayerProgressView | null>(null);
   const [error, setError] = useState("");
   const [, startTransition] = useTransition();
 
@@ -62,17 +48,15 @@ function PlayerPlayHubInner({ code }: PlayerPlayHubProps) {
     if (!session) return;
     startTransition(async () => {
       try {
-        const response = await fetch(
-          `/api/players/${session.sessionPlayerId}/progress`,
-        );
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error ?? "Erreur");
+        const data = await fetchPlayerProgressV2(session.code);
         setProgress(data);
         setError("");
 
-        if (data.session?.status === "closed" && !data.allDone) {
-          setError("La session est fermée. Tu ne peux plus continuer.");
-          return;
+        if (data.session.status === "completed" || data.session.status === "cancelled") {
+          if (!data.allDone) {
+            setError("La session est fermée. Tu ne peux plus continuer.");
+            return;
+          }
         }
 
         if (data.allDone || showDone) {
@@ -84,7 +68,7 @@ function PlayerPlayHubInner({ code }: PlayerPlayHubProps) {
         }
       } catch (err) {
         setError(
-          friendlyProgressError(err instanceof Error ? err.message : "Erreur"),
+          playerApiErrorMessage(err, "Impossible de charger la session."),
         );
       }
     });
@@ -102,7 +86,7 @@ function PlayerPlayHubInner({ code }: PlayerPlayHubProps) {
           href="/join"
           className="inline-flex min-h-12 items-center justify-center rounded-full bg-brand px-6 font-semibold text-white"
         >
-          Entrer le code
+          Entrer les codes
         </Link>
       </section>
     );
@@ -133,10 +117,9 @@ function PlayerPlayHubInner({ code }: PlayerPlayHubProps) {
         <CheckCircle2 className="size-16 text-brand" aria-hidden />
         <h2 className="text-2xl font-bold">Terminé</h2>
         <p className="max-w-sm text-muted">
-          Merci {session.displayName}. Tes exercices sont envoyés à ton
-          entraîneur.
+          Merci. Tes exercices sont envoyés à ton entraîneur.
         </p>
-        <p className="text-xs uppercase tracking-[0.18em] text-brand">
+        <p className="text-xs tracking-[0.18em] text-brand uppercase">
           {progress?.completedCount ?? session.exercises.length} /{" "}
           {progress?.totalCount ?? session.exercises.length} exercices
         </p>

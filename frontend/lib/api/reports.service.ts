@@ -1,22 +1,57 @@
 /**
- * AI reports HTTP API status (FastAPI V2).
- *
- * `AiReport` models exist in the backend, and permissions such as
- * `ai.generate` / `results.view` are seeded, but **no presentation router**
- * is mounted on `api_router` yet.
- *
- * V1 AI reports remain on Next.js Route Handlers under `/api/sessions/.../reports`.
- * Do not call this service until FastAPI exposes report endpoints.
+ * AI reports via FastAPI V2 (`/api/v1/ai/reports`).
  */
 
+import { apiClient } from "@/lib/api/client";
+import { endpoints } from "@/lib/api/endpoints";
+
+export type AiReportType = "test" | "session" | "progress" | "group";
+
+export type AiReportResponse = {
+  id: string;
+  report_type: AiReportType;
+  session_player_id: string | null;
+  training_session_id: string | null;
+  report_data: Record<string, unknown>;
+  model_name: string | null;
+  prompt_version: string | null;
+  created_at: string;
+};
+
+export type AiReportListResponse = {
+  items: AiReportResponse[];
+  total: number;
+};
+
+export type GenerateReportRequest = {
+  report_type: AiReportType;
+  session_player_id?: string | null;
+  training_session_id?: string | null;
+  focus_test_slug?: string | null;
+  force?: boolean;
+};
+
 export const reportsService = {
-  /**
-   * Placeholder — FastAPI has no `/reports` routes at inspection time.
-   * @throws Error always
-   */
-  unavailable(): never {
-    throw new Error(
-      "AI reports are not exposed on the FastAPI HTTP API yet. Use V1 Next.js report routes.",
+  listForSession(
+    trainingSessionId: string,
+    signal?: AbortSignal,
+  ): Promise<AiReportListResponse> {
+    return apiClient.get<AiReportListResponse>(
+      endpoints.aiReports.bySession(trainingSessionId),
+      { auth: "staff", signal },
     );
+  },
+
+  get(reportId: string, signal?: AbortSignal): Promise<AiReportResponse> {
+    return apiClient.get<AiReportResponse>(endpoints.aiReports.byId(reportId), {
+      auth: "staff",
+      signal,
+    });
+  },
+
+  generate(payload: GenerateReportRequest): Promise<AiReportResponse> {
+    return apiClient.post<AiReportResponse>(endpoints.aiReports.create, payload, {
+      auth: "staff",
+    });
   },
 };

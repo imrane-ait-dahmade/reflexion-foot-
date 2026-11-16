@@ -57,7 +57,19 @@ class Settings(BaseSettings):
         alias="BOOTSTRAP_ADMIN_FULL_NAME",
     )
 
-    @field_validator("database_url", "jwt_secret", mode="before")
+    # AI analysis (server-side only)
+    ai_analysis_enabled: bool = Field(default=False, alias="AI_ANALYSIS_ENABLED")
+    openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
+    openai_model: str = Field(default="gpt-4.1-mini", alias="OPENAI_MODEL")
+    ai_analysis_timeout_seconds: float = Field(
+        default=60.0,
+        alias="AI_ANALYSIS_TIMEOUT_SECONDS",
+    )
+    ai_analysis_max_retries: int = Field(default=1, alias="AI_ANALYSIS_MAX_RETRIES")
+    ai_input_cost_per_1m: float = Field(default=0.40, alias="AI_INPUT_COST_PER_1M")
+    ai_output_cost_per_1m: float = Field(default=1.60, alias="AI_OUTPUT_COST_PER_1M")
+
+    @field_validator("database_url", "jwt_secret", "openai_api_key", mode="before")
     @classmethod
     def strip_secrets(cls, value: object) -> object:
         if isinstance(value, str):

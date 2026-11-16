@@ -7,6 +7,11 @@ import { CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { TestSlug } from "@/lib/db/types";
 import { loadPlayerSession } from "@/lib/sessions/player-session";
+import {
+  fetchPlayerProgressV2,
+  playerApiErrorMessage,
+  type PlayerProgressView,
+} from "@/lib/sessions/player-v2";
 import { submitClientResult } from "@/lib/sessions/submit-client";
 
 type SaveResultEffectProps = {
@@ -32,23 +37,14 @@ type ProgressNav = {
   totalCount: number;
 };
 
-function friendlySaveError(message: string) {
-  const lower = message.toLowerCase();
-  if (lower.includes("fermée") || lower.includes("expir")) {
-    return "La session est fermée ou a expiré. Réessaie l'envoi.";
-  }
-  if (lower.includes("déjà")) {
-    return "Déjà enregistré.";
-  }
-  if (
-    lower.includes("réseau") ||
-    lower.includes("fetch") ||
-    lower.includes("network") ||
-    lower.includes("failed to fetch")
-  ) {
-    return "Pas de connexion. Vérifie ton réseau puis réessaie.";
-  }
-  return message || "Échec de l'enregistrement.";
+function toNav(progress: PlayerProgressView): ProgressNav {
+  return {
+    code: progress.session.code,
+    nextExercise: (progress.nextExercise as TestSlug | null) ?? null,
+    allDone: progress.allDone,
+    completedCount: progress.completedCount,
+    totalCount: progress.totalCount,
+  };
 }
 
 export function SaveResultEffect({
@@ -68,36 +64,23 @@ export function SaveResultEffect({
   const redirected = useRef(false);
 
   const resolveNav = useCallback(async () => {
-    try {
-      const response = await fetch(
-        `/api/players/${sessionPlayerId}/progress`,
-      );
-      const progress = await response.json();
-      if (response.ok) {
-        setNav({
-          code: progress.session.code,
-          nextExercise: progress.nextExercise,
-          allDone: progress.allDone,
-          completedCount: progress.completedCount,
-          totalCount: progress.totalCount,
-        });
-        return;
-      }
-    } catch {
-      // Fall back below.
-    }
-
     const stored = loadPlayerSession();
     if (!stored) return;
-    const remaining = stored.exercises.filter((slug) => slug !== testSlug);
-    setNav({
-      code: stored.code,
-      nextExercise: remaining[0] ?? null,
-      allDone: remaining.length === 0,
-      completedCount: stored.exercises.length - remaining.length,
-      totalCount: stored.exercises.length,
-    });
-  }, [sessionPlayerId, testSlug]);
+    try {
+      const progress = await fetchPlayerProgressV2(stored.code);
+      setNav(toNav(progress));
+      return;
+    } catch {
+      const remaining = stored.exercises.filter((slug) => slug !== testSlug);
+      setNav({
+        code: stored.code,
+        nextExercise: remaining[0] ?? null,
+        allDone: remaining.length === 0,
+        completedCount: stored.exercises.length - remaining.length,
+        totalCount: stored.exercises.length,
+      });
+    }
+  }, [testSlug]);
 
   const save = useCallback(async () => {
     if (!result || inFlight.current) return;
@@ -106,7 +89,7 @@ export function SaveResultEffect({
     setMessage("");
 
     try {
-      await submitClientResult({
+      const submitted = await submitClientResult({
         sessionPlayerId,
         testSlug,
         score: result.score,
@@ -120,9 +103,16 @@ export function SaveResultEffect({
       });
       setStatus("saved");
       setMessage("Enregistré. Passage à la suite…");
-      await resolveNav();
+      if (submitted.progress) {
+        setNav(toNav(submitted.progress));
+      } else {
+        await resolveNav();
+      }
     } catch (error) {
-      const raw = error instanceof Error ? error.message : "Erreur";
+      const raw =
+        error instanceof Error
+          ? error.message
+          : playerApiErrorMessage(error, "Erreur");
       if (raw.toLowerCase().includes("déjà")) {
         setStatus("saved");
         setMessage("Déjà enregistré. Passage à la suite…");
@@ -130,7 +120,7 @@ export function SaveResultEffect({
         return;
       }
       setStatus("error");
-      setMessage(friendlySaveError(raw));
+      setMessage(raw);
     } finally {
       inFlight.current = false;
     }
@@ -144,7 +134,6 @@ export function SaveResultEffect({
     void save();
   }, [result, save, sessionPlayerId, testSlug]);
 
-  // Auto-advance — player never picks the next exercise.
   useEffect(() => {
     if (status !== "saved" || !nav || redirected.current) return;
     redirected.current = true;
@@ -181,7 +170,7 @@ export function SaveResultEffect({
       </p>
 
       {status === "saved" && nav ? (
-        <p className="text-xs uppercase tracking-[0.18em] text-brand">
+        <p className="text-xs tracking-[0.18em] text-brand uppercase">
           {nav.allDone
             ? "Session terminée"
             : `Exercice ${nav.completedCount} / ${nav.totalCount}`}

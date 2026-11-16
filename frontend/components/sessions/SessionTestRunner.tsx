@@ -19,6 +19,11 @@ import {
   loadPlayerSession,
   subscribePlayerSession,
 } from "@/lib/sessions/player-session";
+import {
+  fetchPlayerProgressV2,
+  playerApiErrorMessage,
+  startExerciseBySlugV2,
+} from "@/lib/sessions/player-v2";
 
 type SessionTestRunnerProps = {
   code: string;
@@ -51,18 +56,14 @@ export function SessionTestRunner({ code, testSlug }: SessionTestRunnerProps) {
 
     startTransition(async () => {
       try {
-        const response = await fetch(
-          `/api/players/${stored.sessionPlayerId}/progress`,
-        );
-        const data = await response.json();
-        if (!response.ok) {
-          setLoadError(data.error ?? "Impossible de charger la session.");
-          return;
-        }
+        const data = await fetchPlayerProgressV2(stored.code);
 
-        if (data.session?.status === "closed") {
-          const exercise = data.exercises?.find(
-            (item: { testSlug: string }) => item.testSlug === testSlug,
+        if (
+          data.session.status === "completed" ||
+          data.session.status === "cancelled"
+        ) {
+          const exercise = data.exercises.find(
+            (item) => item.testSlug === testSlug,
           );
           if (!exercise?.completed) {
             setBlocked(
@@ -72,8 +73,8 @@ export function SessionTestRunner({ code, testSlug }: SessionTestRunnerProps) {
           }
         }
 
-        const exercise = data.exercises?.find(
-          (item: { testSlug: string }) => item.testSlug === testSlug,
+        const exercise = data.exercises.find(
+          (item) => item.testSlug === testSlug,
         );
         if (exercise?.completed) {
           if (data.nextExercise) {
@@ -84,18 +85,24 @@ export function SessionTestRunner({ code, testSlug }: SessionTestRunnerProps) {
           return;
         }
 
-        // Force order: if this is not the next exercise, redirect.
         if (data.nextExercise && data.nextExercise !== testSlug) {
           router.replace(`/play/${code}/${data.nextExercise}`);
           return;
         }
 
-        const completedCount = data.completedCount ?? 0;
-        const totalCount = data.totalCount ?? stored.exercises.length;
-        setStep({ index: completedCount + 1, total: totalCount });
+        await startExerciseBySlugV2(stored.code, testSlug);
+        setStep({
+          index: data.completedCount + 1,
+          total: data.totalCount || stored.exercises.length,
+        });
         setLoadError("");
-      } catch {
-        setLoadError("Pas de connexion. Vérifie ton réseau puis réessaie.");
+      } catch (err) {
+        setLoadError(
+          playerApiErrorMessage(
+            err,
+            "Pas de connexion. Vérifie ton réseau puis réessaie.",
+          ),
+        );
       } finally {
         setReady(true);
       }

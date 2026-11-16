@@ -11,6 +11,11 @@ import {
 import type { ChartBar } from "@/lib/ai-analysis/report-charts";
 import { buildReportPdfHtml, openReportPdf } from "@/lib/ai-analysis/report-pdf";
 import type { ReportContent, StoredReport } from "@/lib/ai-analysis/types";
+import {
+  reportsService,
+  type AiReportResponse,
+} from "@/lib/api/reports.service";
+import { isApiError } from "@/lib/api/errors";
 import { ReportBarChart } from "@/components/sessions/ReportCharts";
 import {
   AnalysisWait,
@@ -81,14 +86,52 @@ function isReport(data: StoredReport["reportData"]): data is ReportContent {
   return Boolean(data && "fr" in data && "ar" in data);
 }
 
+function mapV2Report(row: AiReportResponse): StoredReport {
+  const data = row.report_data ?? {};
+  const statusRaw = typeof data.status === "string" ? data.status : "completed";
+  const status =
+    statusRaw === "abstained"
+      ? "not_eligible"
+      : statusRaw === "ready" || statusRaw === "completed"
+        ? "completed"
+        : statusRaw === "failed"
+          ? "failed"
+          : "completed";
+  const usage =
+    data.token_usage && typeof data.token_usage === "object"
+      ? (data.token_usage as { input?: number; output?: number })
+      : {};
+  const content =
+    data.fr && data.ar
+      ? (data as unknown as ReportContent)
+      : status === "not_eligible"
+        ? { reason: String(data.confidence_reason ?? "insufficient_data") }
+        : null;
+  return {
+    id: row.id,
+    sessionId: row.training_session_id ?? "",
+    sessionPlayerId: row.session_player_id,
+    testResultId: null,
+    reportType: row.report_type,
+    status,
+    reportData: content,
+    model: row.model_name,
+    promptVersion: row.prompt_version,
+    inputTokens: usage.input ?? 0,
+    outputTokens: usage.output ?? 0,
+    errorCode: null,
+    generatedAt: row.created_at,
+  };
+}
+
 export function CoachGroupReportPanel({
-  code,
+  trainingSessionId,
   sessionTitle,
   finishedCount,
   playerCount,
   playerScores,
 }: {
-  code: string;
+  trainingSessionId: string;
   sessionTitle: string;
   finishedCount: number;
   playerCount: number;
@@ -118,23 +161,34 @@ export function CoachGroupReportPanel({
   );
 
   const load = useCallback(async () => {
-    const response = await fetch(`/api/sessions/${code}/reports`);
-    const json = await response.json();
-    if (!response.ok) {
-      throw new Error(friendlyApiError(json.error ?? "", language));
-    }
+    const list = await reportsService.listForSession(trainingSessionId);
+    const groupReports = list.items
+      .filter(
+        (item) => item.report_type === "group" && item.session_player_id == null,
+      )
+      .map(mapV2Report);
+    const report = groupReports[0] ?? null;
+    const json: GroupResponse = {
+      enabled: true,
+      sessionTitle,
+      sessionDate: null,
+      report,
+    };
     setData(json);
-    return json as GroupResponse;
-  }, [code, language]);
+    return json;
+  }, [sessionTitle, trainingSessionId]);
 
   useEffect(() => {
     startTransition(async () => {
       try {
         await load();
       } catch (err) {
-        setError(
-          friendlyApiError(err instanceof Error ? err.message : "", language),
-        );
+        const message = isApiError(err)
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "";
+        setError(friendlyApiError(message, language));
       }
     });
   }, [language, load]);
@@ -143,23 +197,18 @@ export function CoachGroupReportPanel({
     setError("");
     setBusy(true);
     try {
-      const response = await fetch(`/api/sessions/${code}/reports`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reportType: "group" }),
+      const createdRow = await reportsService.generate({
+        report_type: "group",
+        training_session_id: trainingSessionId,
+        force: false,
       });
-      const json = await response.json();
-      if (!response.ok) {
-        setError(friendlyApiError(json.error ?? "", language));
-        return;
-      }
       const next = await load();
-      const report = next.report;
-      if (report?.status === "completed") setModalOpen(true);
-      if (report?.status === "failed") {
+      const report = next.report ?? mapV2Report(createdRow);
+      if (report.status === "completed") setModalOpen(true);
+      if (report.status === "failed") {
         setError(friendlyReportError(report.errorCode, language));
       }
-      if (report?.status === "not_eligible") {
+      if (report.status === "not_eligible") {
         const reason =
           report.reportData && "reason" in report.reportData
             ? report.reportData.reason
@@ -167,9 +216,17 @@ export function CoachGroupReportPanel({
         setError(friendlyReportError("not_eligible", language, reason));
       }
     } catch (err) {
-      setError(
-        friendlyApiError(err instanceof Error ? err.message : "", language),
-      );
+      if (isApiError(err) && err.status === 409) {
+        const next = await load();
+        if (next.report?.status === "completed") setModalOpen(true);
+        return;
+      }
+      const message = isApiError(err)
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : "";
+      setError(friendlyApiError(message, language));
     } finally {
       setBusy(false);
     }
@@ -220,130 +277,95 @@ export function CoachGroupReportPanel({
           <Users className="size-4 text-brand" aria-hidden />
           {copy.title}
         </h3>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="rounded-full border border-border px-3 py-1 text-sm"
-            onClick={() => setLanguage("fr")}
-          >
-            Français
-          </button>
-          <button
-            type="button"
-            className="rounded-full border border-border px-3 py-1 text-sm"
-            onClick={() => setLanguage("ar")}
-          >
-            العربية
-          </button>
-          <button
-            type="button"
-            className="rounded-full border border-brand px-3 py-1 text-sm text-brand disabled:opacity-50"
-            onClick={exportPdf}
-            disabled={!reportContent}
-          >
-            {copy.exportPdf}
-          </button>
+        <div className="flex gap-1">
+          {(["fr", "ar"] as const).map((lang) => (
+            <button
+              key={lang}
+              type="button"
+              onClick={() => setLanguage(lang)}
+              className={`rounded-md px-2 py-1 text-xs uppercase ${
+                language === lang
+                  ? "bg-brand text-white"
+                  : "bg-brand-soft text-brand"
+              }`}
+            >
+              {lang}
+            </button>
+          ))}
         </div>
       </div>
 
-      {error ? (
-        <p
-          role="alert"
-          className="mb-3 rounded-xl border border-danger/40 px-3 py-2 text-sm text-danger"
-        >
-          {error}
-        </p>
-      ) : null}
+      <p className="mb-3 text-sm text-muted">{copy.basis}</p>
+      <p className="mb-3 text-sm text-muted">
+        {canGenerate
+          ? copy.readyHint(finishedCount, playerCount)
+          : copy.waiting}
+      </p>
 
-      {!data ? <p className="text-sm text-muted">{copy.loading}</p> : null}
-      {data && !data.enabled ? (
-        <p className="text-sm text-muted">{copy.off}</p>
-      ) : null}
-      {data?.enabled ? (
-        <p className="mb-2 text-sm text-muted">{copy.basis}</p>
-      ) : null}
-      {data?.enabled && canGenerate ? (
-        <p className="mb-3 text-sm text-muted">
-          {copy.readyHint(finishedCount, playerCount)}
-        </p>
-      ) : null}
-      {data?.enabled && !canGenerate ? (
-        <p className="mb-3 text-sm text-muted">{copy.waiting}</p>
-      ) : null}
+      {error ? <p className="mb-3 text-sm text-danger">{error}</p> : null}
 
-      {data?.enabled && canGenerate && report?.status !== "completed" ? (
-        <motion.button
+      <div className="flex flex-wrap gap-2">
+        <button
           type="button"
-          className="mb-3 inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-4 py-2 text-sm font-semibold text-black disabled:opacity-60"
-          disabled={busy}
-          onClick={generate}
-          whileTap={{ scale: 0.98 }}
+          disabled={!canGenerate || busy}
+          onClick={() => void generate()}
+          className="rounded-lg bg-brand px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
-          {busy
-            ? copy.pending
-            : report?.status === "failed" || report?.status === "not_eligible"
-              ? copy.retry
-              : copy.generate}
-        </motion.button>
-      ) : null}
-
-      <AnimatePresence>
-        {busy ? <AnalysisWait key="group-wait" label={copy.pending} /> : null}
-      </AnimatePresence>
-
-      {reportContent ? (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl border border-brand/30 bg-brand-soft/40 p-3"
-        >
-          <p className="font-semibold">{copy.reportTitle}</p>
-          <p className="mt-1 line-clamp-2 text-sm text-muted">
-            {reportContent[language].executive_summary}
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
+          {busy ? copy.pending : report ? copy.retry : copy.generate}
+        </button>
+        {reportContent ? (
+          <>
             <button
               type="button"
-              className="inline-flex min-h-10 items-center rounded-full border border-brand px-4 text-sm font-semibold text-brand"
               onClick={() => setModalOpen(true)}
+              className="rounded-lg border border-border px-3 py-2 text-sm"
             >
               {copy.openReport}
             </button>
             <button
               type="button"
-              className="inline-flex min-h-10 items-center rounded-full border border-border px-4 text-sm font-semibold"
               onClick={exportPdf}
+              className="rounded-lg border border-border px-3 py-2 text-sm"
             >
               {copy.exportPdf}
             </button>
-          </div>
-        </motion.div>
+          </>
+        ) : null}
+      </div>
+
+      {chartBars.length > 0 ? (
+        <div className="mt-4">
+          <ReportBarChart title={copy.chartTitle} bars={chartBars} />
+        </div>
       ) : null}
 
-      {reportContent ? (
-        <ReportModal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          title={copy.reportTitle}
-          subtitle={sessionTitle}
-          direction={direction}
-        >
-          <div className="mb-4 flex justify-end">
-            <button
-              type="button"
-              className="rounded-full border border-brand px-4 py-2 text-sm font-semibold text-brand"
-              onClick={exportPdf}
-            >
-              {copy.exportPdf}
-            </button>
-          </div>
+      <AnimatePresence>
+        {busy ? <AnalysisWait label={copy.pending} /> : null}
+      </AnimatePresence>
+
+      <ReportModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={copy.reportTitle}
+        subtitle={sessionTitle}
+        direction={direction}
+      >
+        {reportContent ? (
           <ReportBody
             content={reportContent[language]}
-            labels={copy}
+            labels={{
+              assessed: copy.assessed,
+              observations: copy.observations,
+              strengths: copy.strengths,
+              development: copy.development,
+              training: copy.training,
+              plan: copy.plan,
+              limits: copy.limits,
+            }}
             chart={<ReportBarChart title={copy.chartTitle} bars={chartBars} />}
           />
-        </ReportModal>
-      ) : null}
+        ) : null}
+      </ReportModal>
     </motion.section>
   );
 }

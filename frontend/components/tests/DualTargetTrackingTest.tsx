@@ -5,6 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ExerciseIntro } from "@/components/tests/shared/ExerciseIntro";
 import { useLeaveGuard } from "@/hooks/useLeaveGuard";
+import {
+  challengeEngineErrorMessage,
+  challengeEnginesService,
+} from "@/lib/api/challenge-engines.service";
+import { isApiError } from "@/lib/api/errors";
 import { DUAL_HIGHLIGHT_MS } from "@/lib/tests/dual-target-tracking/config";
 import {
   createOrbs,
@@ -30,7 +35,7 @@ type Challenge = {
 type Phase = "intro" | "highlight" | "move" | "pick" | "saving" | "error";
 
 export function DualTargetTrackingTest({
-  sessionPlayerId,
+  sessionPlayerId: _sessionPlayerId,
   sessionId,
   stepIndex,
   stepTotal,
@@ -78,9 +83,11 @@ export function DualTargetTrackingTest({
   }, [challenge, phase]);
 
   const advance = async () => {
-    const response = await fetch(`/api/players/${sessionPlayerId}/progress`);
-    const progress = await response.json();
-    if (!response.ok) throw new Error(progress.error ?? "Erreur");
+    const { loadPlayerSession } = await import("@/lib/sessions/player-session");
+    const { fetchPlayerProgressV2 } = await import("@/lib/sessions/player-v2");
+    const stored = loadPlayerSession();
+    if (!stored) throw new Error("Session joueur introuvable.");
+    const progress = await fetchPlayerProgressV2(stored.code);
     if (progress.allDone || !progress.nextExercise) {
       router.replace(`/play/${progress.session.code}?done=1`);
     } else {
@@ -110,21 +117,15 @@ export function DualTargetTrackingTest({
     busy.current = true;
     setMessage("");
     try {
-      const response = await fetch("/api/exercises/dual-target-tracking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "start", sessionPlayerId }),
-      });
-      const data = await response.json();
-      if (response.status === 409) {
+      const data = await challengeEnginesService.dualStart();
+      beginRound(data.token, data.challenge);
+    } catch (error) {
+      if (isApiError(error) && error.status === 409) {
         await advance();
         return;
       }
-      if (!response.ok) throw new Error(data.error ?? "Erreur");
-      beginRound(data.token, data.challenge);
-    } catch (error) {
       setPhase("error");
-      setMessage(error instanceof Error ? error.message : "Erreur");
+      setMessage(challengeEngineErrorMessage(error));
     } finally {
       busy.current = false;
     }
@@ -135,25 +136,21 @@ export function DualTargetTrackingTest({
     busy.current = true;
     setPhase("saving");
     try {
-      const response = await fetch("/api/exercises/dual-target-tracking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "submit",
-          token: tokenRef.current,
-          selected,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Erreur");
+      const data = await challengeEnginesService.dualSubmit(
+        tokenRef.current,
+        selected,
+      );
       if (!data.finished) {
+        if (!data.token || !data.challenge) {
+          throw new Error("Réponse serveur incomplète.");
+        }
         beginRound(data.token, data.challenge);
         return;
       }
       await advance();
     } catch (error) {
       setPhase("pick");
-      setMessage(error instanceof Error ? error.message : "Erreur");
+      setMessage(challengeEngineErrorMessage(error));
     } finally {
       busy.current = false;
     }

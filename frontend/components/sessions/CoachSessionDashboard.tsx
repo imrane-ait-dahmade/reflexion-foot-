@@ -336,7 +336,7 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
             <p className="mt-1 text-sm text-muted">{overview.overall}</p>
           </section>
           <CoachGroupReportPanel
-            code={sessionCode}
+            trainingSessionId={data.session.id}
             sessionTitle={data.session.title}
             finishedCount={doneCount}
             playerCount={data.players.length}
@@ -431,7 +431,7 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
                       >
                         <div className="mt-2 rounded-xl border border-brand/30 bg-brand-soft/40 p-4">
                           <CoachAnalysisPanel
-                            code={sessionCode}
+                            trainingSessionId={data.session.id}
                             sessionPlayerId={player.session_player_id}
                             playerName={player.display_name}
                             sessionTitle={data.session.title}

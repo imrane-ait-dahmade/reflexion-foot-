@@ -5,6 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ExerciseIntro } from "@/components/tests/shared/ExerciseIntro";
 import { useLeaveGuard } from "@/hooks/useLeaveGuard";
+import {
+  challengeEngineErrorMessage,
+  challengeEnginesService,
+} from "@/lib/api/challenge-engines.service";
+import { isApiError } from "@/lib/api/errors";
 
 type DigitMemoryTestProps = {
   sessionPlayerId: string;
@@ -23,7 +28,7 @@ function wait(ms: number, signal: { cancelled: boolean }) {
 }
 
 export function DigitMemoryTest({
-  sessionPlayerId,
+  sessionPlayerId: _sessionPlayerId,
   stepIndex,
   stepTotal,
 }: DigitMemoryTestProps) {
@@ -48,9 +53,11 @@ export function DigitMemoryTest({
   }, []);
 
   const advance = async () => {
-    const response = await fetch(`/api/players/${sessionPlayerId}/progress`);
-    const progress = await response.json();
-    if (!response.ok) throw new Error(progress.error ?? "Erreur");
+    const { loadPlayerSession } = await import("@/lib/sessions/player-session");
+    const { fetchPlayerProgressV2 } = await import("@/lib/sessions/player-v2");
+    const stored = loadPlayerSession();
+    if (!stored) throw new Error("Session joueur introuvable.");
+    const progress = await fetchPlayerProgressV2(stored.code);
     if (progress.allDone || !progress.nextExercise) {
       router.replace(`/play/${progress.session.code}?done=1`);
     } else {
@@ -62,13 +69,7 @@ export function DigitMemoryTest({
     setPhase("showing");
     let current = token;
     for (;;) {
-      const response = await fetch("/api/exercises/digit-memory", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "digit", token: current }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Erreur");
+      const data = await challengeEnginesService.digitReveal(current);
       current = data.token;
       tokenRef.current = current;
       setDigit(data.digit);
@@ -88,25 +89,19 @@ export function DigitMemoryTest({
     busy.current = true;
     setMessage("");
     try {
-      const response = await fetch("/api/exercises/digit-memory", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "start", sessionPlayerId }),
-      });
-      const data = await response.json();
-      if (response.status === 409) {
-        await advance();
-        return;
-      }
-      if (!response.ok) throw new Error(data.error ?? "Erreur");
+      const data = await challengeEnginesService.digitStart();
       tokenRef.current = data.token;
       setLevel(data.level);
       setLength(data.length);
       await playLevel(data.token);
     } catch (error) {
       if (signal.current.cancelled) return;
+      if (isApiError(error) && error.status === 409) {
+        await advance();
+        return;
+      }
       setPhase("error");
-      setMessage(error instanceof Error ? error.message : "Erreur");
+      setMessage(challengeEngineErrorMessage(error));
     } finally {
       busy.current = false;
     }
@@ -117,22 +112,15 @@ export function DigitMemoryTest({
     busy.current = true;
     setPhase("saving");
     try {
-      const response = await fetch("/api/exercises/digit-memory", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "answer",
-          token: tokenRef.current,
-          answer: entry,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Erreur");
+      const data = await challengeEnginesService.digitAnswer(
+        tokenRef.current,
+        entry,
+      );
       if (!data.finished) {
-        setLevel(data.level);
-        setLength(data.length);
+        setLevel(data.level ?? 1);
+        setLength(data.length ?? 3);
         setMessage("");
-        await playLevel(data.token);
+        await playLevel(data.token ?? "");
         return;
       }
       setMessage(
@@ -144,7 +132,7 @@ export function DigitMemoryTest({
     } catch (error) {
       if (signal.current.cancelled) return;
       setPhase("error");
-      setMessage(error instanceof Error ? error.message : "Erreur");
+      setMessage(challengeEngineErrorMessage(error));
     } finally {
       busy.current = false;
     }

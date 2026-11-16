@@ -20,6 +20,9 @@ psycopg[binary]==3.3.9
 # Excel import
 openpyxl==3.1.5
 
+# AI analysis (optional until AI_ANALYSIS_ENABLED=true)
+openai==2.54.0
+
 # Tests
 pytest==8.4.2
 pytest-asyncio==1.5.0

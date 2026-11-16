@@ -18,6 +18,7 @@ export { authService } from "@/lib/api/auth.service";
 export { playersService } from "@/lib/api/players.service";
 export { sessionsService } from "@/lib/api/sessions.service";
 export { exercisesService } from "@/lib/api/exercises.service";
+export { challengeEnginesService } from "@/lib/api/challenge-engines.service";
 export { resultsService } from "@/lib/api/results.service";
 export { reportsService } from "@/lib/api/reports.service";
 export { teamsService } from "@/lib/api/teams.service";

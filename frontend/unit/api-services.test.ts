@@ -133,7 +133,15 @@ describe("api services", () => {
     );
   });
 
-  it("reportsService is explicitly unavailable", () => {
-    expect(() => reportsService.unavailable()).toThrow(/not exposed/i);
+  it("reportsService hits V2 AI endpoints", async () => {
+    tokenStore.setStaffTokens("tok", "ref");
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }),
+    );
+    const list = await reportsService.listForSession("sess-1");
+    expect(list.total).toBe(0);
+    expect(String(fetchMock.mock.calls[0][0])).toContain(
+      "/api/v1/ai/reports/sessions/sess-1",
+    );
   });
 });

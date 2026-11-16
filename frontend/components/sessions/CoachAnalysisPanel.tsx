@@ -11,6 +11,11 @@ import {
 import type { ChartBar } from "@/lib/ai-analysis/report-charts";
 import { buildReportPdfHtml, openReportPdf } from "@/lib/ai-analysis/report-pdf";
 import type { ReportContent, StoredReport } from "@/lib/ai-analysis/types";
+import {
+  reportsService,
+  type AiReportResponse,
+} from "@/lib/api/reports.service";
+import { isApiError } from "@/lib/api/errors";
 import { ReportBarChart } from "@/components/sessions/ReportCharts";
 import {
   AnalysisWait,
@@ -96,6 +101,44 @@ function isReport(data: StoredReport["reportData"]): data is ReportContent {
   return Boolean(data && "fr" in data && "ar" in data);
 }
 
+function mapV2Report(row: AiReportResponse): StoredReport {
+  const data = row.report_data ?? {};
+  const statusRaw = typeof data.status === "string" ? data.status : "completed";
+  const status =
+    statusRaw === "abstained"
+      ? "not_eligible"
+      : statusRaw === "ready" || statusRaw === "completed"
+        ? "completed"
+        : statusRaw === "failed"
+          ? "failed"
+          : "completed";
+  const usage =
+    data.token_usage && typeof data.token_usage === "object"
+      ? (data.token_usage as { input?: number; output?: number })
+      : {};
+  const content =
+    data.fr && data.ar
+      ? (data as unknown as ReportContent)
+      : status === "not_eligible"
+        ? { reason: String(data.confidence_reason ?? "insufficient_data") }
+        : null;
+  return {
+    id: row.id,
+    sessionId: row.training_session_id ?? "",
+    sessionPlayerId: row.session_player_id,
+    testResultId: null,
+    reportType: row.report_type,
+    status,
+    reportData: content,
+    model: row.model_name,
+    promptVersion: row.prompt_version,
+    inputTokens: usage.input ?? 0,
+    outputTokens: usage.output ?? 0,
+    errorCode: null,
+    generatedAt: row.created_at,
+  };
+}
+
 export type PrintableResult = {
   id: string;
   name: string;
@@ -107,14 +150,15 @@ export type PrintableResult = {
 };
 
 export function CoachAnalysisPanel({
-  code,
+  trainingSessionId,
   sessionPlayerId,
   playerName,
   sessionTitle,
   exerciseCount,
   results,
 }: {
-  code: string;
+  /** FastAPI V2 session UUID. */
+  trainingSessionId: string;
   sessionPlayerId: string;
   playerName: string;
   sessionTitle: string;
@@ -129,25 +173,47 @@ export function CoachAnalysisPanel({
   const [, startTransition] = useTransition();
 
   const load = useCallback(async () => {
-    const response = await fetch(
-      `/api/sessions/${code}/players/${sessionPlayerId}/reports`,
+    const list = await reportsService.listForSession(trainingSessionId);
+    const playerReports = list.items
+      .filter((item) => item.session_player_id === sessionPlayerId)
+      .map(mapV2Report);
+    const usage = playerReports.reduce(
+      (acc, report) => {
+        acc.inputTokens += report.inputTokens;
+        acc.outputTokens += report.outputTokens;
+        if (report.model) acc.models.add(report.model);
+        return acc;
+      },
+      { inputTokens: 0, outputTokens: 0, models: new Set<string>() },
     );
-    const json = await response.json();
-    if (!response.ok) {
-      throw new Error(friendlyApiError(json.error ?? "", language));
-    }
+    const json: ReportsResponse = {
+      enabled: true,
+      playerName,
+      sessionDate: null,
+      reports: playerReports,
+      usage: {
+        reports: playerReports.length,
+        failed: playerReports.filter((r) => r.status === "failed").length,
+        inputTokens: usage.inputTokens,
+        outputTokens: usage.outputTokens,
+        models: [...usage.models],
+      },
+    };
     setData(json);
-    return json as ReportsResponse;
-  }, [code, language, sessionPlayerId]);
+    return json;
+  }, [playerName, sessionPlayerId, trainingSessionId]);
 
   useEffect(() => {
     startTransition(async () => {
       try {
         await load();
       } catch (err) {
-        setError(
-          friendlyApiError(err instanceof Error ? err.message : "", language),
-        );
+        const message = isApiError(err)
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "";
+        setError(friendlyApiError(message, language));
       }
     });
   }, [language, load]);
@@ -156,26 +222,18 @@ export function CoachAnalysisPanel({
     setError("");
     setBusy(true);
     try {
-      const response = await fetch(
-        `/api/sessions/${code}/players/${sessionPlayerId}/reports`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reportType: "session" }),
-        },
-      );
-      const json = await response.json();
-      if (!response.ok) {
-        setError(friendlyApiError(json.error ?? "", language));
-        return;
-      }
+      const createdRow = await reportsService.generate({
+        report_type: "session",
+        session_player_id: sessionPlayerId,
+        training_session_id: trainingSessionId,
+        force: false,
+      });
       const next = await load();
-      const created = next.reports.find((report) => report.reportType === "session");
-      if (created?.status === "completed") setModalOpen(true);
-      if (created?.status === "failed") {
-        setError(friendlyReportError(created.errorCode, language));
-      }
-      if (created?.status === "not_eligible") {
+      const created =
+        next.reports.find((report) => report.id === createdRow.id) ??
+        mapV2Report(createdRow);
+      if (created.status === "completed") setModalOpen(true);
+      if (created.status === "not_eligible") {
         const reason =
           created.reportData && "reason" in created.reportData
             ? created.reportData.reason
@@ -183,9 +241,18 @@ export function CoachAnalysisPanel({
         setError(friendlyReportError("not_eligible", language, reason));
       }
     } catch (err) {
-      setError(
-        friendlyApiError(err instanceof Error ? err.message : "", language),
-      );
+      if (isApiError(err) && err.status === 409) {
+        const next = await load();
+        const existing = next.reports.find((r) => r.reportType === "session");
+        if (existing?.status === "completed") setModalOpen(true);
+        return;
+      }
+      const message = isApiError(err)
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : "";
+      setError(friendlyApiError(message, language));
     } finally {
       setBusy(false);
     }

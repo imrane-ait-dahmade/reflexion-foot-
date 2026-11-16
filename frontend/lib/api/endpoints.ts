@@ -87,4 +87,19 @@ export const endpoints = {
     completeExercise: (sessionExerciseId: string) =>
       `/api/v1/player/session/exercises/${sessionExerciseId}/complete`,
   },
+
+  /** Server-validated challenge engines (FastAPI V2). */
+  playerExercises: {
+    digitMemory: "/api/v1/player/exercises/digit-memory",
+    dualTargetTracking: "/api/v1/player/exercises/dual-target-tracking",
+    observationComplete: (slug: string) =>
+      `/api/v1/player/exercises/${slug}/complete`,
+  },
+
+  aiReports: {
+    create: "/api/v1/ai/reports",
+    byId: (reportId: string) => `/api/v1/ai/reports/${reportId}`,
+    bySession: (trainingSessionId: string) =>
+      `/api/v1/ai/reports/sessions/${trainingSessionId}`,
+  },
 } as const;
