@@ -22,6 +22,8 @@ npm run dev
 
 ## Backend (FastAPI)
 
+Architecture docs: [`docs/architecture/README.md`](docs/architecture/README.md)
+
 ```bash
 cd backend
 # activate venv (Windows)
@@ -34,6 +36,7 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 - API: http://127.0.0.1:8000/
 - Health: http://127.0.0.1:8000/health
+- API v1 prefix: http://127.0.0.1:8000/api/v1
 - Swagger: http://127.0.0.1:8000/docs
 - ReDoc: http://127.0.0.1:8000/redoc
 
