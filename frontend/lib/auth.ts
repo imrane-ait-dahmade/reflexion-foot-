@@ -23,8 +23,28 @@ function getAuthPool() {
   return pool;
 }
 
+const authBaseUrl =
+  process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+
+function demoTrustedOrigins(baseUrl: string): string[] {
+  const origins = new Set<string>([baseUrl]);
+  try {
+    const parsed = new URL(baseUrl);
+    if (parsed.hostname === "localhost") {
+      origins.add(`${parsed.protocol}//127.0.0.1${parsed.port ? `:${parsed.port}` : ""}`);
+    } else if (parsed.hostname === "127.0.0.1") {
+      origins.add(`${parsed.protocol}//localhost${parsed.port ? `:${parsed.port}` : ""}`);
+    }
+  } catch {
+    // Keep base URL only when parsing fails.
+  }
+  return [...origins];
+}
+
 export const auth = betterAuth({
   database: getAuthPool(),
+  baseURL: authBaseUrl,
+  trustedOrigins: demoTrustedOrigins(authBaseUrl),
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,

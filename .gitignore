@@ -27,3 +27,8 @@ backend/.env*
 
 # DB dumps
 backups/
+
+deploy/demo-credentials.local.txt
+deploy/scripts/demo_smoke_and_seed.py
+
+deploy/demo-credentials.local.txt
