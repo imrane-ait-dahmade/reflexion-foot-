@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Binary,
   Check,
@@ -17,8 +17,11 @@ import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
 import { CopyCodeButton } from "@/components/sessions/CopyCodeButton";
-import type { TestSlug } from "@/lib/db/types";
-import { TESTS } from "@/lib/tests/registry";
+import { exercisesService } from "@/lib/api/exercises.service";
+import { isApiError } from "@/lib/api/errors";
+import { playersService } from "@/lib/api/players.service";
+import { sessionsService } from "@/lib/api/sessions.service";
+import type { CognitiveTestResponse, PlayerResponse } from "@/lib/api/types";
 
 const TEST_ICONS: Record<string, LucideIcon> = {
   "visual-tracking": Crosshair,
@@ -32,23 +35,13 @@ const TEST_ICONS: Record<string, LucideIcon> = {
 };
 
 export type CreatedSession = {
+  id: string;
   code: string;
   title: string;
+  status: string;
   exercises: string[];
   endsAt: string | null;
 };
-
-function formatEndsAt(endsAt: string | null) {
-  if (!endsAt) return null;
-  const date = new Date(endsAt);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 type CreateSessionDialogProps = {
   open: boolean;
@@ -65,13 +58,69 @@ export function CreateSessionDialog({
   onCreated,
   onClearCreated,
 }: CreateSessionDialogProps) {
-  const [title, setTitle] = useState("Séance vision");
-  const [selected, setSelected] = useState<TestSlug[]>([
-    "visual-tracking",
-    "reaction-time",
-  ]);
+  const [tests, setTests] = useState<CognitiveTestResponse[]>([]);
+  const [players, setPlayers] = useState<PlayerResponse[]>([]);
+  const [selectedTestIds, setSelectedTestIds] = useState<string[]>([]);
+  const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([]);
+  const [playerSearch, setPlayerSearch] = useState("");
+  const [startImmediately, setStartImmediately] = useState(true);
+  const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setLoadingCatalog(true);
+      setError("");
+      void (async () => {
+        try {
+          const [catalog, roster] = await Promise.all([
+            exercisesService.listCognitiveTests(),
+            playersService.list({ page: 1, page_size: 100, is_active: true }),
+          ]);
+          if (cancelled) return;
+          const activeTests = catalog.filter((t) => t.is_active);
+          setTests(activeTests);
+          setPlayers(roster.items);
+          setSelectedTestIds((current) =>
+            current.length > 0
+              ? current.filter((id) => activeTests.some((t) => t.id === id))
+              : activeTests
+                  .filter((t) =>
+                    ["visual-tracking", "reaction-time"].includes(t.slug),
+                  )
+                  .map((t) => t.id),
+          );
+        } catch (err) {
+          if (cancelled) return;
+          setError(
+            isApiError(err)
+              ? err.message
+              : err instanceof Error
+                ? err.message
+                : "Impossible de charger le catalogue.",
+          );
+        } finally {
+          if (!cancelled) setLoadingCatalog(false);
+        }
+      })();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  const filteredPlayers = useMemo(() => {
+    const q = playerSearch.trim().toLowerCase();
+    if (!q) return players;
+    return players.filter((p) => {
+      const name = `${p.first_name} ${p.last_name}`.toLowerCase();
+      return name.includes(q);
+    });
+  }, [players, playerSearch]);
 
   const closeAll = () => {
     onOpenChange(false);
@@ -79,43 +128,63 @@ export function CreateSessionDialog({
     setError("");
   };
 
-  const toggleExercise = (slug: TestSlug) => {
-    setSelected((current) =>
-      current.includes(slug)
-        ? current.filter((item) => item !== slug)
-        : [...current, slug],
+  const toggleTest = (id: string) => {
+    setSelectedTestIds((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id],
+    );
+  };
+
+  const togglePlayer = (id: string) => {
+    setSelectedPlayerIds((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id],
     );
   };
 
   const onCreate = async () => {
-    if (selected.length === 0) {
+    if (selectedTestIds.length === 0) {
       setError("Sélectionne au moins un exercice.");
+      return;
+    }
+    if (selectedPlayerIds.length === 0) {
+      setError("Sélectionne au moins un joueur.");
       return;
     }
 
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          testSlugs: selected,
-          exerciseCount: selected.length,
-        }),
+      let session = await sessionsService.create({
+        player_ids: selectedPlayerIds,
+        exercise_ids: selectedTestIds,
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Erreur");
+      if (startImmediately) {
+        session = await sessionsService.start(session.id);
+      }
+      const slugs = session.exercises
+        .map((ex) => ex.cognitive_test?.slug)
+        .filter((slug): slug is string => Boolean(slug));
       onCreated({
-        code: data.code,
-        title: data.title,
-        exercises: data.exercises,
-        endsAt: data.endsAt ?? null,
+        id: session.id,
+        code: session.session_code ?? "",
+        title: session.title,
+        status: session.status,
+        exercises: slugs,
+        endsAt: null,
       });
       onOpenChange(false);
+      setSelectedPlayerIds([]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur");
+      setError(
+        isApiError(err)
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Erreur",
+      );
     } finally {
       setLoading(false);
     }
@@ -127,31 +196,94 @@ export function CreateSessionDialog({
         open={open}
         onClose={() => onOpenChange(false)}
         title="Nouvelle session"
-        description="Les joueurs reçoivent ces exercices dans un ordre mélangé."
+        description="Choisis joueurs et exercices. Le titre est généré automatiquement."
         className="max-w-2xl"
       >
         <div className="flex flex-col gap-4">
-          <Input
-            label="Titre de la session"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            autoFocus
-          />
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-medium">
+                Joueurs · {selectedPlayerIds.length} sélectionné
+                {selectedPlayerIds.length > 1 ? "s" : ""}
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => setSelectedPlayerIds([])}
+                disabled={selectedPlayerIds.length === 0}
+              >
+                Aucun
+              </Button>
+            </div>
+            <Input
+              label="Rechercher un joueur"
+              value={playerSearch}
+              onChange={(event) => setPlayerSearch(event.target.value)}
+              placeholder="Nom…"
+            />
+            <ul className="grid max-h-[min(28vh,14rem)] gap-2 overflow-y-auto sm:grid-cols-2">
+              {loadingCatalog ? (
+                <li className="text-sm text-muted">Chargement…</li>
+              ) : filteredPlayers.length === 0 ? (
+                <li className="text-sm text-muted">
+                  Aucun joueur actif. Crée-en dans Joueurs.
+                </li>
+              ) : (
+                filteredPlayers.map((player) => {
+                  const active = selectedPlayerIds.includes(player.id);
+                  return (
+                    <li key={player.id}>
+                      <button
+                        type="button"
+                        onClick={() => togglePlayer(player.id)}
+                        aria-pressed={active}
+                        className={`flex min-h-12 w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition ${
+                          active
+                            ? "border-brand bg-brand-soft"
+                            : "border-border bg-surface hover:border-brand/50"
+                        }`}
+                      >
+                        <span
+                          className={`flex size-8 shrink-0 items-center justify-center rounded-full border text-xs ${
+                            active
+                              ? "border-brand bg-brand text-white"
+                              : "border-border text-muted"
+                          }`}
+                        >
+                          {active ? <Check className="size-3.5" /> : null}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-semibold">
+                            {player.first_name} {player.last_name}
+                          </span>
+                          <span className="block text-xs text-muted">
+                            {player.primary_position?.code ??
+                              player.primary_position?.name ??
+                              "—"}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          </div>
 
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-medium">
-                Exercices · {selected.length} sélectionné
-                {selected.length > 1 ? "s" : ""}
+                Exercices · {selectedTestIds.length} sélectionné
+                {selectedTestIds.length > 1 ? "s" : ""}
               </p>
               <div className="flex gap-2">
                 <Button
                   type="button"
                   size="sm"
                   variant="secondary"
-                  onClick={() =>
-                    setSelected(TESTS.map((test) => test.slug as TestSlug))
-                  }
+                  onClick={() => setSelectedTestIds(tests.map((t) => t.id))}
+                  disabled={tests.length === 0}
                 >
                   Tout
                 </Button>
@@ -159,22 +291,21 @@ export function CreateSessionDialog({
                   type="button"
                   size="sm"
                   variant="ghost"
-                  onClick={() => setSelected([])}
+                  onClick={() => setSelectedTestIds([])}
                 >
                   Aucun
                 </Button>
               </div>
             </div>
-            <ul className="grid max-h-[min(42vh,22rem)] gap-2 overflow-y-auto sm:grid-cols-2">
-              {TESTS.map((test) => {
-                const slug = test.slug as TestSlug;
-                const active = selected.includes(slug);
-                const Icon = TEST_ICONS[slug] ?? Crosshair;
+            <ul className="grid max-h-[min(36vh,18rem)] gap-2 overflow-y-auto sm:grid-cols-2">
+              {tests.map((test) => {
+                const active = selectedTestIds.includes(test.id);
+                const Icon = TEST_ICONS[test.slug] ?? Crosshair;
                 return (
-                  <li key={slug}>
+                  <li key={test.id}>
                     <button
                       type="button"
-                      onClick={() => toggleExercise(slug)}
+                      onClick={() => toggleTest(test.id)}
                       aria-pressed={active}
                       className={`flex min-h-14 w-full items-start gap-3 rounded-xl border p-3 text-left transition ${
                         active
@@ -208,6 +339,21 @@ export function CreateSessionDialog({
             </ul>
           </div>
 
+          <label className="flex items-start gap-3 rounded-xl border border-border px-3 py-3 text-sm">
+            <input
+              type="checkbox"
+              className="mt-1 size-4 accent-[var(--brand)]"
+              checked={startImmediately}
+              onChange={(event) => setStartImmediately(event.target.checked)}
+            />
+            <span>
+              <span className="font-semibold">Ouvrir immédiatement</span>
+              <span className="mt-0.5 block text-muted">
+                Passe la séance en cours pour que le code soit rejoignable.
+              </span>
+            </span>
+          </label>
+
           {error ? (
             <p role="alert" className="text-sm text-danger">
               {error}
@@ -215,11 +361,18 @@ export function CreateSessionDialog({
           ) : null}
 
           <Button
-            onClick={onCreate}
-            disabled={loading || selected.length === 0}
+            onClick={() => void onCreate()}
+            disabled={
+              loading ||
+              loadingCatalog ||
+              selectedTestIds.length === 0 ||
+              selectedPlayerIds.length === 0
+            }
             className="w-full sm:w-auto"
           >
-            {loading ? "Création…" : `Créer la session (${selected.length})`}
+            {loading
+              ? "Création…"
+              : `Créer la session (${selectedPlayerIds.length}j · ${selectedTestIds.length}ex)`}
           </Button>
         </div>
       </Dialog>
@@ -233,33 +386,38 @@ export function CreateSessionDialog({
         {created ? (
           <div className="flex flex-col gap-4">
             <div className="rounded-xl border border-border bg-surface px-4 py-6 text-center">
-              <p className="text-sm uppercase tracking-wide text-muted">
+              <p className="text-sm tracking-wide text-muted uppercase">
                 Code à partager
               </p>
               <p className="mt-2 text-5xl font-bold tracking-[0.2em] text-brand">
-                {created.code}
+                {created.code || "—"}
               </p>
-              {formatEndsAt(created.endsAt) ? (
-                <p className="mt-3 text-sm text-muted">
-                  Valide jusqu&apos;à {formatEndsAt(created.endsAt)}
-                </p>
-              ) : null}
+              <p className="mt-3 text-sm text-muted">
+                {created.title}
+                {created.status === "draft"
+                  ? " · brouillon (pas encore rejoignable)"
+                  : created.status === "in_progress"
+                    ? " · ouverte"
+                    : ""}
+              </p>
             </div>
-            <p className="text-sm text-muted">Ordre joueur aléatoire parmi :</p>
+            <p className="text-sm text-muted">Exercices :</p>
             <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
               {created.exercises.map((slug) => {
-                const test = TESTS.find((item) => item.slug === slug);
+                const test = tests.find((item) => item.slug === slug);
                 return <li key={slug}>{test?.name ?? slug}</li>;
               })}
             </ul>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <CopyCodeButton code={created.code} />
-              <Link
-                href={`/coach/sessions/${created.code}`}
-                className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full bg-brand px-6 font-semibold text-white"
-              >
-                Voir les résultats
-              </Link>
+              {created.code ? <CopyCodeButton code={created.code} /> : null}
+              {created.code ? (
+                <Link
+                  href={`/coach/sessions/${created.code}`}
+                  className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full bg-brand px-6 font-semibold text-white"
+                >
+                  Ouvrir la session
+                </Link>
+              ) : null}
               <Button
                 variant="secondary"
                 onClick={() => {

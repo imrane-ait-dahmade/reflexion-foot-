@@ -17,6 +17,7 @@ from app.modules.test_sessions.application.schemas import (
     CognitiveTestResponse,
     CreateSessionRequest,
     ReplaceSessionExercisesRequest,
+    SessionDashboardResponse,
     SessionListResponse,
     SessionResponse,
 )
@@ -65,6 +66,40 @@ async def create_session(
     current: AuthenticatedUser = Depends(require_permissions("sessions.manage")),
 ) -> SessionResponse:
     return await session_service.create_session(session, current, payload)
+
+
+@sessions_router.get("/code/{code}", response_model=SessionResponse)
+async def get_session_by_code(
+    code: str,
+    session: AsyncSession = Depends(get_db),
+    current: AuthenticatedUser = Depends(require_permissions("sessions.view")),
+) -> SessionResponse:
+    return await session_service.get_session_by_code(session, current, code)
+
+
+@sessions_router.get("/code/{code}/dashboard", response_model=SessionDashboardResponse)
+async def get_session_dashboard_by_code(
+    code: str,
+    session: AsyncSession = Depends(get_db),
+    current: AuthenticatedUser = Depends(require_permissions("sessions.view")),
+) -> SessionDashboardResponse:
+    return await session_service.get_session_dashboard(session, current, code=code)
+
+
+@sessions_router.get(
+    "/{session_id}/dashboard",
+    response_model=SessionDashboardResponse,
+)
+async def get_session_dashboard(
+    session_id: uuid.UUID,
+    session: AsyncSession = Depends(get_db),
+    current: AuthenticatedUser = Depends(require_permissions("sessions.view")),
+) -> SessionDashboardResponse:
+    return await session_service.get_session_dashboard(
+        session,
+        current,
+        session_id=session_id,
+    )
 
 
 @sessions_router.get("/{session_id}", response_model=SessionResponse)

@@ -264,6 +264,32 @@ async def test_session_lifecycle_team_and_manual_and_player_progress() -> None:
         assert started.status_code == 200
         assert started.json()["status"] == "in_progress"
 
+        by_code = await client.get(
+            f"/api/v1/sessions/code/{session_code}",
+            headers=coach_h,
+        )
+        assert by_code.status_code == 200, by_code.text
+        assert by_code.json()["id"] == session_id
+        assert by_code.json()["session_code"] == session_code
+
+        dash = await client.get(
+            f"/api/v1/sessions/code/{session_code}/dashboard",
+            headers=coach_h,
+        )
+        assert dash.status_code == 200, dash.text
+        dash_body = dash.json()
+        assert dash_body["session"]["id"] == session_id
+        assert len(dash_body["exercises"]) == 2
+        assert len(dash_body["players"]) == 1
+        assert dash_body["players"][0]["player_id"] == player_id
+        assert dash_body["results"] == []
+        assert (
+            await client.get(
+                f"/api/v1/sessions/code/{session_code}/dashboard",
+                headers=other_h,
+            )
+        ).status_code == 404
+
         # Frozen mutations
         assert (
             await client.post(
@@ -353,7 +379,8 @@ async def test_session_lifecycle_team_and_manual_and_player_progress() -> None:
         )
         assert completed.status_code == 200
         assert completed.json()["status"] == "completed"
-        assert completed.json()["session_code"] is None
+        # Staff responses keep the join code for dashboard navigation even after close.
+        assert completed.json()["session_code"] == session_code
 
         # Attempts preserved
         factory = get_session_factory()

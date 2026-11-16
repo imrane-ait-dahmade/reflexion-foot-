@@ -1,6 +1,7 @@
 export const formatSessionStatus = (status: string) => {
-  if (status === "active") return "ouverte";
-  if (status === "closed") return "fermée";
+  if (status === "active" || status === "in_progress") return "ouverte";
+  if (status === "closed" || status === "completed") return "terminée";
+  if (status === "cancelled") return "annulée";
   if (status === "draft") return "brouillon";
   return status;
 };

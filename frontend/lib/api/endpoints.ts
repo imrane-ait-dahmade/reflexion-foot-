@@ -63,6 +63,11 @@ export const endpoints = {
     list: "/api/v1/sessions",
     create: "/api/v1/sessions",
     byId: (sessionId: string) => `/api/v1/sessions/${sessionId}`,
+    byCode: (code: string) => `/api/v1/sessions/code/${encodeURIComponent(code)}`,
+    dashboardByCode: (code: string) =>
+      `/api/v1/sessions/code/${encodeURIComponent(code)}/dashboard`,
+    dashboard: (sessionId: string) =>
+      `/api/v1/sessions/${sessionId}/dashboard`,
     players: (sessionId: string) => `/api/v1/sessions/${sessionId}/players`,
     player: (sessionId: string, playerId: string) =>
       `/api/v1/sessions/${sessionId}/players/${playerId}`,

@@ -17,18 +17,26 @@ from app.modules.teams.application.team_access import (
     is_platform_admin,
 )
 from app.modules.teams.infrastructure.repositories import TeamRepository
+from app.modules.results.infrastructure.models import TestResult
 from app.modules.test_sessions.application.schemas import (
     AddSessionPlayersRequest,
     CognitiveTestResponse,
     CreateSessionRequest,
     ReplaceSessionExercisesRequest,
+    SessionDashboardExercise,
+    SessionDashboardPlayer,
+    SessionDashboardResponse,
+    SessionDashboardResult,
     SessionExerciseResponse,
     SessionListResponse,
     SessionParticipantProgress,
     SessionParticipantResponse,
     SessionResponse,
 )
-from app.modules.test_sessions.application.session_codes import generate_session_code
+from app.modules.test_sessions.application.session_codes import (
+    generate_session_code,
+    normalize_session_code,
+)
 from app.modules.test_sessions.infrastructure.models import SessionPlayer, TrainingSession
 from app.modules.test_sessions.infrastructure.repositories import (
     SessionExerciseRepository,
@@ -47,19 +55,14 @@ def _enum_value(value: object) -> str:
     return getattr(value, "value", value)  # type: ignore[return-value]
 
 
-def _include_code(status: SessionStatus | str) -> bool:
-    return _enum_value(status) in {
-        SessionStatus.DRAFT.value,
-        SessionStatus.IN_PROGRESS.value,
-    }
-
-
 def _serialize_session(
     training: TrainingSession,
     *,
-    include_code: bool | None = None,
+    include_code: bool = True,
 ) -> SessionResponse:
-    show_code = _include_code(training.status) if include_code is None else include_code
+    # Staff responses always include the join code for dashboard navigation.
+    # Player join still requires status == in_progress.
+    show_code = include_code
     exercises = sorted(training.exercises, key=lambda e: e.display_order)
     total_ex = len(exercises)
     players: list[SessionParticipantResponse] = []
@@ -211,6 +214,124 @@ async def get_session(
         raise NotFoundError("Session not found")
     await _assert_can_view_session(session, user, training)
     return _serialize_session(training)
+
+
+async def get_session_by_code(
+    session: AsyncSession,
+    user: AuthenticatedUser,
+    code: str,
+) -> SessionResponse:
+    normalized = normalize_session_code(code)
+    training = await TrainingSessionRepository(session).get_by_code(normalized)
+    if training is None:
+        raise NotFoundError("Session not found")
+    await _assert_can_view_session(session, user, training)
+    return _serialize_session(training)
+
+
+async def get_session_dashboard(
+    session: AsyncSession,
+    user: AuthenticatedUser,
+    *,
+    session_id: uuid.UUID | None = None,
+    code: str | None = None,
+) -> SessionDashboardResponse:
+    repo = TrainingSessionRepository(session)
+    if session_id is not None:
+        training = await repo.get_by_id(session_id)
+    elif code is not None:
+        training = await repo.get_by_code(normalize_session_code(code))
+    else:
+        raise ValidationError("session_id or code required")
+    if training is None:
+        raise NotFoundError("Session not found")
+    await _assert_can_view_session(session, user, training)
+
+    exercises = sorted(training.exercises, key=lambda e: e.display_order)
+    total_ex = len(exercises)
+    slug_by_ex = {
+        ex.id: (ex.cognitive_test.slug if ex.cognitive_test else "")
+        for ex in exercises
+    }
+    name_by_ex = {
+        ex.id: (ex.cognitive_test.name if ex.cognitive_test else "")
+        for ex in exercises
+    }
+
+    dashboard_exercises = [
+        SessionDashboardExercise(
+            session_exercise_id=ex.id,
+            cognitive_test_id=ex.cognitive_test_id,
+            display_order=ex.display_order,
+            slug=slug_by_ex.get(ex.id, ""),
+            name=name_by_ex.get(ex.id, ""),
+        )
+        for ex in exercises
+    ]
+
+    results: list[SessionDashboardResult] = []
+    players: list[SessionDashboardPlayer] = []
+    for sp in training.players:
+        if _enum_value(sp.status) == SessionPlayerStatus.WITHDRAWN.value:
+            continue
+        scores: list[int] = []
+        completed = 0
+        for attempt in sp.attempts:
+            if _enum_value(attempt.status) != AttemptStatus.COMPLETED.value:
+                continue
+            completed += 1
+            result = attempt.result
+            if result is None:
+                # Lazy load if relationship missing
+                result = await session.scalar(
+                    select(TestResult).where(TestResult.attempt_id == attempt.id)
+                )
+            if result is None:
+                continue
+            scores.append(int(result.score))
+            results.append(
+                SessionDashboardResult(
+                    id=result.id,
+                    attempt_id=attempt.id,
+                    session_player_id=sp.id,
+                    session_exercise_id=attempt.session_exercise_id,
+                    test_slug=slug_by_ex.get(attempt.session_exercise_id, ""),
+                    score=int(result.score),
+                    accuracy=result.accuracy,
+                    response_time_ms=int(result.response_time_ms),
+                    result_data=result.result_data or {},
+                    completed_at=attempt.completed_at,
+                )
+            )
+        first = sp.player.first_name if sp.player else ""
+        last = sp.player.last_name if sp.player else ""
+        display = f"{first} {last}".strip() or "Joueur"
+        players.append(
+            SessionDashboardPlayer(
+                session_player_id=sp.id,
+                player_id=sp.player_id,
+                display_name=display,
+                status=_enum_value(sp.status),  # type: ignore[arg-type]
+                completed_tests=completed,
+                total_tests=total_ex,
+                average_score=(
+                    round(sum(scores) / len(scores), 1) if scores else None
+                ),
+                joined_at=sp.joined_at,
+            )
+        )
+
+    players.sort(key=lambda p: p.display_name.lower())
+    results.sort(
+        key=lambda r: (r.completed_at or training.created_at, r.test_slug),
+        reverse=True,
+    )
+    return SessionDashboardResponse(
+        session=_serialize_session(training),
+        exercises=dashboard_exercises,
+        players=players,
+        results=results,
+    )
 
 
 async def create_session(

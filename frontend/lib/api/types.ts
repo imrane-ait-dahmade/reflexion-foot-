@@ -365,6 +365,45 @@ export type ListSessionsQuery = {
   status?: SessionStatus;
 };
 
+export type SessionDashboardExercise = {
+  session_exercise_id: string;
+  cognitive_test_id: string;
+  display_order: number;
+  slug: string;
+  name: string;
+};
+
+export type SessionDashboardPlayer = {
+  session_player_id: string;
+  player_id: string;
+  display_name: string;
+  status: SessionPlayerStatus;
+  completed_tests: number;
+  total_tests: number;
+  average_score: number | null;
+  joined_at: string;
+};
+
+export type SessionDashboardResult = {
+  id: string;
+  attempt_id: string;
+  session_player_id: string;
+  session_exercise_id: string;
+  test_slug: string;
+  score: number;
+  accuracy: number | string;
+  response_time_ms: number;
+  result_data: Record<string, unknown>;
+  completed_at: string | null;
+};
+
+export type SessionDashboardResponse = {
+  session: SessionResponse;
+  exercises: SessionDashboardExercise[];
+  players: SessionDashboardPlayer[];
+  results: SessionDashboardResult[];
+};
+
 export type PlayerJoinRequest = {
   personal_code: string;
   session_code: string;

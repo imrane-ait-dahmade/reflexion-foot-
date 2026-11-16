@@ -144,3 +144,42 @@ class CompleteExerciseRequest(BaseModel):
     accuracy: Decimal = Field(ge=0, le=100)
     response_time_ms: int = Field(ge=0)
     result_data: dict[str, Any] = Field(default_factory=dict)
+
+
+class SessionDashboardExercise(BaseModel):
+    session_exercise_id: uuid.UUID
+    cognitive_test_id: uuid.UUID
+    display_order: int
+    slug: str
+    name: str
+
+
+class SessionDashboardPlayer(BaseModel):
+    session_player_id: uuid.UUID
+    player_id: uuid.UUID
+    display_name: str
+    status: SessionPlayerStatusValue
+    completed_tests: int
+    total_tests: int
+    average_score: float | None = None
+    joined_at: datetime
+
+
+class SessionDashboardResult(BaseModel):
+    id: uuid.UUID
+    attempt_id: uuid.UUID
+    session_player_id: uuid.UUID
+    session_exercise_id: uuid.UUID
+    test_slug: str
+    score: int
+    accuracy: Decimal
+    response_time_ms: int
+    result_data: dict[str, Any] = Field(default_factory=dict)
+    completed_at: datetime | None = None
+
+
+class SessionDashboardResponse(BaseModel):
+    session: SessionResponse
+    exercises: list[SessionDashboardExercise]
+    players: list[SessionDashboardPlayer]
+    results: list[SessionDashboardResult]

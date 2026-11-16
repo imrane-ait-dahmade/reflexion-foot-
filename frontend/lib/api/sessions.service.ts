@@ -10,6 +10,7 @@ import type {
   PlayerJoinResponse,
   PlayerSessionProgressResponse,
   ReplaceSessionExercisesRequest,
+  SessionDashboardResponse,
   SessionListResponse,
   SessionResponse,
 } from "@/lib/api/types";
@@ -42,6 +43,33 @@ export const sessionsService = {
       auth: "staff",
       signal,
     });
+  },
+
+  getByCode(code: string, signal?: AbortSignal): Promise<SessionResponse> {
+    return apiClient.get<SessionResponse>(endpoints.sessions.byCode(code), {
+      auth: "staff",
+      signal,
+    });
+  },
+
+  dashboardByCode(
+    code: string,
+    signal?: AbortSignal,
+  ): Promise<SessionDashboardResponse> {
+    return apiClient.get<SessionDashboardResponse>(
+      endpoints.sessions.dashboardByCode(code),
+      { auth: "staff", signal },
+    );
+  },
+
+  dashboard(
+    sessionId: string,
+    signal?: AbortSignal,
+  ): Promise<SessionDashboardResponse> {
+    return apiClient.get<SessionDashboardResponse>(
+      endpoints.sessions.dashboard(sessionId),
+      { auth: "staff", signal },
+    );
   },
 
   addPlayers(
