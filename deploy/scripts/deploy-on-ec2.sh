@@ -88,7 +88,8 @@ if wait_healthy; then
 fi
 
 echo "Healthcheck failed — attempting rollback" >&2
-compose logs --no-color --tail=200 || true
+# Do not dump container logs here (may contain sensitive app data). Status only.
+compose ps || true
 
 if [[ -n "${PREVIOUS_TAG}" && "${PREVIOUS_TAG}" != "${IMAGE_TAG}" ]]; then
   echo "Rolling back to IMAGE_TAG=${PREVIOUS_TAG}" >&2
@@ -105,5 +106,5 @@ else
   echo "No previous IMAGE_TAG available for rollback" >&2
 fi
 
-compose logs --no-color --tail=200 || true
+compose ps || true
 exit 1

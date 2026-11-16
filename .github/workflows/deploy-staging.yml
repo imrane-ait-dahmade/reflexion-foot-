@@ -35,8 +35,7 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      # Lockfile may lag optional platform deps; keep tests enabled.
-      - run: npm ci || npm install
+      - run: npm ci
       - run: npm run lint
       - run: npm run test
 

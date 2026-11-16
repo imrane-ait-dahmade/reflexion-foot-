@@ -164,7 +164,7 @@ bash deploy/scripts/deploy-on-ec2.sh
 2. **EC2 `.env` and GHCR login** are manual one-time steps.
 3. **First compose up runs Alembic** against Neon V2 — ensure V2 URL is correct before enabling deploy vars.
 4. Frontend still uses **Neon serverless driver** — OK for Neon staging; RDS cutover needs a later driver change.
-5. `npm ci` may need lockfile sync (`npm ci \|\| npm install` in CI).
+5. CI and Docker frontend builds use **`npm ci` only**; keep `frontend/package-lock.json` in sync with `package.json`.
 6. t3.small RAM is tight; watch OOM under build-less pull-only deploys.
 7. No domain/HTTPS yet — set `BETTER_AUTH_URL` to the real public HTTP origin in use.
 8. This readiness pass **did not** deploy and **did not** migrate Neon.
