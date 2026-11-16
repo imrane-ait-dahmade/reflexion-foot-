@@ -23,7 +23,9 @@ export function proxy(request: NextRequest) {
   const isPublicCoachAuth =
     pathname === "/coach/login" || pathname === "/coach/register";
   const isCoachArea =
-    pathname === "/coach" || pathname.startsWith("/coach/sessions");
+    pathname === "/coach" ||
+    pathname.startsWith("/coach/sessions") ||
+    pathname.startsWith("/coach/players");
 
   // Already signed in: skip auth forms without waiting for the page RSC.
   if (isPublicCoachAuth && hasCoachCookie) {
@@ -46,6 +48,8 @@ export const config = {
     "/coach/login",
     "/coach/register",
     "/coach/sessions/:path*",
+    "/coach/players",
+    "/coach/players/:path*",
     "/tests",
     "/tests/:path*",
     "/exercises",

@@ -44,6 +44,22 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 pytest -v
 ```
 
+## Docker
+
+See [`docs/DOCKER.md`](docs/DOCKER.md). Quick start:
+
+```bash
+cp .env.example .env
+# fill FRONTEND_DATABASE_URL, BACKEND_DATABASE_URL, JWT_SECRET, BETTER_AUTH_SECRET
+docker compose up --build
+```
+
+- http://localhost/ — frontend via nginx  
+- http://localhost/health — backend health  
+- http://localhost/api/v1 — FastAPI  
+
+Staging / AWS: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md), [`docs/AWS_SETUP.md`](docs/AWS_SETUP.md), [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md).
+
 ## Vercel
 
 Set **Root Directory** to `frontend` in the Vercel project settings.

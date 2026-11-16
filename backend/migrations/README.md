@@ -1,14 +1,14 @@
-# Migrations
+# Migrations (V2)
 
-Alembic is configured for future SQLAlchemy migrations.
+Alembic manages the **independent V2** schema.
 
-- Config: `alembic.ini` (project root)
-- Environment: `migrations/env.py` (uses `Base.metadata` + `DATABASE_URL`)
-- Revisions: `migrations/versions/` (empty until V1 Drizzle schema is inspected)
+- Config: `alembic.ini`
+- Environment: `migrations/env.py` (`import_all_models()` + `Base.metadata`)
+- Initial revision: `versions/20261115_0001_v2_initial_schema.py`
 
 ## Rules
 
-- Do not invent business tables or player models yet.
-- Do not generate revisions until the V1 Drizzle schema is reviewed.
-- Do not run `alembic upgrade` against production without an explicit plan.
-- Keep credentials in `.env` / environment only — never in `alembic.ini`.
+- Use a **dedicated V2 Neon / Postgres database** — never the V1 app database.
+- Do not run `alembic upgrade` against production V1.
+- Do not call `Base.metadata.create_all()` from FastAPI startup.
+- Seed reference data from `app.shared.infrastructure.database.seeds` after schema exists.

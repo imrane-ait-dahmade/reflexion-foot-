@@ -96,7 +96,10 @@ export function CoachSessionDashboard({ code }: CoachSessionDashboardProps) {
   const [playerFilter, setPlayerFilter] = useState<"all" | "doing" | "done">("all");
   const [isPending, startTransition] = useTransition();
   const selectedRef = useRef<string | null>(null);
-  selectedRef.current = selectedId;
+
+  useEffect(() => {
+    selectedRef.current = selectedId;
+  }, [selectedId]);
 
   const load = useCallback((quiet = false) => {
     startTransition(async () => {

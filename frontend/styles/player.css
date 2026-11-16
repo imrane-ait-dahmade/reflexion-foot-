@@ -1,0 +1,22 @@
+/*
+ * Player experience — immersive, minimal, high contrast.
+ */
+
+[data-experience="player"] {
+  --shell-max: 42rem;
+}
+
+[data-experience="player"] .player-shell {
+  min-height: 100%;
+}
+
+[data-experience="player"].player-immersive footer {
+  display: none;
+}
+
+[data-experience="player"] .player-exercise-frame {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}

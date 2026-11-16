@@ -1,0 +1,40 @@
+/*
+ * Coach experience — sports intelligence shell (tablet-first).
+ */
+
+[data-experience="coach"] {
+  --shell-max: 80rem;
+  --coach-sidebar-width: 15rem;
+  --coach-sidebar-collapsed: 4.5rem;
+  --coach-touch: 2.75rem; /* 44px */
+}
+
+[data-experience="coach"] footer {
+  display: none;
+}
+
+[data-experience="coach"] .coach-shell {
+  min-height: 100%;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+[data-experience="coach"] .coach-sidebar {
+  width: var(--coach-sidebar-width);
+}
+
+[data-experience="coach"] .coach-sidebar[data-collapsed="true"] {
+  width: var(--coach-sidebar-collapsed);
+}
+
+[data-experience="coach"] .coach-content {
+  max-width: var(--shell-max);
+}
+
+@supports (padding: env(safe-area-inset-top)) {
+  [data-experience="coach"] .coach-shell {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}

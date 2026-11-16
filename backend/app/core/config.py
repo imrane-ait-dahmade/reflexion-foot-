@@ -9,7 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Runtime configuration for the FastAPI backend.
 
-    Secrets such as DATABASE_URL must come from the environment — never hardcode them.
+    Secrets such as DATABASE_URL / JWT_SECRET must come from the environment.
     """
 
     model_config = SettingsConfigDict(
@@ -26,13 +26,40 @@ class Settings(BaseSettings):
     database_url: str = Field(default="", alias="DATABASE_URL")
     db_echo: bool = Field(default=False, alias="DB_ECHO")
 
-    # Optional extras (not required by the DB foundation task)
     app_version: str = Field(default="0.1.0", alias="APP_VERSION")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
-    @field_validator("database_url", mode="before")
+    # JWT / session
+    jwt_secret: str = Field(default="", alias="JWT_SECRET")
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    access_token_expire_minutes: int = Field(
+        default=15,
+        alias="ACCESS_TOKEN_EXPIRE_MINUTES",
+    )
+    refresh_token_expire_days: int = Field(
+        default=14,
+        alias="REFRESH_TOKEN_EXPIRE_DAYS",
+    )
+    jwt_issuer: str = Field(
+        default="cognitif-connexion-foot-v2",
+        alias="JWT_ISSUER",
+    )
+    jwt_audience: str = Field(
+        default="cognitif-connexion-foot-api",
+        alias="JWT_AUDIENCE",
+    )
+
+    # One-time / ops bootstrap (never hardcode passwords in code)
+    bootstrap_admin_email: str = Field(default="", alias="BOOTSTRAP_ADMIN_EMAIL")
+    bootstrap_admin_password: str = Field(default="", alias="BOOTSTRAP_ADMIN_PASSWORD")
+    bootstrap_admin_full_name: str = Field(
+        default="Platform Admin",
+        alias="BOOTSTRAP_ADMIN_FULL_NAME",
+    )
+
+    @field_validator("database_url", "jwt_secret", mode="before")
     @classmethod
-    def strip_database_url(cls, value: object) -> object:
+    def strip_secrets(cls, value: object) -> object:
         if isinstance(value, str):
             return value.strip()
         return value
@@ -41,20 +68,24 @@ class Settings(BaseSettings):
     def has_database_url(self) -> bool:
         return bool(self.database_url)
 
+    @property
+    def has_jwt_secret(self) -> bool:
+        return bool(self.jwt_secret) and len(self.jwt_secret) >= 32
+
     def async_database_url(self) -> str:
         """Return a SQLAlchemy async URL using the asyncpg driver."""
         if not self.database_url:
             raise RuntimeError("DATABASE_URL is not configured.")
         url = self.database_url
         if url.startswith("postgresql+asyncpg://"):
-            return url
-        if url.startswith("postgres://"):
-            return "postgresql+asyncpg://" + url.removeprefix("postgres://")
-        if url.startswith("postgresql://"):
-            return "postgresql+asyncpg://" + url.removeprefix("postgresql://")
-        if url.startswith("postgresql+psycopg://"):
-            return "postgresql+asyncpg://" + url.removeprefix("postgresql+psycopg://")
-        return url
+            pass
+        elif url.startswith("postgres://"):
+            url = "postgresql+asyncpg://" + url.removeprefix("postgres://")
+        elif url.startswith("postgresql://"):
+            url = "postgresql+asyncpg://" + url.removeprefix("postgresql://")
+        elif url.startswith("postgresql+psycopg://"):
+            url = "postgresql+asyncpg://" + url.removeprefix("postgresql+psycopg://")
+        return url.replace("sslmode=require", "ssl=require")
 
 
 @lru_cache

@@ -1,0 +1,42 @@
+{
+  "stamp": "20261115T215523Z",
+  "source": {
+    "host": "ep-silent-sunset-b9gxjxnx-pooler.c-7.eu-central-1.aws.neon.tech",
+    "database": "neondb",
+    "user": "neondb_owner",
+    "port": "5432",
+    "fingerprint": "eed74849c9417ea9"
+  },
+  "target": {
+    "host": "ep-icy-river-b9e1499d-pooler.c-7.eu-central-1.aws.neon.tech",
+    "database": "cognitif_connexion_foot_v2",
+    "user": "cognitif_connexion_foot_v2_owner",
+    "port": "5432",
+    "fingerprint": "b5fa9f5099b4b4ee",
+    "app_env": "development"
+  },
+  "source_counts": {
+    "users_total": 8,
+    "users_coach": 8,
+    "users_player": 0,
+    "training_sessions": 25,
+    "session_exercises": 68,
+    "session_players": 22,
+    "test_results": 78,
+    "ai_reports": 16
+  },
+  "target_counts": {
+    "users": 181,
+    "players": 108,
+    "teams": 32,
+    "training_sessions": 42,
+    "session_exercises": 42,
+    "session_players": 43,
+    "test_attempts": 15,
+    "test_results": 12,
+    "ai_reports": 0,
+    "positions": 10,
+    "cognitive_tests": 8
+  },
+  "note": "Logical inventory only \u2014 not a full pg_dump. Prefer Neon PITR/branch before write ETL."
+}

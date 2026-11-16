@@ -11,10 +11,10 @@ from sqlalchemy import engine_from_config, pool
 
 from app.core.config import get_settings
 from app.shared.infrastructure.database.base import Base
+from app.shared.infrastructure.database.models import import_all_models
 
-# Import future ORM models here so they register on Base.metadata before autogenerate.
-# Example (when models exist):
-#   from app.modules.players.infrastructure.models import Player  # noqa: F401
+# Register V2 ORM models on Base.metadata.
+import_all_models()
 
 config = context.config
 
@@ -33,14 +33,15 @@ def _sync_database_url() -> str:
         )
     url = settings.database_url
     if url.startswith("postgresql+asyncpg://"):
-        return "postgresql+psycopg://" + url.removeprefix("postgresql+asyncpg://")
-    if url.startswith("postgres://"):
-        return "postgresql+psycopg://" + url.removeprefix("postgres://")
-    if url.startswith("postgresql://"):
-        return "postgresql+psycopg://" + url.removeprefix("postgresql://")
-    if url.startswith("postgresql+psycopg://"):
-        return url
-    return url
+        url = "postgresql+psycopg://" + url.removeprefix("postgresql+asyncpg://")
+    elif url.startswith("postgres://"):
+        url = "postgresql+psycopg://" + url.removeprefix("postgres://")
+    elif url.startswith("postgresql://"):
+        url = "postgresql+psycopg://" + url.removeprefix("postgresql://")
+    elif url.startswith("postgresql+psycopg://"):
+        pass
+    # psycopg expects sslmode=; async app URLs may use ssl=
+    return url.replace("ssl=require", "sslmode=require")
 
 
 def run_migrations_offline() -> None:

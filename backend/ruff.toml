@@ -1,0 +1,16 @@
+target-version = "py312"
+line-length = 100
+
+[lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = [
+  # FastAPI Depends() in defaults is idiomatic.
+  "B008",
+  # Keep descriptions readable without forced wrapping.
+  "E501",
+]
+
+[lint.per-file-ignores]
+"app/shared/infrastructure/database/session.py" = ["PLW0603", "PLW0602"]
+"app/shared/infrastructure/database/__init__.py" = ["PLC0415"]
+"tests/*" = ["PLR2004", "PLC0415", "S101"]

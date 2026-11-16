@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
+import { PlayerLayout } from "@/components/player/layout";
 import { SessionTestRunner } from "@/components/sessions/SessionTestRunner";
-import { TestShell } from "@/components/tests/shared/TestShell";
 import { isTestSlug } from "@/lib/sessions/exercises";
 import { TESTS } from "@/lib/tests/registry";
 
@@ -17,11 +17,12 @@ export default async function PlayTestPage({ params }: PageProps) {
   const test = TESTS.find((item) => item.slug === slug);
 
   return (
-    <TestShell
+    <PlayerLayout
       title={test?.name ?? "Exercice"}
       description="Enchaînement automatique — reste concentré jusqu'à la fin."
+      immersive
     >
       <SessionTestRunner code={code.toUpperCase()} testSlug={slug} />
-    </TestShell>
+    </PlayerLayout>
   );
 }

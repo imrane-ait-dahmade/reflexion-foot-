@@ -63,9 +63,7 @@ def test_async_database_url_converts_postgres_schemes() -> None:
         _env_file=None,
         DATABASE_URL="postgresql://user:pass@host/db?sslmode=require",
     )
-    assert settings.async_database_url() == (
-        "postgresql+asyncpg://user:pass@host/db?sslmode=require"
-    )
+    assert settings.async_database_url() == ("postgresql+asyncpg://user:pass@host/db?ssl=require")
 
     settings2 = Settings(
         _env_file=None,

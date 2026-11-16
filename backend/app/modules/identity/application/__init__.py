@@ -1,1 +1,1 @@
-"""Use cases and application services for this module."""
+"""Application services for identity / auth."""

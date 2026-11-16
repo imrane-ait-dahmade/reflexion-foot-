@@ -1,0 +1,1583 @@
+{
+  "stamp": "20261115T215523Z",
+  "source_identity": {
+    "host": "ep-silent-sunset-b9gxjxnx-pooler.c-7.eu-central-1.aws.neon.tech",
+    "database": "neondb",
+    "user": "neondb_owner",
+    "port": "5432",
+    "fingerprint": "eed74849c9417ea9",
+    "role": "V1_Neon",
+    "app": "frontend"
+  },
+  "target_identity": {
+    "host": "ep-icy-river-b9e1499d-pooler.c-7.eu-central-1.aws.neon.tech",
+    "database": "cognitif_connexion_foot_v2",
+    "user": "cognitif_connexion_foot_v2_owner",
+    "port": "5432",
+    "fingerprint": "b5fa9f5099b4b4ee",
+    "role": "V2_Postgres",
+    "app_env": "development",
+    "note": "Treated as development/TEST per APP_ENV; no Neon branch clone created in this run"
+  },
+  "identities_distinct": true,
+  "source_counts": {
+    "users_total": 8,
+    "users_coach": 8,
+    "users_player": 0,
+    "training_sessions": 25,
+    "session_exercises": 68,
+    "session_players": 22,
+    "test_results": 78,
+    "ai_reports": 16
+  },
+  "target_counts": {
+    "users": 181,
+    "players": 108,
+    "teams": 32,
+    "training_sessions": 42,
+    "session_exercises": 42,
+    "session_players": 43,
+    "test_attempts": 15,
+    "test_results": 12,
+    "ai_reports": 0,
+    "positions": 10,
+    "cognitive_tests": 8
+  },
+  "coach_map": {
+    "matched_existing": [],
+    "to_create_without_password": [
+      {
+        "v1_user_id": "86349ed9-38d1-424f-bc4d-bc78ef918d18",
+        "email": "coach@football-vision.lab",
+        "display_name": "Demo Coach",
+        "better_auth_id": null,
+        "action": "create_staff_no_password_copy"
+      },
+      {
+        "v1_user_id": "a5ed285e-fbcc-4fd0-9ee3-17a4d5cec024",
+        "email": "coach24705@test.lab",
+        "display_name": "Coach Test",
+        "better_auth_id": "oxIYBLFt6P0WRHwBfpjp3fvSoUEp2Uz3",
+        "action": "create_staff_no_password_copy"
+      },
+      {
+        "v1_user_id": "5835b32e-92df-4622-8af1-944488fb533a",
+        "email": "coach.smoke@test.lab",
+        "display_name": "Coach Test",
+        "better_auth_id": "bJ36ijs03fgPAJYGztkVs6WB7lA4sXRK",
+        "action": "create_staff_no_password_copy"
+      },
+      {
+        "v1_user_id": "07501731-6e55-41eb-a223-f6f9e09eefd7",
+        "email": "test@gmail.com",
+        "display_name": "test",
+        "better_auth_id": "6GPHbmq8rLfrcEvIhyKzYA51uWlFVKTw",
+        "action": "create_staff_no_password_copy"
+      },
+      {
+        "v1_user_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "email": "entraineur@gmail.com",
+        "display_name": "Entraineur",
+        "better_auth_id": "OJUWRkgJsigqb4TGf7z08eRfIns3ZnxV",
+        "action": "create_staff_no_password_copy"
+      },
+      {
+        "v1_user_id": "afc6b5c2-e359-4bf4-865d-9f6348108b1f",
+        "email": "elbouihi.soufiane001@gmail.com",
+        "display_name": "elbouihi",
+        "better_auth_id": "vLMvzAI8eWlV4XtTZdvbOODpzMH0OmNg",
+        "action": "create_staff_no_password_copy"
+      },
+      {
+        "v1_user_id": "4302aeb0-0b90-41a1-8096-57df1388a391",
+        "email": "imraneaitdahmade2006@gmail.com",
+        "display_name": "Imrane",
+        "better_auth_id": "cdM1nqzCpwSZntvbYQsjXxttXdRW2Vxa",
+        "action": "create_staff_no_password_copy"
+      },
+      {
+        "v1_user_id": "192f1554-7179-4a14-bddb-b4cdfc873f4a",
+        "email": "coach.v2.1229288601@example.com",
+        "display_name": "Coach V2",
+        "better_auth_id": "JtHRBdJAVVXpRm9GwjQ6PV5Yr7j9oPyk",
+        "action": "create_staff_no_password_copy"
+      }
+    ],
+    "matched_count": 0,
+    "create_count": 8
+  },
+  "player_synthesis": {
+    "identities": [
+      {
+        "synth_key": "86349ed9-38d1-424f-bc4d-bc78ef918d18|amine",
+        "coach_id": "86349ed9-38d1-424f-bc4d-bc78ef918d18",
+        "name_key": "amine",
+        "first_name": "Amine",
+        "last_name": "Migrated",
+        "v1_session_player_ids": [
+          "a5693a12-8ad4-406c-a628-7663cf05dbce"
+        ],
+        "session_codes": [
+          "9ZFL3E"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "07501731-6e55-41eb-a223-f6f9e09eefd7|imrane",
+        "coach_id": "07501731-6e55-41eb-a223-f6f9e09eefd7",
+        "name_key": "imrane",
+        "first_name": "Imrane",
+        "last_name": "Migrated",
+        "v1_session_player_ids": [
+          "b66d8af8-420d-41c1-9f6a-92f2c1db8e08"
+        ],
+        "session_codes": [
+          "QJDMQF"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "69a93526-76de-4d6e-b5c9-c5260f918f14|amine",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "name_key": "amine",
+        "first_name": "Amine",
+        "last_name": "Migrated",
+        "v1_session_player_ids": [
+          "d5a6a26c-c274-4350-8fd8-caf9afbb4aaf",
+          "f6ade74a-0e28-4be3-a1f7-f1cd45566a1e"
+        ],
+        "session_codes": [
+          "2HQZXQ",
+          "9REWCH"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "69a93526-76de-4d6e-b5c9-c5260f918f14|achraf",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "name_key": "achraf",
+        "first_name": "Achraf",
+        "last_name": "Migrated",
+        "v1_session_player_ids": [
+          "452af739-5808-49c8-b635-6da6691089b2"
+        ],
+        "session_codes": [
+          "RTYZXR"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "69a93526-76de-4d6e-b5c9-c5260f918f14|amine alaoui",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "name_key": "amine alaoui",
+        "first_name": "Amine",
+        "last_name": "Alaoui",
+        "v1_session_player_ids": [
+          "01b8a90f-9c6b-44ce-8119-bcdc2f2a9a85"
+        ],
+        "session_codes": [
+          "K48KNN"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "69a93526-76de-4d6e-b5c9-c5260f918f14|imrane",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "name_key": "imrane",
+        "first_name": "Imrane",
+        "last_name": "Migrated",
+        "v1_session_player_ids": [
+          "629d1024-c889-4a0c-bdb6-b319ad610ecb",
+          "cc84dcdc-ca58-4da5-8f6d-f6834d64f88b",
+          "f7397fe2-b18e-418b-b636-93a3c28da93e",
+          "302b09d4-416c-463d-9a9b-bf886af10e18"
+        ],
+        "session_codes": [
+          "74W23N",
+          "K48KNN",
+          "PX6GS5",
+          "TA98S8"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "69a93526-76de-4d6e-b5c9-c5260f918f14|azzedine",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "name_key": "azzedine",
+        "first_name": "Azzedine",
+        "last_name": "Migrated",
+        "v1_session_player_ids": [
+          "33ea0e80-c109-425a-aab2-a3c6db248194"
+        ],
+        "session_codes": [
+          "G9EWXJ"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "69a93526-76de-4d6e-b5c9-c5260f918f14|anas koko",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "name_key": "anas koko",
+        "first_name": "Anas",
+        "last_name": "Koko",
+        "v1_session_player_ids": [
+          "3dcec720-440f-4273-8110-5917bbec11a0"
+        ],
+        "session_codes": [
+          "G9EWXJ"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "69a93526-76de-4d6e-b5c9-c5260f918f14|test",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "name_key": "test",
+        "first_name": "Test",
+        "last_name": "Migrated",
+        "v1_session_player_ids": [
+          "fba47fb1-c0b4-4930-96ed-10a897fa250f",
+          "9124da16-2b2f-4bd9-bdab-735afa9fcc43"
+        ],
+        "session_codes": [
+          "2HQZXQ",
+          "PX6GS5"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "69a93526-76de-4d6e-b5c9-c5260f918f14|azedinne",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "name_key": "azedinne",
+        "first_name": "Azedinne",
+        "last_name": "Migrated",
+        "v1_session_player_ids": [
+          "981d77fa-fb94-4b6d-9513-8ed82dc50252"
+        ],
+        "session_codes": [
+          "PX6GS5"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "69a93526-76de-4d6e-b5c9-c5260f918f14|hakim doumou",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "name_key": "hakim doumou",
+        "first_name": "Hakim",
+        "last_name": "Doumou",
+        "v1_session_player_ids": [
+          "2e9bb595-9123-4421-a200-549f0a24fb36"
+        ],
+        "session_codes": [
+          "4HY2GP"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "69a93526-76de-4d6e-b5c9-c5260f918f14|ali zoubeidi",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "name_key": "ali zoubeidi",
+        "first_name": "Ali",
+        "last_name": "Zoubeidi",
+        "v1_session_player_ids": [
+          "b90d4caf-32b4-4abc-a986-aa8271b9f93f"
+        ],
+        "session_codes": [
+          "74W23N"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "69a93526-76de-4d6e-b5c9-c5260f918f14|ali",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "name_key": "ali",
+        "first_name": "Ali",
+        "last_name": "Migrated",
+        "v1_session_player_ids": [
+          "4137ce72-6d99-4c5e-b016-e432b0872c71"
+        ],
+        "session_codes": [
+          "74W23N"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "4302aeb0-0b90-41a1-8096-57df1388a391|imrane",
+        "coach_id": "4302aeb0-0b90-41a1-8096-57df1388a391",
+        "name_key": "imrane",
+        "first_name": "Imrane",
+        "last_name": "Migrated",
+        "v1_session_player_ids": [
+          "d215b637-fc1e-46a9-bcbb-97408634cacf"
+        ],
+        "session_codes": [
+          "62W695"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "4302aeb0-0b90-41a1-8096-57df1388a391|jeff",
+        "coach_id": "4302aeb0-0b90-41a1-8096-57df1388a391",
+        "name_key": "jeff",
+        "first_name": "Jeff",
+        "last_name": "Migrated",
+        "v1_session_player_ids": [
+          "c63d3428-e36b-4763-b090-221eba1bcf2b"
+        ],
+        "session_codes": [
+          "884CF5"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "4302aeb0-0b90-41a1-8096-57df1388a391|sahid dahbi",
+        "coach_id": "4302aeb0-0b90-41a1-8096-57df1388a391",
+        "name_key": "sahid dahbi",
+        "first_name": "Sahid",
+        "last_name": "Dahbi",
+        "v1_session_player_ids": [
+          "500dab20-2a8c-4e78-9472-0fe32468fdbc"
+        ],
+        "session_codes": [
+          "884CF5"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      },
+      {
+        "synth_key": "4302aeb0-0b90-41a1-8096-57df1388a391|khalid",
+        "coach_id": "4302aeb0-0b90-41a1-8096-57df1388a391",
+        "name_key": "khalid",
+        "first_name": "Khalid",
+        "last_name": "Migrated",
+        "v1_session_player_ids": [
+          "eff43dc4-b379-4b14-9f72-3571d80938f8"
+        ],
+        "session_codes": [
+          "884CF5"
+        ],
+        "v2_name_matches": [],
+        "action": "create_synthetic_player"
+      }
+    ],
+    "identity_count": 17,
+    "truncated": false
+  },
+  "session_map": {
+    "actions": [
+      {
+        "v1_session_id": "24a597ac-bb56-40df-b260-fbfdab950df9",
+        "coach_id": "86349ed9-38d1-424f-bc4d-bc78ef918d18",
+        "code": "9ZFL3E",
+        "title": "Test seance",
+        "v1_status": "active",
+        "v2_status": "in_progress",
+        "archived": false,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "815fce3e-217c-4af8-bf38-8d3d73060bda",
+        "coach_id": "a5ed285e-fbcc-4fd0-9ee3-17a4d5cec024",
+        "code": "SVLAPW",
+        "title": "Seance auth",
+        "v1_status": "active",
+        "v2_status": "in_progress",
+        "archived": false,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "a17bd5ff-eab5-422c-ba6b-16f1a03ee06a",
+        "coach_id": "5835b32e-92df-4622-8af1-944488fb533a",
+        "code": "TUHU8L",
+        "title": "Seance auth",
+        "v1_status": "active",
+        "v2_status": "in_progress",
+        "archived": false,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "078089c3-0e62-4483-aa38-6bbc39abf70e",
+        "coach_id": "07501731-6e55-41eb-a223-f6f9e09eefd7",
+        "code": "QJDMQF",
+        "title": "S\u00e9ance vision",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": false,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "6830bc67-bc8b-44f8-86d1-8db2a1c6780a",
+        "coach_id": "afc6b5c2-e359-4bf4-865d-9f6348108b1f",
+        "code": "7RM7K6",
+        "title": "S\u00e9ance vision",
+        "v1_status": "active",
+        "v2_status": "in_progress",
+        "archived": false,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "ca737ac1-6ca5-4af8-a373-9efa35491d1c",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "4HY2GP",
+        "title": "test",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "35250deb-e206-40e9-bed5-0f286f0e3b5e",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "74W23N",
+        "title": "session test",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "d557d939-726d-49f6-a54d-076d0f3f076d",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "U7EE35",
+        "title": "test 3",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "2fce3bd7-a52e-4fe2-8d0d-99fde638ef02",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "TUU4LU",
+        "title": "test 3",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "6d238716-8919-4060-826c-26894529cda0",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "TA98S8",
+        "title": "test recherche",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "f4853350-75a2-4189-9e48-db9099e01476",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "4K9SMP",
+        "title": "test recherche",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "2f1406ae-1954-4855-9c11-9f11e498260c",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "RSH9GD",
+        "title": "test recherche",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "6a365616-22c0-4a7a-9f2f-ea8a5b7b1131",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "G9EWXJ",
+        "title": "test 1",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "2aa93964-8331-4432-919b-c04cbbfb6709",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "K48KNN",
+        "title": "test Ai",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "5e2cb199-461d-43bc-badd-82214999300e",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "RTYZXR",
+        "title": "S\u00e9ance vision",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "90742aa2-7d83-4e6a-ad02-e03749fde7f6",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "NWGGSU",
+        "title": "test 2",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "77dbbfc5-37c7-4fca-bcf8-ebe3ed26528c",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "AU7WXL",
+        "title": "S\u00e9ance vision",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "79e6bbeb-d6c8-44f4-8e93-6d4bd54094d5",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "GBFGC7",
+        "title": "test 2",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "de614b5c-071f-4bf7-a162-07eb5e1a5ddc",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "9REWCH",
+        "title": "seance 1 test",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "954f3133-09a7-4f61-bf4d-d29879bdbd31",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "PX6GS5",
+        "title": "test 3",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "6a5a5215-f75c-41df-8924-6742a88fda47",
+        "coach_id": "4302aeb0-0b90-41a1-8096-57df1388a391",
+        "code": "62W695",
+        "title": "Test",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": false,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "coach_id": "69a93526-76de-4d6e-b5c9-c5260f918f14",
+        "code": "2HQZXQ",
+        "title": "session avant l'entrainement",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": false,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "c5ae8804-934e-4865-bdd0-311c0783857e",
+        "coach_id": "4302aeb0-0b90-41a1-8096-57df1388a391",
+        "code": "CVDU9S",
+        "title": "S\u00e9ance vision",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "coach_id": "4302aeb0-0b90-41a1-8096-57df1388a391",
+        "code": "884CF5",
+        "title": "S\u00e9ance vision",
+        "v1_status": "closed",
+        "v2_status": "completed",
+        "archived": true,
+        "action": "insert_preserve_uuid"
+      },
+      {
+        "v1_session_id": "7efb8bcb-84ae-4cff-96eb-bec74cd31c9f",
+        "coach_id": "192f1554-7179-4a14-bddb-b4cdfc873f4a",
+        "code": "878ZT4",
+        "title": "S\ufffdance iPad V2",
+        "v1_status": "active",
+        "v2_status": "in_progress",
+        "archived": false,
+        "action": "insert_preserve_uuid"
+      }
+    ],
+    "session_count": 25,
+    "truncated": false
+  },
+  "result_map": {
+    "sample": [
+      {
+        "v1_result_id": "a608c89e-fc81-421a-9fd2-680250d22c2a",
+        "session_id": "24a597ac-bb56-40df-b260-fbfdab950df9",
+        "session_player_id": "a5693a12-8ad4-406c-a628-7663cf05dbce",
+        "slug": "visual-tracking",
+        "score": 84,
+        "accuracy": 81.8,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "a21f34ca-8939-4689-ab77-59909ea34b62",
+        "session_id": "078089c3-0e62-4483-aa38-6bbc39abf70e",
+        "session_player_id": "b66d8af8-420d-41c1-9f6a-92f2c1db8e08",
+        "slug": "reaction-time",
+        "score": 35,
+        "accuracy": 90.9,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "16523cc5-6bfc-48c6-b875-01eb5c1f20a8",
+        "session_id": "078089c3-0e62-4483-aa38-6bbc39abf70e",
+        "session_player_id": "b66d8af8-420d-41c1-9f6a-92f2c1db8e08",
+        "slug": "visual-memory",
+        "score": 58,
+        "accuracy": 78.9,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "921ccf53-ebc7-45ee-b372-d85cca578a7f",
+        "session_id": "de614b5c-071f-4bf7-a162-07eb5e1a5ddc",
+        "session_player_id": "d5a6a26c-c274-4350-8fd8-caf9afbb4aaf",
+        "slug": "visual-tracking",
+        "score": 29,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "bd482c7b-b99a-491f-aa0d-9d90cfaba483",
+        "session_id": "de614b5c-071f-4bf7-a162-07eb5e1a5ddc",
+        "session_player_id": "d5a6a26c-c274-4350-8fd8-caf9afbb4aaf",
+        "slug": "reaction-time",
+        "score": 0,
+        "accuracy": 90.9,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "f49b856a-8ae5-41ce-a677-864a27f99595",
+        "session_id": "de614b5c-071f-4bf7-a162-07eb5e1a5ddc",
+        "session_player_id": "d5a6a26c-c274-4350-8fd8-caf9afbb4aaf",
+        "slug": "peripheral-vision",
+        "score": 43,
+        "accuracy": 50.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "90cd4300-8233-47aa-bf7b-7bff96429634",
+        "session_id": "de614b5c-071f-4bf7-a162-07eb5e1a5ddc",
+        "session_player_id": "d5a6a26c-c274-4350-8fd8-caf9afbb4aaf",
+        "slug": "visual-memory",
+        "score": 38,
+        "accuracy": 63.3,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "f69d4932-33a6-4b05-b2a2-b1200b1389be",
+        "session_id": "2aa93964-8331-4432-919b-c04cbbfb6709",
+        "session_player_id": "01b8a90f-9c6b-44ce-8119-bcdc2f2a9a85",
+        "slug": "visual-tracking",
+        "score": 32,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "280fc7d2-a2db-476d-aa0b-b4daa26b5884",
+        "session_id": "2aa93964-8331-4432-919b-c04cbbfb6709",
+        "session_player_id": "629d1024-c889-4a0c-bdb6-b319ad610ecb",
+        "slug": "visual-tracking",
+        "score": 32,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "e59cf841-93c9-4c2c-87bd-02cf7352427b",
+        "session_id": "6a365616-22c0-4a7a-9f2f-ea8a5b7b1131",
+        "session_player_id": "3dcec720-440f-4273-8110-5917bbec11a0",
+        "slug": "reaction-time",
+        "score": 53,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "5156f13f-3d89-4b1d-8ac6-72c6d72827b4",
+        "session_id": "6a365616-22c0-4a7a-9f2f-ea8a5b7b1131",
+        "session_player_id": "33ea0e80-c109-425a-aab2-a3c6db248194",
+        "slug": "reaction-time",
+        "score": 58,
+        "accuracy": 83.3,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "67d052c9-8a93-4a9b-9012-23cad5e55c97",
+        "session_id": "6a365616-22c0-4a7a-9f2f-ea8a5b7b1131",
+        "session_player_id": "33ea0e80-c109-425a-aab2-a3c6db248194",
+        "slug": "peripheral-vision",
+        "score": 65,
+        "accuracy": 83.3,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "bb7b446b-b934-43ef-840b-c1c49474ba18",
+        "session_id": "6a365616-22c0-4a7a-9f2f-ea8a5b7b1131",
+        "session_player_id": "3dcec720-440f-4273-8110-5917bbec11a0",
+        "slug": "peripheral-vision",
+        "score": 67,
+        "accuracy": 81.3,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "23296d16-bb83-4f51-8cc0-28f19b71e4da",
+        "session_id": "6a365616-22c0-4a7a-9f2f-ea8a5b7b1131",
+        "session_player_id": "33ea0e80-c109-425a-aab2-a3c6db248194",
+        "slug": "visual-tracking",
+        "score": 25,
+        "accuracy": 50.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "b602c83e-67fc-48e6-bdf5-05acd3d006ad",
+        "session_id": "6a365616-22c0-4a7a-9f2f-ea8a5b7b1131",
+        "session_player_id": "3dcec720-440f-4273-8110-5917bbec11a0",
+        "slug": "visual-tracking",
+        "score": 22,
+        "accuracy": 50.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "817e14fb-5f20-4c06-aecd-8283e0ff3b16",
+        "session_id": "6a365616-22c0-4a7a-9f2f-ea8a5b7b1131",
+        "session_player_id": "33ea0e80-c109-425a-aab2-a3c6db248194",
+        "slug": "visual-memory",
+        "score": 98,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "6abfcd8a-71cb-4af7-b9c1-c2d19164af53",
+        "session_id": "6a365616-22c0-4a7a-9f2f-ea8a5b7b1131",
+        "session_player_id": "3dcec720-440f-4273-8110-5917bbec11a0",
+        "slug": "visual-memory",
+        "score": 99,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "507e6676-e49b-4a51-bf25-28e5c16ba97f",
+        "session_id": "954f3133-09a7-4f61-bf4d-d29879bdbd31",
+        "session_player_id": "fba47fb1-c0b4-4930-96ed-10a897fa250f",
+        "slug": "digit-memory",
+        "score": 5,
+        "accuracy": 83.3,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "e05c2c74-7855-447d-a952-baf9d31987ee",
+        "session_id": "954f3133-09a7-4f61-bf4d-d29879bdbd31",
+        "session_player_id": "fba47fb1-c0b4-4930-96ed-10a897fa250f",
+        "slug": "dual-target-tracking",
+        "score": 90,
+        "accuracy": 90.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "0ce77438-9900-422e-8533-09e007897230",
+        "session_id": "954f3133-09a7-4f61-bf4d-d29879bdbd31",
+        "session_player_id": "fba47fb1-c0b4-4930-96ed-10a897fa250f",
+        "slug": "sequential-visual-search",
+        "score": 93,
+        "accuracy": 92.6,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "48655947-6c2a-4748-b506-a827b772d661",
+        "session_id": "954f3133-09a7-4f61-bf4d-d29879bdbd31",
+        "session_player_id": "f7397fe2-b18e-418b-b636-93a3c28da93e",
+        "slug": "digit-memory",
+        "score": 5,
+        "accuracy": 66.7,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "9432c502-322f-49b0-9449-2084afe21486",
+        "session_id": "954f3133-09a7-4f61-bf4d-d29879bdbd31",
+        "session_player_id": "981d77fa-fb94-4b6d-9513-8ed82dc50252",
+        "slug": "digit-memory",
+        "score": 4,
+        "accuracy": 66.7,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "43c313c4-f3db-4cdb-a3cf-012dd240d813",
+        "session_id": "954f3133-09a7-4f61-bf4d-d29879bdbd31",
+        "session_player_id": "981d77fa-fb94-4b6d-9513-8ed82dc50252",
+        "slug": "dual-target-tracking",
+        "score": 100,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "74e40355-2fce-4e71-b671-f02c7864b242",
+        "session_id": "ca737ac1-6ca5-4af8-a373-9efa35491d1c",
+        "session_player_id": "2e9bb595-9123-4421-a200-549f0a24fb36",
+        "slug": "sequential-visual-search",
+        "score": 100,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "cd3f6656-3009-4080-b825-0686424ea012",
+        "session_id": "ca737ac1-6ca5-4af8-a373-9efa35491d1c",
+        "session_player_id": "2e9bb595-9123-4421-a200-549f0a24fb36",
+        "slug": "dual-target-tracking",
+        "score": 90,
+        "accuracy": 90.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "f89ce4e7-2a12-4996-80cb-e314a0d0b862",
+        "session_id": "ca737ac1-6ca5-4af8-a373-9efa35491d1c",
+        "session_player_id": "2e9bb595-9123-4421-a200-549f0a24fb36",
+        "slug": "football-visual-scanning",
+        "score": 22,
+        "accuracy": 22.2,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "3f28ac37-2a1b-457b-8d2a-bd1ca41349fa",
+        "session_id": "ca737ac1-6ca5-4af8-a373-9efa35491d1c",
+        "session_player_id": "2e9bb595-9123-4421-a200-549f0a24fb36",
+        "slug": "digit-memory",
+        "score": 0,
+        "accuracy": 0.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "17ecc048-a2f1-4a17-9760-f6a72aa2af94",
+        "session_id": "35250deb-e206-40e9-bed5-0f286f0e3b5e",
+        "session_player_id": "302b09d4-416c-463d-9a9b-bf886af10e18",
+        "slug": "visual-tracking",
+        "score": 23,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "9603589b-8442-4b0e-ae8e-d57193a028b9",
+        "session_id": "35250deb-e206-40e9-bed5-0f286f0e3b5e",
+        "session_player_id": "302b09d4-416c-463d-9a9b-bf886af10e18",
+        "slug": "digit-memory",
+        "score": 5,
+        "accuracy": 72.2,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "7b1902df-4eea-463e-a71b-9165dfb9aac2",
+        "session_id": "35250deb-e206-40e9-bed5-0f286f0e3b5e",
+        "session_player_id": "302b09d4-416c-463d-9a9b-bf886af10e18",
+        "slug": "sequential-visual-search",
+        "score": 96,
+        "accuracy": 96.2,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "91c5af92-d8d4-406b-bcbf-9b35ff8e6801",
+        "session_id": "35250deb-e206-40e9-bed5-0f286f0e3b5e",
+        "session_player_id": "302b09d4-416c-463d-9a9b-bf886af10e18",
+        "slug": "dual-target-tracking",
+        "score": 100,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "fdb2cbbf-4ea1-4eb0-9e86-a9a2ab620a4b",
+        "session_id": "35250deb-e206-40e9-bed5-0f286f0e3b5e",
+        "session_player_id": "302b09d4-416c-463d-9a9b-bf886af10e18",
+        "slug": "visual-memory",
+        "score": 71,
+        "accuracy": 70.4,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "a767d63f-8553-4d6f-bbc7-f6618ddd6bc1",
+        "session_id": "35250deb-e206-40e9-bed5-0f286f0e3b5e",
+        "session_player_id": "302b09d4-416c-463d-9a9b-bf886af10e18",
+        "slug": "peripheral-vision",
+        "score": 69,
+        "accuracy": 75.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "0b986e75-7ec2-4a0b-b7f9-ea83d7f83988",
+        "session_id": "35250deb-e206-40e9-bed5-0f286f0e3b5e",
+        "session_player_id": "302b09d4-416c-463d-9a9b-bf886af10e18",
+        "slug": "reaction-time",
+        "score": 62,
+        "accuracy": 83.3,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "9a001d5b-051e-4ef2-8ed0-0cfdd394e84b",
+        "session_id": "35250deb-e206-40e9-bed5-0f286f0e3b5e",
+        "session_player_id": "b90d4caf-32b4-4abc-a986-aa8271b9f93f",
+        "slug": "visual-tracking",
+        "score": 13,
+        "accuracy": 50.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "c4a6193c-3596-4385-8d78-ab1e96d7575d",
+        "session_id": "35250deb-e206-40e9-bed5-0f286f0e3b5e",
+        "session_player_id": "b90d4caf-32b4-4abc-a986-aa8271b9f93f",
+        "slug": "digit-memory",
+        "score": 5,
+        "accuracy": 83.3,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "f9536d39-47c7-40a8-a2b0-085dee02a5d6",
+        "session_id": "35250deb-e206-40e9-bed5-0f286f0e3b5e",
+        "session_player_id": "4137ce72-6d99-4c5e-b016-e432b0872c71",
+        "slug": "visual-tracking",
+        "score": 22,
+        "accuracy": 50.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "10ccc27c-811a-425d-9fb1-8fe75b0331db",
+        "session_id": "35250deb-e206-40e9-bed5-0f286f0e3b5e",
+        "session_player_id": "4137ce72-6d99-4c5e-b016-e432b0872c71",
+        "slug": "digit-memory",
+        "score": 0,
+        "accuracy": 66.7,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "26c737cd-a1ea-47c5-ac2b-a0fdf3ed9119",
+        "session_id": "35250deb-e206-40e9-bed5-0f286f0e3b5e",
+        "session_player_id": "4137ce72-6d99-4c5e-b016-e432b0872c71",
+        "slug": "sequential-visual-search",
+        "score": 100,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "1a8d80df-d3ad-4d3f-b3f3-1e5b817d0f4d",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "f6ade74a-0e28-4be3-a1f7-f1cd45566a1e",
+        "slug": "digit-memory",
+        "score": 3,
+        "accuracy": 57.1,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "ed0e8f5b-acfc-42bc-9460-a6c0b93cf262",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "f6ade74a-0e28-4be3-a1f7-f1cd45566a1e",
+        "slug": "dual-target-tracking",
+        "score": 50,
+        "accuracy": 50.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "718cc804-31b2-4c79-862d-e0249bb165e3",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "f6ade74a-0e28-4be3-a1f7-f1cd45566a1e",
+        "slug": "visual-memory",
+        "score": 18,
+        "accuracy": 17.8,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "0be50083-ff7e-4cf2-a61a-dd4839b590ee",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "f6ade74a-0e28-4be3-a1f7-f1cd45566a1e",
+        "slug": "visual-tracking",
+        "score": 24,
+        "accuracy": 75.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "785434bf-d0ab-4adb-bd57-5d121b3d2343",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "f6ade74a-0e28-4be3-a1f7-f1cd45566a1e",
+        "slug": "peripheral-vision",
+        "score": 25,
+        "accuracy": 12.5,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "ce9fc961-f6d1-46e5-a31f-680f46e4e760",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "f6ade74a-0e28-4be3-a1f7-f1cd45566a1e",
+        "slug": "reaction-time",
+        "score": 10,
+        "accuracy": 83.3,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "9cd97671-54f6-4ae6-9118-cbf0f49ad362",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "f6ade74a-0e28-4be3-a1f7-f1cd45566a1e",
+        "slug": "sequential-visual-search",
+        "score": 93,
+        "accuracy": 92.6,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "8869eb41-edc9-4b68-9918-80150bac3673",
+        "session_id": "6a5a5215-f75c-41df-8924-6742a88fda47",
+        "session_player_id": "d215b637-fc1e-46a9-bcbb-97408634cacf",
+        "slug": "visual-tracking",
+        "score": 32,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "cde8dc47-723a-4e76-8e25-1f2ceaca4263",
+        "session_id": "6a5a5215-f75c-41df-8924-6742a88fda47",
+        "session_player_id": "d215b637-fc1e-46a9-bcbb-97408634cacf",
+        "slug": "visual-memory",
+        "score": 87,
+        "accuracy": 91.8,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "55672139-d0b5-40cb-9c32-8fbb2e03fc3f",
+        "session_id": "6a5a5215-f75c-41df-8924-6742a88fda47",
+        "session_player_id": "d215b637-fc1e-46a9-bcbb-97408634cacf",
+        "slug": "sequential-visual-search",
+        "score": 98,
+        "accuracy": 98.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "34c1487e-c125-4bb2-878d-0926b93273aa",
+        "session_id": "6a5a5215-f75c-41df-8924-6742a88fda47",
+        "session_player_id": "d215b637-fc1e-46a9-bcbb-97408634cacf",
+        "slug": "peripheral-vision",
+        "score": 65,
+        "accuracy": 77.8,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "22c75820-c52d-47a5-b469-969f82b402e5",
+        "session_id": "6a5a5215-f75c-41df-8924-6742a88fda47",
+        "session_player_id": "d215b637-fc1e-46a9-bcbb-97408634cacf",
+        "slug": "dual-target-tracking",
+        "score": 80,
+        "accuracy": 80.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "5035851d-2a54-4b75-a2fa-e97dfa802444",
+        "session_id": "6a5a5215-f75c-41df-8924-6742a88fda47",
+        "session_player_id": "d215b637-fc1e-46a9-bcbb-97408634cacf",
+        "slug": "digit-memory",
+        "score": 3,
+        "accuracy": 71.4,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "29cf06a2-6cef-41aa-b406-4757bc0a2d67",
+        "session_id": "6a5a5215-f75c-41df-8924-6742a88fda47",
+        "session_player_id": "d215b637-fc1e-46a9-bcbb-97408634cacf",
+        "slug": "reaction-time",
+        "score": 59,
+        "accuracy": 83.3,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "5ef659f9-dc44-4799-b61d-e7e81c142d62",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "9124da16-2b2f-4bd9-bdab-735afa9fcc43",
+        "slug": "digit-memory",
+        "score": 5,
+        "accuracy": 72.2,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "07c1b348-ee08-47b3-88ea-b8b2b18a716b",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "9124da16-2b2f-4bd9-bdab-735afa9fcc43",
+        "slug": "dual-target-tracking",
+        "score": 100,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "9cad22ef-94e7-4c94-9d24-37614a4f0fc8",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "9124da16-2b2f-4bd9-bdab-735afa9fcc43",
+        "slug": "visual-memory",
+        "score": 79,
+        "accuracy": 80.8,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "ed0f5af3-667e-499b-9729-5bf003b66829",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "9124da16-2b2f-4bd9-bdab-735afa9fcc43",
+        "slug": "visual-tracking",
+        "score": 32,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "b126aea1-1a2d-47f0-bb75-3b8e30fbdb5a",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "9124da16-2b2f-4bd9-bdab-735afa9fcc43",
+        "slug": "peripheral-vision",
+        "score": 62,
+        "accuracy": 76.5,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "677fdfc0-c820-436d-b6fa-784f9fde8c09",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "9124da16-2b2f-4bd9-bdab-735afa9fcc43",
+        "slug": "reaction-time",
+        "score": 19,
+        "accuracy": 66.7,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "e42583e5-9c59-45d9-a1c4-94656844f736",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "9124da16-2b2f-4bd9-bdab-735afa9fcc43",
+        "slug": "sequential-visual-search",
+        "score": 86,
+        "accuracy": 86.2,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "fce45886-fcb1-4830-943d-6ac65b483bfc",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "c63d3428-e36b-4763-b090-221eba1bcf2b",
+        "slug": "visual-tracking",
+        "score": 16,
+        "accuracy": 50.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "ab75d1a1-191e-4986-b64f-76051614f5a2",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "500dab20-2a8c-4e78-9472-0fe32468fdbc",
+        "slug": "visual-tracking",
+        "score": 28,
+        "accuracy": 80.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "0f477719-8410-4ebb-b16b-addd83fcbd69",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "eff43dc4-b379-4b14-9f72-3571d80938f8",
+        "slug": "visual-tracking",
+        "score": 19,
+        "accuracy": 66.7,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "29b890cd-5cca-4566-9450-f14ad668fd89",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "500dab20-2a8c-4e78-9472-0fe32468fdbc",
+        "slug": "sequential-visual-search",
+        "score": 100,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "744a9efc-a420-4721-ab82-3c57c92230eb",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "c63d3428-e36b-4763-b090-221eba1bcf2b",
+        "slug": "sequential-visual-search",
+        "score": 91,
+        "accuracy": 90.9,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "9ef778c4-3239-4a57-9391-21303d4a4847",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "500dab20-2a8c-4e78-9472-0fe32468fdbc",
+        "slug": "reaction-time",
+        "score": 36,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "34df22e5-1a87-484c-b53f-b5455b051e5a",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "c63d3428-e36b-4763-b090-221eba1bcf2b",
+        "slug": "reaction-time",
+        "score": 0,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "907c309d-50c7-4495-8a48-ea176893b00d",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "500dab20-2a8c-4e78-9472-0fe32468fdbc",
+        "slug": "peripheral-vision",
+        "score": 64,
+        "accuracy": 76.5,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "6613a665-be88-4854-b13b-986bd491316f",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "500dab20-2a8c-4e78-9472-0fe32468fdbc",
+        "slug": "dual-target-tracking",
+        "score": 80,
+        "accuracy": 80.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "6f24ec33-8c18-4626-a5f7-ce90615cd256",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "eff43dc4-b379-4b14-9f72-3571d80938f8",
+        "slug": "sequential-visual-search",
+        "score": 93,
+        "accuracy": 92.6,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "4543620a-035a-420f-90bf-2a0158ebe98d",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "c63d3428-e36b-4763-b090-221eba1bcf2b",
+        "slug": "dual-target-tracking",
+        "score": 80,
+        "accuracy": 80.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "2b2a5237-64fd-4087-a3f3-f7d477cf7a12",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "500dab20-2a8c-4e78-9472-0fe32468fdbc",
+        "slug": "digit-memory",
+        "score": 6,
+        "accuracy": 80.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "ce5b854e-92de-41aa-a959-19f7f68a5c56",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "c63d3428-e36b-4763-b090-221eba1bcf2b",
+        "slug": "digit-memory",
+        "score": 0,
+        "accuracy": 0.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "bc3551c9-7a59-440f-9887-82c4b9286ab5",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "eff43dc4-b379-4b14-9f72-3571d80938f8",
+        "slug": "reaction-time",
+        "score": 0,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "77688052-8c9d-4993-9c2b-901c0fcfe47d",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "500dab20-2a8c-4e78-9472-0fe32468fdbc",
+        "slug": "visual-memory",
+        "score": 76,
+        "accuracy": 100.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "7f32fbd5-5304-4d34-857d-a9c4eab22b6e",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "eff43dc4-b379-4b14-9f72-3571d80938f8",
+        "slug": "peripheral-vision",
+        "score": 36,
+        "accuracy": 50.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "b980570a-3506-4a78-b809-abed8bb71993",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "c63d3428-e36b-4763-b090-221eba1bcf2b",
+        "slug": "visual-memory",
+        "score": 31,
+        "accuracy": 56.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      },
+      {
+        "v1_result_id": "1e425eeb-3360-45f6-ac53-8cf8fdc879de",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "c63d3428-e36b-4763-b090-221eba1bcf2b",
+        "slug": "peripheral-vision",
+        "score": 25,
+        "accuracy": 25.0,
+        "action": "create_attempt_and_result",
+        "slug_in_catalogue": true
+      }
+    ],
+    "result_count": 78,
+    "truncated": false
+  },
+  "report_map": {
+    "sample": [
+      {
+        "v1_report_id": "c8e49701-4848-48e8-9a26-64a3d872a42c",
+        "session_id": "2aa93964-8331-4432-919b-c04cbbfb6709",
+        "session_player_id": "01b8a90f-9c6b-44ce-8119-bcdc2f2a9a85",
+        "report_type": "test",
+        "status": "failed",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "1181ef37-03f2-414d-bb4b-bb06927fa101",
+        "session_id": "2aa93964-8331-4432-919b-c04cbbfb6709",
+        "session_player_id": "01b8a90f-9c6b-44ce-8119-bcdc2f2a9a85",
+        "report_type": "progress",
+        "status": "not_eligible",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "e217f28c-491c-439b-9bc7-cbac081439fa",
+        "session_id": "2aa93964-8331-4432-919b-c04cbbfb6709",
+        "session_player_id": "01b8a90f-9c6b-44ce-8119-bcdc2f2a9a85",
+        "report_type": "session",
+        "status": "failed",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "9a0993a8-8c32-4816-b78c-fdd2234084d7",
+        "session_id": "2aa93964-8331-4432-919b-c04cbbfb6709",
+        "session_player_id": "629d1024-c889-4a0c-bdb6-b319ad610ecb",
+        "report_type": "test",
+        "status": "completed",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "53adb353-220e-4365-a4b0-600cfa0c414d",
+        "session_id": "6a365616-22c0-4a7a-9f2f-ea8a5b7b1131",
+        "session_player_id": "33ea0e80-c109-425a-aab2-a3c6db248194",
+        "report_type": "test",
+        "status": "completed",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "63881977-32f7-4cc7-862d-2944f7670275",
+        "session_id": "954f3133-09a7-4f61-bf4d-d29879bdbd31",
+        "session_player_id": "981d77fa-fb94-4b6d-9513-8ed82dc50252",
+        "report_type": "test",
+        "status": "completed",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "9261ef44-910b-4558-a071-40901145c64c",
+        "session_id": "ca737ac1-6ca5-4af8-a373-9efa35491d1c",
+        "session_player_id": "2e9bb595-9123-4421-a200-549f0a24fb36",
+        "report_type": "test",
+        "status": "completed",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "bdd72488-5a17-4537-9279-2bd33a5b646c",
+        "session_id": "35250deb-e206-40e9-bed5-0f286f0e3b5e",
+        "session_player_id": "302b09d4-416c-463d-9a9b-bf886af10e18",
+        "report_type": "session",
+        "status": "completed",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "0cb0a7ab-3977-4838-b054-2bc12bd8183a",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "f6ade74a-0e28-4be3-a1f7-f1cd45566a1e",
+        "report_type": "session",
+        "status": "completed",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "5199f84e-f0e6-4dc5-82e5-8324a4964adf",
+        "session_id": "6a5a5215-f75c-41df-8924-6742a88fda47",
+        "session_player_id": "d215b637-fc1e-46a9-bcbb-97408634cacf",
+        "report_type": "session",
+        "status": "completed",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "83429321-8c05-4f46-a154-303777dfeeb3",
+        "session_id": "6a5a5215-f75c-41df-8924-6742a88fda47",
+        "session_player_id": null,
+        "report_type": "group",
+        "status": "completed",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "2d9ebe89-3167-49b4-8be8-ef7c61c4828a",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": null,
+        "report_type": "group",
+        "status": "completed",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "e11f9e2b-88b5-4a56-b653-92f7a34da051",
+        "session_id": "7df77ea4-80ad-4f04-91ea-db0a60e16aee",
+        "session_player_id": "9124da16-2b2f-4bd9-bdab-735afa9fcc43",
+        "report_type": "session",
+        "status": "completed",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "26e3cfcf-3273-4426-a6c5-1ec9638c1a3c",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "c63d3428-e36b-4763-b090-221eba1bcf2b",
+        "report_type": "session",
+        "status": "completed",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "3ebbac3b-7b8b-4c53-a243-2ad2673f07e4",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": null,
+        "report_type": "group",
+        "status": "completed",
+        "action": "load_json_only_http_blocked"
+      },
+      {
+        "v1_report_id": "3fdc8a0d-4cc5-4d54-a246-94bb119bc7fb",
+        "session_id": "8968e822-c6cc-4e2d-be1c-456e35c26a4f",
+        "session_player_id": "500dab20-2a8c-4e78-9472-0fe32468fdbc",
+        "report_type": "session",
+        "status": "completed",
+        "action": "load_json_only_http_blocked"
+      }
+    ],
+    "report_count": 16,
+    "truncated": false
+  },
+  "collisions": {
+    "v1_coach_duplicate_emails": [],
+    "session_uuid_collisions": 0,
+    "session_code_collisions": 0,
+    "player_name_collisions_with_v2": 0
+  },
+  "missing_relationships": [],
+  "validation": {
+    "uuids_preservable_sessions": 25,
+    "session_uuid_collisions": 0,
+    "session_code_collisions": 0,
+    "coach_emails_duplicated_in_v1": [],
+    "player_name_collisions_with_v2": 0,
+    "synthetic_player_identities": 17,
+    "multi_session_shared_identities": 3,
+    "exercises_total": 68,
+    "results_migratable": 78,
+    "results_skipped": 0,
+    "reports_json_loadable": 16,
+    "passwords_copied": false,
+    "writes_performed": false
+  },
+  "writes_performed": false,
+  "rollback": {
+    "strategy": "No writes performed \u2014 rollback is N/A for this dry-run. For a future write run: restore V2 snapshot / Neon branch; V1 remains read-only source of truth until explicit approval.",
+    "v1_untouched": true
+  }
+}

@@ -34,14 +34,17 @@ async def _reset_engine():
 
 
 def test_base_is_declarative_and_has_metadata() -> None:
+    from app.shared.infrastructure.database.models import V2_TABLES, import_all_models
+
+    import_all_models()
     assert issubclass(Base, DeclarativeBase)
     assert Base.metadata is not None
-    # No business tables registered yet.
-    assert list(Base.metadata.tables.keys()) == []
+    assert set(Base.metadata.tables.keys()) == set(V2_TABLES)
 
 
 def test_get_engine_requires_database_url(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("DATABASE_URL", raising=False)
+    # Override .env file value — empty URL must not open an engine.
+    monkeypatch.setenv("DATABASE_URL", "")
     clear_settings_cache()
     with pytest.raises(RuntimeError, match="DATABASE_URL"):
         get_engine()
@@ -70,17 +73,17 @@ def test_get_engine_creates_async_engine(monkeypatch: pytest.MonkeyPatch) -> Non
         engine = get_engine()
         assert engine is fake_engine
         create_engine.assert_called_once()
-        kwargs = create_engine.call_args.kwargs
-        assert kwargs.get("pool_pre_ping") is True
+        assert create_engine.call_args.kwargs.get("pool_pre_ping") is True
         assert create_engine.call_args.args[0].startswith("postgresql+asyncpg://")
         sessionmaker.assert_called_once()
         assert get_session_factory() is fake_factory
-        # Second call reuses singleton
         assert get_engine() is fake_engine
 
 
 @pytest.mark.asyncio
-async def test_get_db_yields_and_closes_session(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_get_db_yields_and_closes_session(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv(
         "DATABASE_URL",
         "postgresql+asyncpg://user:pass@localhost:5432/testdb",
@@ -103,7 +106,9 @@ async def test_get_db_yields_and_closes_session(monkeypatch: pytest.MonkeyPatch)
 
 
 @pytest.mark.asyncio
-async def test_dispose_engine_clears_singletons(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_dispose_engine_clears_singletons(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv(
         "DATABASE_URL",
         "postgresql+asyncpg://user:pass@localhost:5432/testdb",
@@ -125,8 +130,7 @@ async def test_dispose_engine_clears_singletons(monkeypatch: pytest.MonkeyPatch)
         await dispose_engine()
         fake_engine.dispose.assert_awaited_once()
 
-    # After dispose, missing URL should fail again (fresh singleton)
-    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("DATABASE_URL", "")
     clear_settings_cache()
     with pytest.raises(RuntimeError, match="DATABASE_URL"):
         get_engine()

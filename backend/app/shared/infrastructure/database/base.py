@@ -1,7 +1,9 @@
 """SQLAlchemy 2.x declarative base and shared metadata.
 
-Business models are not defined here yet. Future ORM models should subclass `Base`
-so Alembic can discover them via `Base.metadata`.
+V2 application models subclass `Base`. Import
+`app.shared.infrastructure.database.models` so they register on `Base.metadata`
+before Alembic inspection. Do not call `metadata.create_all()` from app startup;
+use Alembic against a dedicated V2 database only.
 """
 
 from sqlalchemy.orm import DeclarativeBase

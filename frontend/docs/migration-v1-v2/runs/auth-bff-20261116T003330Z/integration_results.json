@@ -1,0 +1,165 @@
+{
+  "stamp": "20261116T003330Z",
+  "next": "http://127.0.0.1:3000",
+  "fastapi": "http://127.0.0.1:8000",
+  "passed": 18,
+  "failed": 0,
+  "total": 18,
+  "results": [
+    {
+      "id": "env.fastapi_reachable",
+      "ok": true,
+      "health": {
+        "status": "healthy",
+        "service": "cognitif-connexion-foot-api",
+        "environment": "development"
+      }
+    },
+    {
+      "id": "env.next_bff_reachable",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "csrf.issue_cookie",
+      "ok": true,
+      "status": 200,
+      "flags": {
+        "httpOnly": false,
+        "secure": true,
+        "sameSite": "lax",
+        "path": "/",
+        "maxAge": "28800"
+      },
+      "hasToken": true
+    },
+    {
+      "id": "csrf.reject_login_without_header",
+      "ok": true,
+      "status": 403,
+      "error": "Invalid CSRF token"
+    },
+    {
+      "id": "login.bad_credentials",
+      "ok": true,
+      "status": 401,
+      "bodyKeys": [
+        "error"
+      ]
+    },
+    {
+      "id": "login.success_httponly_no_jwt_body",
+      "ok": true,
+      "status": 200,
+      "accessFlags": {
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "lax",
+        "path": "/",
+        "maxAge": "900"
+      },
+      "refreshFlags": {
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "lax",
+        "path": "/api/bff/auth",
+        "maxAge": "1209600"
+      },
+      "roles": [
+        "coach"
+      ],
+      "noJwtLeak": true,
+      "secureOnHttpDev": false
+    },
+    {
+      "id": "me.authenticated",
+      "ok": true,
+      "status": 200,
+      "email": "bff.integration.coach@v2-test.lab",
+      "roles": [
+        "coach"
+      ]
+    },
+    {
+      "id": "me.unauthenticated_rejected",
+      "ok": true,
+      "status": 401
+    },
+    {
+      "id": "me.access_invalid_triggers_refresh",
+      "ok": true,
+      "status": 200,
+      "rotatedAccess": true,
+      "hadRefresh": true,
+      "email": "bff.integration.coach@v2-test.lab"
+    },
+    {
+      "id": "refresh.token_rotation",
+      "ok": true,
+      "status": 200,
+      "email": "bff.integration.coach@v2-test.lab"
+    },
+    {
+      "id": "refresh.invalid_clears_session",
+      "ok": true,
+      "status": 401,
+      "accessCleared": true
+    },
+    {
+      "id": "jwt.access_cookie_has_exp_sub",
+      "ok": true,
+      "exp": 1794790115,
+      "subPresent": true,
+      "note": "localStorage not used by BFF client; JWT only in httpOnly cookie"
+    },
+    {
+      "id": "rbac.limited_staff_denied_users_manage",
+      "ok": true,
+      "loginOk": true,
+      "meEmail": "bff.integration.limited@v2-test.lab",
+      "roles": [
+        "staff"
+      ],
+      "usersStatus": 403,
+      "note": "Permission enforced by FastAPI; BFF /me still returns identity"
+    },
+    {
+      "id": "rbac.coach_users_endpoint_authz",
+      "ok": true,
+      "status": 403,
+      "roles": [
+        "coach"
+      ],
+      "note": "Coach lacks users.manage — expected rejection"
+    },
+    {
+      "id": "logout.clears_cookies",
+      "ok": true,
+      "status": 200,
+      "cleared": true
+    },
+    {
+      "id": "me.after_logout_rejected",
+      "ok": true,
+      "status": 401,
+      "user": null
+    },
+    {
+      "id": "compat.bff_is_opt_in_parallel",
+      "ok": true,
+      "message": "BFF routes under /api/bff/auth/*; authService + tokenStore + better-auth unchanged"
+    },
+    {
+      "id": "cookie.secure_on_production_server",
+      "ok": true,
+      "message": "Set-Cookie included Secure under NODE_ENV=production next start",
+      "accessFlags": {
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "lax",
+        "path": "/",
+        "maxAge": "900"
+      }
+    }
+  ]
+}
