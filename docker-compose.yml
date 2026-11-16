@@ -39,6 +39,11 @@ services:
       JWT_AUDIENCE: ${JWT_AUDIENCE:-cognitif-connexion-foot-api}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-14}
+      AI_ANALYSIS_ENABLED: ${AI_ANALYSIS_ENABLED:-false}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+      AI_ANALYSIS_TIMEOUT_SECONDS: ${AI_ANALYSIS_TIMEOUT_SECONDS:-90}
+      AI_ANALYSIS_MAX_RETRIES: ${AI_ANALYSIS_MAX_RETRIES:-1}
     depends_on:
       migrate:
         condition: service_completed_successfully
