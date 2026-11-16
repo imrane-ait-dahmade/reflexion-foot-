@@ -46,6 +46,10 @@ docker build -t reflexion-foot-backend ./backend
 docker build -t reflexion-foot-frontend ./frontend
 ```
 
+## Staging path (EC2)
+
+App root: `/opt/cognitif-connexion/app` (`COMPOSE_DIR`). See [`AWS_STAGING_READINESS.md`](AWS_STAGING_READINESS.md).
+
 ## Resource limits (t3.small)
 
 Compose sets approximate caps: backend 256MB, frontend 512MB, nginx 64MB.

@@ -1,5 +1,7 @@
 # Staging deploy: push to master → test → build → GHCR → SSM → EC2
 # No permanent AWS keys (OIDC). No production deploy. Does not touch main.
+#
+# EC2 app directory (default): /opt/cognitif-connexion/app
 
 name: Deploy staging
 
@@ -17,6 +19,7 @@ env:
   GHCR_OWNER: ${{ github.repository_owner }}
   FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/reflexion-foot-frontend
   BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/reflexion-foot-backend
+  DEFAULT_COMPOSE_DIR: /opt/cognitif-connexion/app
 
 jobs:
   test-frontend:
@@ -32,7 +35,8 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
+      # Lockfile may lag optional platform deps; keep tests enabled.
+      - run: npm ci || npm install
       - run: npm run lint
       - run: npm run test
 
@@ -50,6 +54,7 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r requirements.txt
+      # Includes isolated Alembic Docker tests when Docker is available on the runner.
       - run: pytest -v
 
   build-and-push:
@@ -120,40 +125,52 @@ jobs:
           INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
           IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
           OWNER: ${{ env.GHCR_OWNER }}
-          COMPOSE_DIR: ${{ vars.COMPOSE_DIR || '/opt/cognitif-connexion' }}
+          COMPOSE_DIR: ${{ vars.COMPOSE_DIR || '/opt/cognitif-connexion/app' }}
         run: |
+          set -euo pipefail
+          echo "Deploying IMAGE_TAG=${IMAGE_TAG} to ${INSTANCE_ID} COMPOSE_DIR=${COMPOSE_DIR}"
+
+          # Explicit COMPOSE_DIR for the remote script (do not rely on remote defaults alone).
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "${INSTANCE_ID}" \
             --document-name "AWS-RunShellScript" \
             --comment "Cognitif Connexion Foot staging deploy ${IMAGE_TAG}" \
-            --parameters commands='[
-              "set -euo pipefail",
-              "cd '"${COMPOSE_DIR}"'",
-              "export IMAGE_TAG='"${IMAGE_TAG}"'",
-              "export GHCR_OWNER='"${OWNER}"'",
-              "bash deploy/scripts/deploy-on-ec2.sh"
-            ]' \
+            --parameters commands="$(jq -cn \
+              --arg tag "$IMAGE_TAG" \
+              --arg owner "$OWNER" \
+              --arg dir "$COMPOSE_DIR" \
+              '[
+                "set -euo pipefail",
+                ("export IMAGE_TAG=" + $tag),
+                ("export GHCR_OWNER=" + $owner),
+                ("export COMPOSE_DIR=" + $dir),
+                ("cd " + $dir),
+                "test -f .env",
+                "test -f docker-compose.prod.yml",
+                "bash deploy/scripts/deploy-on-ec2.sh"
+              ]')" \
             --query "Command.CommandId" \
             --output text)
+
           echo "command_id=${COMMAND_ID}" >> "$GITHUB_OUTPUT"
+
+          # Wait until SSM finishes (failure still returns; we assert Status below).
           aws ssm wait command-executed \
             --command-id "${COMMAND_ID}" \
             --instance-id "${INSTANCE_ID}" || true
-          STATUS=$(aws ssm get-command-invocation \
+
+          INVOCATION=$(aws ssm get-command-invocation \
             --command-id "${COMMAND_ID}" \
             --instance-id "${INSTANCE_ID}" \
-            --query "Status" \
-            --output text)
+            --output json)
+          echo "${INVOCATION}" | jq '{Status, ResponseCode, Stdout: (.StandardOutputContent|.[0:4000]), Stderr: (.StandardErrorContent|.[0:4000])}'
+
+          STATUS=$(echo "${INVOCATION}" | jq -r .Status)
           echo "SSM status: ${STATUS}"
-          aws ssm get-command-invocation \
-            --command-id "${COMMAND_ID}" \
-            --instance-id "${INSTANCE_ID}" \
-            --query "{Status:Status,Stdout:StandardOutputContent,Stderr:StandardErrorContent}" \
-            --output json
           test "${STATUS}" = "Success"
 
       - name: Failure hint
         if: failure()
         run: |
-          echo "Deploy failed. Check SSM output above and EC2 docker compose logs."
-          echo "Rollback is attempted by deploy-on-ec2.sh when a previous IMAGE_TAG exists."
+          echo "Deploy failed. Check SSM Stdout/Stderr above and EC2 docker compose logs."
+          echo "deploy-on-ec2.sh attempts rollback to the previous IMAGE_TAG when available."

@@ -1,9 +1,11 @@
 # Staging / EC2 stack (pull pre-built images from GHCR)
-# Databases: Neon for tests now; RDS later (same env var names).
-# On the server:
+# Deploy root on EC2: /opt/cognitif-connexion/app
+# Databases: Neon for staging test (V1 + V2 separate); RDS later (same env names).
+# Only nginx publishes a host port. Backend/frontend are internal (expose only).
+#
+#   cd /opt/cognitif-connexion/app
 #   export IMAGE_TAG=<git-sha>
-#   docker compose -f docker-compose.prod.yml pull
-#   docker compose -f docker-compose.prod.yml up -d
+#   bash deploy/scripts/deploy-on-ec2.sh
 
 name: cognitif-connexion-foot
 
