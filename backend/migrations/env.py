@@ -1,7 +1,8 @@
-"""Alembic environment — metadata wired; no revisions generated yet.
+"""Alembic environment — V2 metadata wired via import_all_models().
 
 Uses application Settings for DATABASE_URL. Does not connect on import of the
 application; Alembic connects only when a migration command is run.
+Never point DATABASE_URL at the V1 Neon database.
 """
 
 from logging.config import fileConfig

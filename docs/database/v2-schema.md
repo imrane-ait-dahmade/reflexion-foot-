@@ -64,6 +64,7 @@ Defined in `backend/app/shared/infrastructure/database/seeds.py`:
 ## Alembic
 
 - Metadata discovery via `import_all_models()` in `migrations/env.py`.
-- Initial revision: `migrations/versions/20261115_0001_v2_initial_schema.py`.
+- Linear chain `20261115_0001` … `0006` (explicit DDL; **no** `create_all` in revisions).
 - Apply only to an **empty dedicated V2 database**. Never against V1 Neon.
 - Do not call `metadata.create_all()` from the FastAPI app startup.
+- Details: [`docs/migrations/ALEMBIC_AUDIT.md`](../migrations/ALEMBIC_AUDIT.md), [`MIGRATION_STRATEGY.md`](../migrations/MIGRATION_STRATEGY.md).

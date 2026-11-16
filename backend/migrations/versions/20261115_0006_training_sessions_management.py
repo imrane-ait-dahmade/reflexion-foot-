@@ -66,7 +66,12 @@ def upgrade() -> None:
     op.create_table(
         "session_name_counters",
         sa.Column("year", sa.Integer(), nullable=False),
-        sa.Column("last_value", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column(
+            "last_value",
+            sa.Integer(),
+            nullable=False,
+            server_default=sa.text("0"),
+        ),
         sa.PrimaryKeyConstraint("year"),
         sa.CheckConstraint("last_value >= 0", name="session_name_counters_nonneg"),
     )

@@ -1,7 +1,8 @@
 """V2 PostgreSQL enums for Cognitif Connexion Foot.
 
-Independent of the V1 Drizzle schema. `create_type=False` until an Alembic
-revision creates these types on a dedicated V2 database.
+Independent of the V1 Drizzle schema. Enum types are created by Alembic
+(`20261115_0001` / remaps in later revisions). ORM uses `create_type=False`
+so the app never races Alembic on type creation.
 """
 
 from enum import StrEnum
@@ -46,7 +47,7 @@ def _pg_enum(enum_cls: type[StrEnum], name: str) -> ENUM:
     return ENUM(
         *[member.value for member in enum_cls],
         name=name,
-        create_type=True,
+        create_type=False,
     )
 
 
