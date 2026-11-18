@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionCookie } from "better-auth/cookies";
+import { STAFF_ACCESS_COOKIE } from "@/lib/auth-bff/constants";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const hasCoachCookie = Boolean(getSessionCookie(request));
+  const hasStaffSession = Boolean(request.cookies.get(STAFF_ACCESS_COOKIE)?.value);
 
   // Free tests are disabled — players must join with a session code.
   if (
@@ -16,7 +16,7 @@ export function proxy(request: NextRequest) {
   }
 
   // Logged-in coaches skip the public home without a database round-trip.
-  if (pathname === "/" && hasCoachCookie) {
+  if (pathname === "/" && hasStaffSession) {
     return NextResponse.redirect(new URL("/coach", request.url));
   }
 
@@ -27,12 +27,11 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/coach/sessions") ||
     pathname.startsWith("/coach/players");
 
-  // Already signed in: skip auth forms without waiting for the page RSC.
-  if (isPublicCoachAuth && hasCoachCookie) {
+  if (isPublicCoachAuth && hasStaffSession) {
     return NextResponse.redirect(new URL("/coach", request.url));
   }
 
-  if (isCoachArea && !hasCoachCookie) {
+  if (isCoachArea && !hasStaffSession) {
     const loginUrl = new URL("/coach/login", request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);

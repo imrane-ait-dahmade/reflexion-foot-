@@ -1,16 +1,18 @@
 /**
- * Browser client for the Auth BFF (httpOnly cookies).
- * Does NOT store JWTs in localStorage — tokens stay on the server response Set-Cookie.
- * Parallel to `authService` until cutover is approved.
+ * Browser client for the Auth BFF (httpOnly cookies + tokenStore for apiClient).
  */
 
 import type { UserResponse } from "@/lib/api/types";
+import { notifyStaffTokenChange } from "@/lib/api/staff-token-events";
+import { tokenStore } from "@/lib/api/token-store";
 import { CSRF_COOKIE, CSRF_HEADER } from "@/lib/auth-bff/constants";
 
 export type BffAuthSession = {
   user: UserResponse;
   expires_in: number;
   token_type: string;
+  access_token: string;
+  refresh_token: string;
 };
 
 function readCsrfFromDocument(): string {
@@ -64,30 +66,62 @@ async function bffFetch<T>(
   return data;
 }
 
-/** Opt-in BFF auth helpers — Better Auth + localStorage authService remain default. */
+function hydrateTokenStore(session: BffAuthSession) {
+  tokenStore.setStaffTokens(session.access_token, session.refresh_token);
+  notifyStaffTokenChange();
+}
+
+/** Primary coach auth client (FastAPI BFF). */
 export const authBffClient = {
   ensureCsrf,
 
-  login(email: string, password: string): Promise<BffAuthSession> {
-    return bffFetch<BffAuthSession>("/api/bff/auth/login", {
+  async login(email: string, password: string): Promise<BffAuthSession> {
+    const session = await bffFetch<BffAuthSession>("/api/bff/auth/login", {
       method: "POST",
       csrf: true,
       body: JSON.stringify({ email, password }),
     });
+    hydrateTokenStore(session);
+    return session;
   },
 
-  refresh(): Promise<BffAuthSession> {
-    return bffFetch<BffAuthSession>("/api/bff/auth/refresh", {
+  async register(
+    fullName: string,
+    email: string,
+    password: string,
+  ): Promise<BffAuthSession> {
+    const session = await bffFetch<BffAuthSession>("/api/bff/auth/register", {
+      method: "POST",
+      csrf: true,
+      body: JSON.stringify({
+        full_name: fullName,
+        email,
+        password,
+      }),
+    });
+    hydrateTokenStore(session);
+    return session;
+  },
+
+  async refresh(): Promise<BffAuthSession> {
+    const session = await bffFetch<BffAuthSession>("/api/bff/auth/refresh", {
       method: "POST",
       csrf: true,
     });
+    hydrateTokenStore(session);
+    return session;
   },
 
   async logout(): Promise<void> {
-    await bffFetch<{ ok: boolean }>("/api/bff/auth/logout", {
-      method: "POST",
-      csrf: true,
-    });
+    try {
+      await bffFetch<{ ok: boolean }>("/api/bff/auth/logout", {
+        method: "POST",
+        csrf: true,
+      });
+    } finally {
+      tokenStore.clearStaffTokens();
+      notifyStaffTokenChange();
+    }
   },
 
   me(): Promise<{ user: UserResponse | null }> {

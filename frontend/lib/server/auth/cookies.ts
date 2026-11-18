@@ -37,11 +37,13 @@ export function staffAccessCookieOptions(maxAgeSeconds: number): CookieOptions {
 export function staffRefreshCookieOptions(
   maxAgeSeconds = 60 * 60 * 24 * 14,
 ): CookieOptions {
+  // Path `/` so RSC `requireCoach()` can rotate after access JWT expiry
+  // (browser would not send a path-scoped `/api/bff/auth` cookie on `/coach`).
   return {
     httpOnly: true,
     secure: isProd(),
     sameSite: "lax",
-    path: "/api/bff/auth",
+    path: "/",
     maxAge: Math.max(1, maxAgeSeconds),
   };
 }

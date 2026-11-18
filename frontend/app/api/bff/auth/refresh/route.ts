@@ -38,6 +38,8 @@ export async function POST(request: Request) {
         user: tokens.user,
         expires_in: tokens.expires_in,
         token_type: tokens.token_type,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
       },
       { headers: { "Cache-Control": "no-store" } },
     );

@@ -27,6 +27,14 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=8, max_length=128)
 
 
+class RegisterCoachRequest(BaseModel):
+    """Public self-registration — always creates a coach (never admin/staff)."""
+
+    full_name: str = Field(min_length=2, max_length=200)
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+
+
 class RefreshRequest(BaseModel):
     refresh_token: str = Field(min_length=20)
 

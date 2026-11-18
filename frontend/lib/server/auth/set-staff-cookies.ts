@@ -32,6 +32,8 @@ export async function setStaffAuthCookies(tokens: TokenResponse) {
 export async function clearStaffAuthCookies() {
   const jar = await cookies();
   jar.set(STAFF_ACCESS_COOKIE, "", clearCookieOptions("/"));
+  jar.set(STAFF_REFRESH_COOKIE, "", clearCookieOptions("/"));
+  // Clear legacy path-scoped refresh cookie from earlier BFF iterations.
   jar.set(STAFF_REFRESH_COOKIE, "", {
     ...clearCookieOptions("/api/bff/auth"),
     httpOnly: true,

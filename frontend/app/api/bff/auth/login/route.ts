@@ -29,12 +29,15 @@ export async function POST(request: Request) {
 
     await setStaffAuthCookies(tokens);
 
-    // Never return JWT material to the browser.
+    // httpOnly cookies protect RSC/proxy; tokens also returned for same-origin
+    // apiClient (localStorage) so coach UI can call FastAPI without a second login.
     return NextResponse.json(
       {
         user: tokens.user,
         expires_in: tokens.expires_in,
         token_type: tokens.token_type,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
       },
       { headers: { "Cache-Control": "no-store" } },
     );

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { authClient } from "@/lib/auth-client";
+import { authBffClient } from "@/lib/api/auth-bff.client";
 
 type CoachAuthFormProps = {
   mode: "login" | "register";
@@ -31,7 +31,11 @@ function frenchAuthError(message: string, mode: "login" | "register") {
   ) {
     return "Email ou mot de passe incorrect.";
   }
-  if (lower.includes("already") || lower.includes("exists")) {
+  if (
+    lower.includes("already") ||
+    lower.includes("exists") ||
+    lower.includes("conflict")
+  ) {
     return "Un compte existe déjà avec cet email.";
   }
   if (
@@ -42,6 +46,9 @@ function frenchAuthError(message: string, mode: "login" | "register") {
   }
   if (lower.includes("too many") || lower.includes("rate limit")) {
     return "Trop de tentatives. Réessaie dans un moment.";
+  }
+  if (lower.includes("csrf")) {
+    return "Session de sécurité expirée. Recharge la page.";
   }
   if (/[àâéèêëïîôùûüç]/i.test(message)) return message;
   return mode === "login"
@@ -62,26 +69,11 @@ export function CoachAuthForm({ mode, nextPath = "/coach" }: CoachAuthFormProps)
     setError("");
     try {
       if (mode === "register") {
-        const result = await authClient.signUp.email({
-          email: email.trim(),
-          password,
-          name: name.trim(),
-          callbackURL: destination,
-        });
-        if (result.error) {
-          throw new Error(result.error.message ?? "Inscription impossible.");
-        }
+        await authBffClient.register(name.trim(), email.trim(), password);
       } else {
-        const result = await authClient.signIn.email({
-          email: email.trim(),
-          password,
-          callbackURL: destination,
-        });
-        if (result.error) {
-          throw new Error(result.error.message ?? "Connexion impossible.");
-        }
+        await authBffClient.login(email.trim(), password);
       }
-      // Full reload so the new session cookie is on the first /coach request.
+      // Full reload so httpOnly cookies are on the first /coach RSC request.
       window.location.assign(destination);
     } catch (err) {
       setError(

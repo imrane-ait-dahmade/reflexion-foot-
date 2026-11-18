@@ -1,23 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { authBffClient } from "@/lib/api/auth-bff.client";
 import { authService } from "@/lib/api/auth.service";
 import { isApiError } from "@/lib/api/errors";
+import {
+  notifyStaffTokenChange,
+  subscribeStaffTokenChanges,
+} from "@/lib/api/staff-token-events";
 import { tokenStore } from "@/lib/api/token-store";
 import type { UserResponse } from "@/lib/api/types";
 
-const STAFF_TOKEN_EVENT = "ccf-staff-token-change";
-
-function subscribeStaffTokens(onStoreChange: () => void) {
-  if (typeof window === "undefined") return () => {};
-  const handler = () => onStoreChange();
-  window.addEventListener(STAFF_TOKEN_EVENT, handler);
-  window.addEventListener("storage", handler);
-  return () => {
-    window.removeEventListener(STAFF_TOKEN_EVENT, handler);
-    window.removeEventListener("storage", handler);
-  };
-}
+export { notifyStaffTokenChange } from "@/lib/api/staff-token-events";
 
 function getStaffTokenSnapshot() {
   return tokenStore.getStaffAccessToken();
@@ -27,34 +21,33 @@ function getServerSnapshot() {
   return null as string | null;
 }
 
-export function notifyStaffTokenChange() {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event(STAFF_TOKEN_EVENT));
-  }
-}
-
 /**
- * FastAPI staff JWT session (orthogonal to Better Auth V1 coach cookies).
+ * FastAPI staff JWT session via BFF cookies + localStorage tokenStore.
  */
 export function useStaffApiSession() {
   const accessToken = useSyncExternalStore(
-    subscribeStaffTokens,
+    subscribeStaffTokenChanges,
     getStaffTokenSnapshot,
     getServerSnapshot,
   );
   const [user, setUser] = useState<UserResponse | null>(null);
-  const [checking, setChecking] = useState(Boolean(accessToken));
+  const [checking, setChecking] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const refreshMe = useCallback(async () => {
-    if (!tokenStore.getStaffAccessToken()) {
-      setUser(null);
-      setChecking(false);
-      return null;
-    }
     setChecking(true);
     setError(null);
     try {
+      if (!tokenStore.getStaffAccessToken()) {
+        // Cookies may still be valid after a hard refresh cleared localStorage.
+        try {
+          await authBffClient.refresh();
+        } catch {
+          setUser(null);
+          setChecking(false);
+          return null;
+        }
+      }
       const me = await authService.me();
       setUser(me);
       return me;
@@ -87,8 +80,7 @@ export function useStaffApiSession() {
     setError(null);
     setChecking(true);
     try {
-      await authService.login({ email: email.trim(), password });
-      notifyStaffTokenChange();
+      await authBffClient.login(email.trim(), password);
       const me = await authService.me();
       setUser(me);
       return me;
@@ -106,8 +98,7 @@ export function useStaffApiSession() {
   }, []);
 
   const logout = useCallback(async () => {
-    await authService.logout();
-    notifyStaffTokenChange();
+    await authBffClient.logout();
     setUser(null);
   }, []);
 

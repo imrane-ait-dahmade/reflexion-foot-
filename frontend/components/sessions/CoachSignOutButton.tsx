@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { authClient } from "@/lib/auth-client";
+import { authBffClient } from "@/lib/api/auth-bff.client";
 
 type CoachSignOutButtonProps = {
   className?: string;
@@ -16,10 +16,7 @@ export function CoachSignOutButton({ className }: CoachSignOutButtonProps) {
     setLoading(true);
     setError("");
     try {
-      const result = await authClient.signOut();
-      if (result.error) {
-        throw new Error(result.error.message ?? "Déconnexion impossible.");
-      }
+      await authBffClient.logout();
       window.location.assign("/coach/login");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");
